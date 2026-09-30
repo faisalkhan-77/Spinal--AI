@@ -1,6 +1,5 @@
 Flask
 Flask-SocketIO
-eventlet
 gunicorn
 google-genai
 supabase

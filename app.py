@@ -14,6 +14,18 @@ import supabase
 from datetime import datetime, timedelta
 import uuid
 
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify
+from flask_socketio import SocketIO, emit
+import base64
+import os
+import time
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import supabase
+from datetime import datetime, timedelta
+import uuid
+
 print("✅ Imports done", file=sys.stderr)
 sys.stderr.flush()
 
@@ -59,9 +71,7 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(days=7),
 )
 
-socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
-
-
+socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*", manage_session=False)
 # ============================================================
 # GEMINI HELPER — Retry + Model Fallback + AFC Disabled
 # ============================================================
@@ -464,4 +474,4 @@ def handle_frame(data):
 if __name__ == '__main__':
     print("🚀 Starting Flask server...", file=sys.stderr)
     sys.stderr.flush()
-    socketio.run(app, debug=True, port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app, debug=True, port=5000)
