@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access · Spinal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="/static/supabase.min.js"></script>
+    <style>
+        :root {
+            --void: #0B0C0E;
+            --panel: #18191C;
+            --panel-2: #1F2124;
+            --gunmetal: #54575D;
+            --gunmetal-dim: #35373B;
+            --chrome: #C9CBCF;
+            --chrome-hi: #F3F3F4;
+            --bone: #F2F1ED;
+            --bone-dim: #9A9B98;
+            --amber: #FF7A1A;
+            --amber-glow: rgba(255, 122, 26, 0.25);
+            --line: rgba(199, 201, 205, 0.14);
+            --red: #FF6B6B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html {
+            height: 100%;
+        }
+        body {
+            background: var(--void);
+            color: var(--bone);
+            font-family: 'IBM Plex Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        ::selection {
+            background: var(--amber);
+            color: var(--void);
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(var(--line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--line) 1px, transparent 1px);
+            background-size: 88px 88px;
+            opacity: 0.4;
+        }
+        .mono {
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 0.08em;
+        }
+        a {
+            color: inherit;
+        }
+        input,
+        button {
+            font-family: inherit;
+        }
+        :focus-visible {
+            outline: 2px solid var(--amber);
+            outline-offset: 2px;
+        }
+        .brand-panel {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 48px 5% 40px;
+            border-right: 1px solid var(--line);
+            overflow: hidden;
+        }
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(ellipse 60% 50% at 30% 25%, rgba(255, 122, 26, 0.07), transparent 65%);
+        }
+        .bp-top .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Big Shoulders Display', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--chrome-hi);
+            text-decoration: none;
+        }
+        .bp-top .brand svg {
+            width: 24px;
+            height: 24px;
+        }
+        .bp-top .brand small {
+            display: block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 400;
+            font-size: 0.52rem;
+            letter-spacing: 0.2em;
+            color: var(--bone-dim);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        .bp-mid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+            margin: 20px 0;
+        }
+        .bp-mid svg {
+            width: 100%;
+            max-width: 220px;
+            height: auto;
+            filter: drop-shadow(0 24px 50px rgba(0, 0, 0, 0.6));
+            animation: drift 7s ease-in-out infinite;
+        }
+        @keyframes drift {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        .bp-copy {
+            text-align: center;
+            max-width: 340px;
+            margin: 0 auto;
+        }
+        .bp-eyebrow {
+            font-size: 0.68rem;
+            color: var(--amber);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            margin-bottom: 16px;
+        }
+        .bp-eyebrow .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--amber);
+            box-shadow: 0 0 8px var(--amber);
+            animation: pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.25;
+            }
+        }
+        .bp-copy h1 {
+            font-family: 'Big Shoulders Display', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 1.9rem;
+            line-height: 1.02;
+            color: var(--chrome-hi);
+            margin-bottom: 14px;
+        }
+        .bp-copy p {
+            color: var(--bone-dim);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .bp-specs {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding-top: 22px;
+            border-top: 1px solid var(--line);
+        }
+        .bp-specs .spec {
+            text-align: center;
+        }
+        .bp-specs .val {
+            font-size: 0.82rem;
+            color: var(--chrome-hi);
+            font-weight: 500;
+        }
+        .bp-specs .lab {
+            font-size: 0.58rem;
+            color: var(--bone-dim);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+        .form-panel {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 8%;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+        }
+        .auth-sub {
+            font-size: 0.7rem;
+            color: var(--bone-dim);
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--line);
+        }
+        .auth-sub strong {
+            color: var(--chrome-hi);
+            font-weight: 500;
+        }
+        .tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            background: var(--void);
+            padding: 4px;
+            margin-bottom: 26px;
+            border: 1px solid var(--gunmetal-dim);
+        }
+        .tab {
+            background: transparent;
+            border: none;
+            color: var(--bone-dim);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 10px 8px;
+            cursor: pointer;
+            transition: all .25s;
+        }
+        .tab.active {
+            background: var(--amber);
+            color: var(--void);
+            box-shadow: 0 0 24px var(--amber-glow);
+            font-weight: 600;
+        }
+        .tab:hover:not(.active) {
+            color: var(--bone);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        .form-group-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+        .form-group label {
+            font-size: 0.63rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gunmetal);
+        }
+        .forgot-link {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 0.06em;
+            color: var(--bone-dim);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: color .2s, border-color .2s;
+        }
+        .forgot-link:hover {
+            color: var(--amber);
+            border-color: var(--amber);
+        }
+        .input-wrap {
+            position: relative;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--void);
+            border: 1px solid var(--gunmetal-dim);
+            color: var(--bone);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all .3s;
+        }
+        .form-group input.has-toggle {
+            padding-right: 44px;
+        }
+        .form-group input:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-glow), inset 0 0 12px rgba(255, 122, 26, 0.04);
+            background: #0F1012;
+        }
+        .form-group input::placeholder {
+            color: var(--gunmetal);
+            font-size: 0.75rem;
+            opacity: 0.6;
+        }
+        .pw-toggle {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 42px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gunmetal);
+            transition: color .2s;
+        }
+        .pw-toggle:hover {
+            color: var(--chrome-hi);
+        }
+        .pw-toggle svg {
+            width: 17px;
+            height: 17px;
+        }
+        .pw-hint {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.62rem;
+            color: var(--gunmetal);
+            margin-top: 7px;
+            letter-spacing: 0.02em;
+        }
+        .form-hidden {
+            display: none;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(160deg, var(--chrome-hi), var(--chrome) 55%, var(--gunmetal) 130%);
+            color: var(--void);
+            border: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s, opacity .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 6px;
+            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-submit::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%);
+            background-size: 220% 100%;
+            animation: shimmer 3.2s linear infinite;
+        }
+        @keyframes shimmer {
+            0% {
+                background-position: -220% 0;
+            }
+            100% {
+                background-position: 220% 0;
+            }
+        }
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.9), 0 0 40px var(--amber-glow);
+        }
+        .btn-submit:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+        .btn-submit:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .btn-submit:disabled::before {
+            animation: none;
+        }
+        .btn-submit svg {
+            width: 18px;
+            height: 18px;
+            position: relative;
+            z-index: 1;
+        }
+        .btn-submit span {
+            position: relative;
+            z-index: 1;
+        }
+        .spinner {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid rgba(11, 12, 14, 0.25);
+            border-top-color: var(--void);
+            animation: spin .7s linear infinite;
+            position: relative;
+            z-index: 1;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 22px 0 18px;
+            color: var(--gunmetal);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+        }
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--line);
+        }
+        .btn-google {
+            width: 100%;
+            border: 1px solid var(--gunmetal-dim);
+            color: var(--bone);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all .25s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .btn-google:hover {
+            border-color: var(--chrome);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--chrome-hi);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+        }
+        .btn-google svg {
+            width: 18px;
+            height: 18px;
+        }
+        .error-msg {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--red);
+            min-height: 0;
+            margin-top: 0;
+            text-align: center;
+            letter-spacing: 0.02em;
+            border: 1px solid transparent;
+            padding: 0;
+            transition: all .2s;
+            overflow: hidden;
+        }
+        .error-msg.show {
+            min-height: 22px;
+            margin-top: 14px;
+            border-color: rgba(255, 107, 107, 0.15);
+            padding: 8px 6px;
+            background: rgba(255, 107, 107, 0.04);
+        }
+        .success-msg {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            color: #7CD98B;
+            text-align: center;
+            letter-spacing: 0.02em;
+            border: 1px solid rgba(124, 217, 139, 0.2);
+            padding: 8px 6px;
+            margin-top: 14px;
+            background: rgba(124, 217, 139, 0.05);
+            display: none;
+        }
+        .success-msg.show {
+            display: block;
+        }
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 26px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--gunmetal);
+            text-decoration: none;
+            letter-spacing: 0.1em;
+            transition: color .2s;
+        }
+        .back-link:hover {
+            color: var(--bone);
+        }
+        .back-link svg {
+            width: 12px;
+            height: 12px;
+        }
+        @media (max-width: 900px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+            .brand-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--line);
+                padding: 32px 6% 28px;
+            }
+            .bp-mid svg {
+                max-width: 130px;
+            }
+            .bp-copy h1 {
+                font-size: 1.4rem;
+            }
+            .bp-specs {
+                gap: 20px;
+            }
+            .form-panel {
+                padding: 36px 6% 50px;
+            }
+        }
+        @media (max-width: 420px) {
+            .auth-container {
+                max-width: 100%;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="brand-panel">
+        <div class="bp-top">
+            <a href="/" class="brand">
+                <svg viewBox="0 0 26 26" fill="none">
+                    <rect x="9" y="1" width="8" height="5" fill="var(--chrome)" />
+                    <rect x="6" y="8" width="14" height="5" fill="var(--chrome)" />
+                    <rect x="3" y="15" width="20" height="5" fill="var(--chrome)" />
+                    <circle cx="13" cy="3.5" r="1.4" fill="var(--amber)" />
+                    <line x1="13" y1="6" x2="13" y2="20" stroke="var(--amber)" stroke-width="1" />
+                </svg>
+                <div>Spinal<small>Vision-native AI</small></div>
+            </a>
+        </div>
+
+        <div class="bp-mid">
+            <svg viewBox="0 0 400 460" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                    <linearGradient id="vertGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#F1F1F2" />
+                        <stop offset="45%" stop-color="#B7B9BD" />
+                        <stop offset="100%" stop-color="#4B4D52" />
+                    </linearGradient>
+                    <radialGradient id="lensGrad" cx="35%" cy="30%" r="75%">
+                        <stop offset="0%" stop-color="#FFE3C7" />
+                        <stop offset="35%" stop-color="#FF9A45" />
+                        <stop offset="100%" stop-color="#7A2E00" />
+                    </radialGradient>
+                </defs>
+                <path class="cord" d="M200,120 L198,220 L204,320 L200,410" fill="none" />
+                <g class="vert">
+                    <polygon points="152,150 248,150 264,182 236,196 164,196 136,182" />
+                    <polygon points="118,168 92,182 96,196" opacity="0.9" />
+                    <polygon points="282,168 308,182 304,196" opacity="0.9" />
+                </g>
+                <g class="vert">
+                    <polygon points="140,222 260,222 278,256 246,272 154,272 122,256" />
+                    <polygon points="104,240 76,256 80,272" opacity="0.9" />
+                    <polygon points="296,240 324,256 320,272" opacity="0.9" />
+                </g>
+                <g class="vert">
+                    <polygon points="132,300 268,300 288,336 252,354 148,354 112,336" />
+                    <polygon points="94,320 64,336 68,354" opacity="0.9" />
+                    <polygon points="306,320 336,336 332,354" opacity="0.9" />
+                </g>
+                <g class="vert">
+                    <polygon points="140,382 260,382 280,418 244,438 156,438 120,418" />
+                </g>
+                <circle class="iris-ring" cx="200" cy="96" r="72" />
+                <circle class="iris-ring" cx="200" cy="96" r="58" stroke-opacity="0.5" />
+                <circle class="iris-core" cx="200" cy="96" r="26" />
+                <circle cx="192" cy="88" r="6" fill="#FFF6EC" opacity="0.85" />
+            </svg>
+
+            <div class="bp-copy">
+                <div class="bp-eyebrow mono"><span class="dot"></span>Secure column access</div>
+                <h1>Every session starts at C1.</h1>
+                <p>Sign in and Spinal picks up exactly where it left off — same voice, same memory, same eye on the
+                    world.</p>
+            </div>
+        </div>
+
+        <div class="bp-specs">
+            <div class="spec">
+                <div class="val mono">AES-256</div>
+                <div class="lab">Encryption</div>
+            </div>
+            <div class="spec">
+                <div class="val mono">OAuth 2.0</div>
+                <div class="lab">Sign-in</div>
+            </div>
+            <div class="spec">
+                <div class="val mono">SOC 2</div>
+                <div class="lab">In progress</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-panel">
+        <div class="auth-container">
+
+            <div class="auth-sub mono">// <strong>ACCESS THE COLUMN</strong> — log in or create an account</div>
+
+            <div class="tabs">
+                <button class="tab active" id="loginTab" type="button">Login</button>
+                <button class="tab" id="signupTab" type="button">Sign Up</button>
+            </div>
+
+            <form id="loginForm" novalidate>
+                <div class="form-group">
+                    <div class="form-group-head">
+                        <label for="loginEmail">Email</label>
+                    </div>
+                    <div class="input-wrap">
+                        <input type="email" id="loginEmail" placeholder="you@domain.com" autocomplete="email" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-group-head">
+                        <label for="loginPass">Password</label>
+                        <a href="#" class="forgot-link mono" id="forgotLink">Forgot?</a>
+                    </div>
+                    <div class="input-wrap">
+                        <input type="password" id="loginPass" class="has-toggle" placeholder="••••••••"
+                            autocomplete="current-password" required>
+                        <button type="button" class="pw-toggle" data-target="loginPass" aria-label="Show password">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn-submit" id="loginBtn" type="submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                        <path d="M10 17l5-5-5-5" />
+                        <path d="M15 12H3" />
+                    </svg>
+                    <span>Log In</span>
+                </button>
+            </form>
+
+            <form id="signupForm" class="form-hidden" novalidate>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <div class="input-wrap">
+                        <input type="email" id="signupEmail" placeholder="you@domain.com" autocomplete="email" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signupPass">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="signupPass" class="has-toggle" placeholder="••••••••"
+                            autocomplete="new-password" minlength="8" required>
+                        <button type="button" class="pw-toggle" data-target="signupPass" aria-label="Show password">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="pw-hint">Minimum 8 characters.</div>
+                </div>
+                <button class="btn-submit" id="signupBtn" type="submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="8.5" cy="7" r="4" />
+                        <path d="M20 8v6M23 11h-6" />
+                    </svg>
+                    <span>Create Account</span>
+                </button>
+            </form>
+
+            <div class="divider">
+                <span class="divider-line"></span><span>or</span><span class="divider-line"></span>
+            </div>
+
+            <button class="btn-google" id="googleBtn" type="button">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                    <path
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                    <path
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+                <span>Continue with Google</span>
+            </button>
+
+            <div id="errorMsg" class="error-msg"></div>
+            <div id="successMsg" class="success-msg"></div>
+
+            <a href="/" class="back-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                Back to landing
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://thxvwyylwwhdahclzpge.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeHZ3eXlsd3doZGFoY2x6cGdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2ODU4MDcsImV4cCI6MjEwMjI2MTgwN30.se6trPMvGEKn1gV27fNfA9zytU3-4EeKKZ0tBWGBClw";
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const loginTab = document.getElementById('loginTab');
+        const signupTab = document.getElementById('signupTab');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        const forgotLink = document.getElementById('forgotLink');
+
+        function clearMsgs() {
+            errorMsg.classList.remove('show');
+            errorMsg.innerText = '';
+            successMsg.classList.remove('show');
+            successMsg.innerText = '';
+        }
+
+        function showError(msg) {
+            successMsg.classList.remove('show');
+            errorMsg.innerText = msg;
+            errorMsg.classList.add('show');
+        }
+
+        function showSuccess(msg) {
+            errorMsg.classList.remove('show');
+            successMsg.innerText = msg;
+            successMsg.classList.add('show');
+        }
+
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('active');
+            signupTab.classList.remove('active');
+            loginForm.classList.remove('form-hidden');
+            signupForm.classList.add('form-hidden');
+            clearMsgs();
+        });
+        signupTab.addEventListener('click', () => {
+            signupTab.classList.add('active');
+            loginTab.classList.remove('active');
+            signupForm.classList.remove('form-hidden');
+            loginForm.classList.add('form-hidden');
+            clearMsgs();
+        });
+
+        document.querySelectorAll('.pw-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = document.getElementById(btn.dataset.target);
+                const showing = input.type === 'text';
+                input.type = showing ? 'password' : 'text';
+                btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+                btn.style.color = showing ? '' : 'var(--amber)';
+            });
+        });
+
+        function setLoading(btn, loading) {
+            btn.disabled = loading;
+            if (loading) {
+                btn.dataset.origHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner"></span><span>Working…</span>';
+            } else if (btn.dataset.origHtml) {
+                btn.innerHTML = btn.dataset.origHtml;
+            }
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMsgs();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPass').value;
+            if (!email || !pass) { showError('All fields are required.'); return; }
+
+            const btn = document.getElementById('loginBtn');
+            setLoading(btn, true);
+            try {
+                const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+                if (error) { showError(error.message); return; }
+                await verifyAndRedirect(data.session.access_token);
+            } catch (err) {
+                showError('Something went wrong: ' + err.message);
+            } finally {
+                setLoading(btn, false);
+            }
+        });
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMsgs();
+            const email = document.getElementById('signupEmail').value.trim();
+            const pass = document.getElementById('signupPass').value;
+            if (!email || !pass) { showError('All fields are required.'); return; }
+            if (pass.length < 8) { showError('Password must be at least 8 characters.'); return; }
+
+            const btn = document.getElementById('signupBtn');
+            setLoading(btn, true);
+            try {
+                const { data, error } = await sb.auth.signUp({ email, password: pass });
+                if (error) { showError(error.message); return; }
+                if (data.session) {
+                    await verifyAndRedirect(data.session.access_token);
+                } else {
+                    showSuccess('Check your inbox to confirm your email.');
+                }
+            } catch (err) {
+                showError('Something went wrong: ' + err.message);
+            } finally {
+                setLoading(btn, false);
+            }
+        });
+
+        forgotLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            clearMsgs();
+            const email = document.getElementById('loginEmail').value.trim();
+            if (!email) { showError('Enter your email above first, then tap "Forgot?".'); return; }
+            try {
+                const { error } = await sb.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/auth'
+                });
+                if (error) { showError(error.message); return; }
+                showSuccess('Password reset link sent to ' + email + '.');
+            } catch (err) {
+                showError('Something went wrong: ' + err.message);
+            }
+        });
+
+        document.getElementById('googleBtn').addEventListener('click', async () => {
+            clearMsgs();
+            const { error } = await sb.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin + '/dashboard' }
+            });
+            if (error) showError(error.message);
+        });
+
+        // ✅ FIX: credentials: 'include' added here
+        async function verifyAndRedirect(token) {
+            try {
+                const res = await fetch('/verify_token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = '/dashboard';
+                } else {
+                    showError('Verification failed. Please try again.');
+                }
+            } catch (e) {
+                showError('Network error: ' + e.message);
+            }
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                const { data } = await sb.auth.getSession();
+                if (data.session) window.location.href = '/dashboard';
+            } catch (e) {
+                console.warn('Auto-login skipped:', e.message);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

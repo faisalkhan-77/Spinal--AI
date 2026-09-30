@@ -1,0 +1,43 @@
+# Environment
+.env
+.env.local
+*.env
+
+# Python
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# Flask
+instance/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# DB
+*.db
+*.sqlite
+*.sqlite3
+
+# Personal
+notes.txt
+todo.md
+screenshots/
+*.zip
