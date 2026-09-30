@@ -410,6 +410,16 @@ def handle_frame(data):
                 context += f"User: {entry['prompt']}\nSpinal: {entry['response']}\n"
 
         full_prompt = f"{context}\nCurrent question: {user_prompt}" if context else user_prompt
+        # Prompt ko improve karo
+        system_instruction = (
+            "You are Spinal AI, a helpful and friendly AI companion. "
+            "When user asks for code, ALWAYS respond with properly formatted markdown code blocks "
+            "using ```language ... ``` syntax. Use headings, lists, and bold formatting for clarity. "
+            "Keep responses concise but complete.\n\n"
+        )
+
+        full_prompt = f"{system_instruction}{context}\nCurrent question: {user_prompt}" if context else f"{system_instruction}{user_prompt}"
+        
 
         # Decode image
         header, encoded = image_data.split(',', 1)
