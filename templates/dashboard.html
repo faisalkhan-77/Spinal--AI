@@ -341,20 +341,46 @@
         }
 
         .profile-menu-btn {
-            background: transparent;
-            border: none;
-            color: var(--bone-dim);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #F3F3F4;
             cursor: pointer;
             padding: 4px 6px;
-            border-radius: 4px;
-            transition: all 0.2s;
-            font-size: 0.8rem;
+            border-radius: 6px;
+            transition: all 0.25s ease;
+            font-size: 0.85rem;
             margin-left: auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+        }
+
+        .profile-menu-btn:hover {
+            background: rgba(255, 122, 26, 0.15);
+            border-color: rgba(255, 122, 26, 0.4);
+            color: #FF7A1A;
+            transform: scale(1.05);
+        }
+
+        .profile-dropdown-menu::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            right: 12px;
+            width: 12px;
+            height: 12px;
+            background: #0A0B0D;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+
+
+        .profile-menu-btn:active {
+            transform: scale(0.95);
         }
 
         .profile-menu-btn:hover {
@@ -366,15 +392,21 @@
             display: none;
             position: absolute;
             right: 0;
-            top: calc(100% + 6px);
-            background: #0D0E10;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 6px;
-            min-width: 160px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.3);
-            z-index: 100;
+            bottom: calc(100% + 10px);
+            /* ✅ Upar open hoga */
+            top: auto;
+            background: #0A0B0D;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            min-width: 200px;
+            box-shadow:
+                0 -8px 32px rgba(0, 0, 0, 0.9),
+                0 0 40px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            z-index: 9999;
             overflow: hidden;
-            margin-top: 0;
+            padding: 6px;
+            backdrop-filter: blur(12px);
         }
 
         .profile-dropdown-menu.open {
@@ -384,17 +416,43 @@
         .profile-dropdown-menu button {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
-            background: transparent;
-            border: none;
-            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+            padding: 12px 16px;
             text-align: left;
             font-family: 'IBM Plex Sans', sans-serif;
-            font-size: 0.75rem;
-            color: var(--bone-dim);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #F3F3F4;
             cursor: pointer;
-            transition: background 0.2s, color 0.2s;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            letter-spacing: 0.01em;
+        }
+
+        .profile-dropdown-menu button:hover {
+            background: rgba(255, 122, 26, 0.12);
+            border-color: rgba(255, 122, 26, 0.3);
+            color: #FFFFFF;
+            transform: translateX(2px);
+        }
+
+        .profile-dropdown-menu button:active {
+            transform: translateX(0) scale(0.98);
+        }
+
+        .profile-dropdown-menu button i {
+            width: 20px;
+            color: #FF7A1A;
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-dropdown-menu button:hover i {
+            transform: rotate(45deg);
+            /* ⚙️ Icon rotate on hover */
         }
 
         .profile-dropdown-menu button:hover {
@@ -768,6 +826,7 @@
                 opacity: 0;
                 transform: translateY(8px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -891,9 +950,11 @@
             0% {
                 transform: scale(1);
             }
+
             50% {
                 transform: scale(1.6);
             }
+
             100% {
                 transform: scale(1);
             }
@@ -1014,6 +1075,7 @@
             0% {
                 background-position: -220% 0;
             }
+
             100% {
                 background-position: 220% 0;
             }
@@ -1145,6 +1207,7 @@
                 transform: translateX(110%);
                 opacity: 0;
             }
+
             100% {
                 transform: translateX(0);
                 opacity: 1;
@@ -1156,6 +1219,7 @@
                 transform: translateX(0);
                 opacity: 1;
             }
+
             100% {
                 transform: translateX(110%);
                 opacity: 0;
@@ -1291,46 +1355,147 @@
             #avatar-container {
                 max-width: 400px;
             }
+
             .main {
                 padding: 20px;
             }
         }
 
         @media (max-width: 820px) {
+            /* ✅ Mobile par Screen Share button hide karo */
+            @media (max-width: 820px) {
+
+                /* Hide screen share on mobile */
+                #shareScreenBtn {
+                    display: none !important;
+                }
+
+                /* Input field full width aur better look */
+                .input-row {
+                    width: 90vw;
+                    gap: 0;
+                }
+
+                .input-row input {
+                    width: 100%;
+                    font-size: 16px;
+                    padding: 14px 18px;
+                    min-height: 52px;
+                    border-radius: 6px;
+                }
+            }
+
             body {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
             }
+
+            /* Reset desktop collapse behavior */
+            body.sidebar-collapsed .sidebar {
+                padding: 20px 16px;
+                border-right: 1px solid var(--line);
+                overflow-y: auto;
+            }
+
+            /* ✅ Mobile Sidebar — Full Screen Overlay */
             .sidebar {
-                display: none;
+                display: flex !important;
+                position: fixed !important;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                z-index: 2000;
+                transform: translateX(-100%);
+                transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                padding: 20px 16px;
+                padding-top: max(20px, env(safe-area-inset-top));
+                padding-bottom: max(20px, env(safe-area-inset-bottom));
+                gap: 16px;
+                border-right: none;
+                overflow-y: auto;
+                background: var(--panel);
             }
+
+            body.mobile-sidebar-open .sidebar {
+                transform: translateX(0);
+                box-shadow: 0 0 80px rgba(0, 0, 0, 0.9);
+            }
+
+            /* ✅ Scrim (background dark overlay) */
+            body.mobile-sidebar-open::after {
+                content: '';
+                position: fixed;
+                inset: 0;
+                z-index: 1999;
+                background: rgba(0, 0, 0, 0.55);
+                backdrop-filter: blur(6px);
+                animation: fadeIn 0.25s ease;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+
+                to {
+                    opacity: 1;
+                }
+            }
+
+            /* ✅ Hide hamburger when sidebar open */
+            body.mobile-sidebar-open .floating-toggle {
+                display: none !important;
+            }
+
+            /* Show hamburger when sidebar closed */
             .floating-toggle {
                 display: flex !important;
             }
+
+            /* ✅ Change collapse button icon to X on mobile */
+            .sidebar-collapse-btn {
+                display: flex !important;
+            }
+
+            .sidebar-collapse-btn i::before {
+                content: '\f00d';
+                /* Font Awesome fa-times (X) */
+                font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Pro', 'Font Awesome 5 Free';
+                font-weight: 900;
+            }
+
+            /* ✅ Main content ka top padding badhaao taake hamburger overlap na kare */
             .main {
-                padding: 16px 12px 30px;
+                padding: 70px 12px 30px;
                 justify-content: flex-start;
             }
+
             #avatar-container {
                 width: 65vw;
                 max-width: 280px;
                 max-height: 280px;
             }
+
             #chat-container {
                 width: 95vw;
                 height: 50vh;
                 min-height: 200px;
                 max-height: 60vh;
             }
+
             .input-row {
                 width: 95vw;
                 flex-wrap: wrap;
             }
+
             .input-row input {
                 width: 100%;
                 font-size: 16px;
                 padding: 12px;
                 min-height: 48px;
             }
+
             .input-row .share-btn {
                 width: 100%;
                 justify-content: center;
@@ -1338,12 +1503,14 @@
                 min-height: 48px;
                 font-size: 0.7rem;
             }
+
             .button-row {
                 width: 90vw;
                 gap: 10px;
                 flex-wrap: wrap;
                 justify-content: center;
             }
+
             .ask-btn {
                 flex: 1 1 40%;
                 min-width: 100px;
@@ -1351,22 +1518,27 @@
                 font-size: 0.7rem;
                 min-height: 44px;
             }
+
             .status-strip {
                 gap: 12px;
                 padding: 6px 12px;
                 font-size: 0.5rem;
             }
+
             .message {
                 font-size: 0.8rem;
                 padding: 8px 12px;
             }
+
             .toast {
                 font-size: 0.8rem;
                 padding: 12px 16px;
             }
+
             .onboarding-card {
                 padding: 24px 18px;
             }
+
             .onboarding-card h2 {
                 font-size: 1.2rem;
             }
@@ -1376,17 +1548,20 @@
             .main {
                 padding: 12px 8px 20px;
             }
+
             #avatar-container {
                 width: 75vw;
                 max-width: 200px;
                 max-height: 200px;
             }
+
             #chat-container {
                 height: 40vh;
                 min-height: 120px;
                 max-height: 250px;
                 padding: 12px 10px 6px 10px;
             }
+
             .ask-btn {
                 flex: 1 1 100%;
                 padding: 10px 12px;
@@ -1394,34 +1569,42 @@
                 min-height: 40px;
                 max-width: 220px;
             }
+
             .button-row {
                 gap: 6px;
             }
+
             .input-row input {
                 font-size: 15px;
                 padding: 10px 12px;
                 min-height: 44px;
             }
+
             .input-row .share-btn {
                 font-size: 0.65rem;
                 padding: 10px;
                 min-height: 44px;
             }
+
             .message {
                 font-size: 0.75rem;
                 padding: 6px 10px;
                 max-width: 90%;
             }
+
             .status-item {
                 font-size: 0.5rem;
             }
+
             .status-strip {
                 gap: 8px;
                 padding: 4px 10px;
             }
+
             .share-note {
                 font-size: 0.5rem;
             }
+
             .mono {
                 letter-spacing: 0.04em;
             }
@@ -1472,7 +1655,8 @@
                     <span id="userAvatarText">U</span>
                 </div>
                 <span id="userDisplayName" class="user-name">User</span>
-                <button class="profile-menu-btn" id="profileMenuBtn" onclick="event.stopPropagation(); toggleProfileMenu()">
+                <button class="profile-menu-btn" id="profileMenuBtn"
+                    onclick="event.stopPropagation(); toggleProfileMenu()">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
                 <div class="profile-dropdown-menu" id="profileDropdownMenu">
@@ -1538,7 +1722,8 @@
             </button>
         </div>
 
-        <div class="share-note mono">💡 For better experience, share your <strong>entire screen</strong> (monitor).</div>
+        <div class="share-note mono">💡 For better experience, share your <strong>entire screen</strong> (monitor).
+        </div>
     </div>
 
     <div id="toast-container"></div>
@@ -1817,13 +2002,51 @@
         const newChatBtn = document.getElementById('newChatBtn');
 
         const body = document.body;
+        // ✅ Mobile sidebar handlers
         document.getElementById('sidebarCollapseBtn').addEventListener('click', () => {
-            body.classList.add('sidebar-collapsed');
-            localStorage.setItem('sidebarCollapsed', 'true');
+            if (window.innerWidth <= 820) {
+                // Mobile: close mobile sidebar (full-screen overlay)
+                document.body.classList.remove('mobile-sidebar-open');
+            } else {
+                // Desktop: collapse sidebar
+                body.classList.add('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', 'true');
+            }
         });
+
         document.getElementById('sidebarExpandBtn').addEventListener('click', () => {
-            body.classList.remove('sidebar-collapsed');
-            localStorage.setItem('sidebarCollapsed', 'false');
+            if (window.innerWidth <= 820) {
+                // Mobile: open mobile sidebar
+                document.body.classList.add('mobile-sidebar-open');
+            } else {
+                // Desktop: expand sidebar
+                body.classList.remove('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', 'false');
+            }
+        });
+
+        // Close mobile sidebar when clicking on scrim (outside sidebar)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 820 && document.body.classList.contains('mobile-sidebar-open')) {
+                // If click is NOT inside sidebar and NOT inside floating toggle
+                if (!e.target.closest('.sidebar') && !e.target.closest('.floating-toggle')) {
+                    document.body.classList.remove('mobile-sidebar-open');
+                }
+            }
+        });
+
+        // ESC key se bhi close ho
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && window.innerWidth <= 820) {
+                document.body.classList.remove('mobile-sidebar-open');
+            }
+        });
+
+        // Window resize handle — agar user mobile se desktop pe switch kare
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 820) {
+                document.body.classList.remove('mobile-sidebar-open');
+            }
         });
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
             body.classList.add('sidebar-collapsed');
@@ -1873,6 +2096,10 @@
         }
 
         function createNewSession() {
+            if (window.innerWidth <= 820) {
+                document.body.classList.remove('mobile-sidebar-open');
+            }
+
             fetch('/api/sessions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1904,6 +2131,10 @@
         }
 
         function loadSession(sessionId) {
+            if (window.innerWidth <= 820) {
+                document.body.classList.remove('mobile-sidebar-open');
+            }
+
             console.log("🔄 Loading session:", sessionId);
             if (isLoadingSession) return;
             isLoadingSession = true;
@@ -1950,6 +2181,10 @@
                     loadSessions();
                 })
                 .catch(err => console.error('Delete session error:', err));
+            if (window.innerWidth <= 820) {
+                document.body.classList.remove('mobile-sidebar-open');
+            }
+
         }
 
         function highlightSession(sessionId) {
@@ -2015,7 +2250,7 @@
             dropdown.classList.toggle('open');
         }
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!e.target.closest('.sidebar-user')) {
                 document.getElementById('profileDropdownMenu').classList.remove('open');
             }
@@ -2030,11 +2265,11 @@
             document.getElementById('settings-overlay').classList.add('active');
         }
 
-        document.getElementById('settingsCloseBtn').addEventListener('click', function() {
+        document.getElementById('settingsCloseBtn').addEventListener('click', function () {
             document.getElementById('settings-overlay').classList.remove('active');
         });
 
-        document.getElementById('settingsDeleteBtn').addEventListener('click', async function() {
+        document.getElementById('settingsDeleteBtn').addEventListener('click', async function () {
             if (!currentUser) {
                 showToast('❌ You are not logged in.', 'error');
                 return;
@@ -2060,7 +2295,7 @@
             }
         });
 
-        document.getElementById('settingsLogoutBtn').addEventListener('click', async function() {
+        document.getElementById('settingsLogoutBtn').addEventListener('click', async function () {
             try {
                 await sb.auth.signOut();
                 localStorage.clear();
@@ -2120,7 +2355,7 @@
             dropdown.classList.toggle('open');
         }
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!e.target.closest('.session-actions')) {
                 document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('open'));
             }
@@ -2418,7 +2653,7 @@
         }
         document.getElementById('cameraToggleBtn').addEventListener('click', toggleCamera);
 
-        askBtn.addEventListener('click', function() {
+        askBtn.addEventListener('click', function () {
             primeSpeechSynthesis();
             if (isProcessing) return;
             currentPrompt = questionInput.value.trim() ||
@@ -2445,7 +2680,7 @@
                 showToast('❌ Speech recognition not supported.', 'error');
                 return null;
             }
-            const rec = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+            const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             rec.continuous = false;
             rec.interimResults = false;
             rec.lang = 'hi-IN';
@@ -2453,7 +2688,7 @@
             return rec;
         }
 
-        voiceBtn.addEventListener('click', function() {
+        voiceBtn.addEventListener('click', function () {
             primeSpeechSynthesis();
             if (voiceBtn.classList.contains('speaking-active')) {
                 document.querySelectorAll('audio').forEach(a => a.pause());
@@ -2545,7 +2780,7 @@
             }
         });
 
-        shareScreenBtn.addEventListener('click', async function() {
+        shareScreenBtn.addEventListener('click', async function () {
             if (isScreenSharing) {
                 if (screenStream) {
                     screenStream.getTracks().forEach(track => track.stop());
