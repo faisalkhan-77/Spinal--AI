@@ -13,18 +13,9 @@ from google.genai import types
 import supabase
 from datetime import datetime, timedelta
 import uuid
-
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify
-from flask_socketio import SocketIO, emit
-import base64
-import os
-import time
-from dotenv import load_dotenv
-from google import genai
-from google.genai import types
-import supabase
-from datetime import datetime, timedelta
-import uuid
+import threading
+import json
+import re
 
 print("✅ Imports done", file=sys.stderr)
 sys.stderr.flush()
@@ -51,6 +42,327 @@ if not GEMINI_API_KEY:
 # Gemini Client
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# ============================================================
+# MEMORY SYSTEM CONFIG
+# ============================================================
+MEMORY_EXTRACTION_MODEL = 'gemini-3.5-flash-lite'
+EMBEDDING_MODEL = 'gemini-embedding-001'
+MEMORY_THRESHOLD = 0.45
+IMPORTANCE_THRESHOLD = 8      # ✅ Memories with importance >= 8 always injected
+DEDUP_THRESHOLD = 0.78          # ✅ Lowered — catches name corrections
+DEDUP_HIGH_SIMILARITY = 0.90    # Force update threshold
+MAX_MEMORIES_PER_QUERY = 5
+
+MEMORY_EXTRACTION_PROMPT = """You are a memory extraction system for an AI assistant called Spinal.
+
+Given a conversation exchange, extract ONLY facts about the USER that are worth remembering for future conversations.
+
+EXTRACT:
+- Identity facts (name, location, profession, background, relationships)
+- Preferences (likes, dislikes, communication style, work habits)
+- Ongoing projects, goals, or challenges
+- Important recurring context (constraints, tools they use, deadlines)
+
+DO NOT EXTRACT:
+- Generic questions or one-time tasks
+- AI's own statements or opinions
+- Trivial or obvious facts
+- Speculation or things the user didn't explicitly state
+
+IMPORTANT - User Corrections:
+If the user CORRECTS or UPDATES a previously stated fact (e.g., "actually my name is Faisal"
+or "call me Faisal" or "mera naam Faisal hai"), extract the CORRECTED fact. The system will
+automatically replace the old memory.
+
+Return a JSON array. Each item must have:
+{{
+  "content": "Concise fact written in 3rd person (e.g., 'User's name is Faisal')",
+  "category": "identity | preference | project | goal | context",
+  "importance": 1-10 (10 = core identity, 5 = useful context, 1 = minor)
+}}
+
+If nothing worth remembering exists, return an empty array: []
+
+CONVERSATION:
+User: {user_message}
+Assistant: {ai_response}
+
+Return ONLY valid JSON. No markdown fences, no explanation."""
+
+
+# ============================================================
+# MEMORY HELPER FUNCTIONS
+# ============================================================
+def generate_embedding(text):
+    """Generate 768-dim embedding for given text using Gemini."""
+    try:
+        result = client.models.embed_content(
+            model=EMBEDDING_MODEL,
+            contents=text,
+            config=types.EmbedContentConfig(output_dimensionality=768)
+        )
+        embedding = result.embeddings[0].values
+        print(f"✅ Embedding generated: {len(embedding)} dimensions", file=sys.stderr)
+        sys.stderr.flush()
+        return embedding
+    except Exception as e:
+        print(f"⚠️ Embedding error: {e}", file=sys.stderr)
+        sys.stderr.flush()
+        return None
+
+
+def extract_memories(user_message, ai_response):
+    """Call Gemini to extract memorable facts using native JSON mode."""
+    try:
+        prompt = MEMORY_EXTRACTION_PROMPT.replace(
+            "{user_message}", user_message[:2000]
+        ).replace(
+            "{ai_response}", ai_response[:1000]
+        )
+
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema={
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "content": {
+                            "type": "string",
+                            "description": "Concise fact about user in 3rd person"
+                        },
+                        "category": {
+                            "type": "string",
+                            "enum": ["identity", "preference", "project", "goal", "context"]
+                        },
+                        "importance": {
+                            "type": "integer",
+                            "description": "1-10 scale, 10 is core identity"
+                        }
+                    },
+                    "required": ["content", "category", "importance"]
+                }
+            }
+        )
+
+        response = client.models.generate_content(
+            model=MEMORY_EXTRACTION_MODEL,
+            contents=prompt,
+            config=config
+        )
+
+        text = response.text.strip()
+        print(f"🔍 Raw extraction: {text[:300]}", file=sys.stderr)
+        sys.stderr.flush()
+
+        if not text or text == "[]":
+            return []
+
+        memories = json.loads(text)
+
+        if not isinstance(memories, list):
+            return []
+
+        valid_memories = []
+        for m in memories:
+            if isinstance(m, dict) and 'content' in m and m['content']:
+                valid_memories.append({
+                    'content': str(m.get('content', '')).strip(),
+                    'category': str(m.get('category', 'context')).strip(),
+                    'importance': int(m.get('importance', 5))
+                })
+
+        print(f"✅ Extracted {len(valid_memories)} valid memories", file=sys.stderr)
+        sys.stderr.flush()
+        return valid_memories
+
+    except json.JSONDecodeError as e:
+        print(f"⚠️ Memory JSON parse error: {e}", file=sys.stderr)
+        sys.stderr.flush()
+        return []
+    except Exception as e:
+        print(f"⚠️ Memory extraction error: {type(e).__name__}: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.stderr.flush()
+        return []
+
+
+def store_memory(user_id, session_id, memory_item):
+    """Store memory with SMART deduplication (category-aware + similarity)."""
+    try:
+        content = memory_item.get('content', '').strip()
+        if not content or len(content) < 5:
+            return
+        category = memory_item.get('category', 'context')
+        importance = max(1, min(10, int(memory_item.get('importance', 5))))
+
+        # Generate embedding for the new memory
+        embedding = generate_embedding(content)
+        if not embedding:
+            return
+
+        # 🔥 STEP 1: Get MULTIPLE candidates for dedup
+        existing = supabase_admin.rpc('match_memories', {
+            'query_embedding': embedding,
+            'match_user_id': user_id,
+            'match_threshold': DEDUP_THRESHOLD,
+            'match_count': 5
+        }).execute()
+
+        # 🔥 STEP 2: Find best match (same category OR high similarity)
+        best_match = None
+        best_score = 0
+
+        if existing.data:
+            for candidate in existing.data:
+                sim = candidate.get('similarity', 0)
+                cand_cat = candidate.get('category', '')
+
+                # Same category = instant priority
+                if cand_cat == category:
+                    if sim > best_score:
+                        best_match = candidate
+                        best_score = sim
+                # Very high similarity = force update
+                elif sim > DEDUP_HIGH_SIMILARITY:
+                    if sim > best_score:
+                        best_match = candidate
+                        best_score = sim
+
+        if best_match:
+            # 🔄 UPDATE existing memory
+            supabase_admin.table('user_memories').update({
+                'content': content,
+                'category': category,
+                'importance': importance,
+                'embedding': embedding,
+                'updated_at': datetime.now().isoformat()
+            }).eq('id', best_match['id']).execute()
+            print(f"🔄 Memory UPDATED (sim={best_score:.3f}, cat={category}): {content[:50]}...", file=sys.stderr)
+        else:
+            # ✅ INSERT new memory
+            supabase_admin.table('user_memories').insert({
+                'user_id': user_id,
+                'content': content,
+                'category': category,
+                'importance': importance,
+                'embedding': embedding,
+                'source_session_id': session_id
+            }).execute()
+            print(f"✅ Memory STORED: {content[:50]}...", file=sys.stderr)
+
+        sys.stderr.flush()
+    except Exception as e:
+        print(f"⚠️ Store memory error: {e}", file=sys.stderr)
+        sys.stderr.flush()
+
+
+def process_memories_async(user_id, session_id, user_message, ai_response):
+    """Background thread: extract and store memories."""
+    try:
+        memories = extract_memories(user_message, ai_response)
+        if not memories:
+            return
+        print(f"🧠 Extracted {len(memories)} memories", file=sys.stderr)
+        sys.stderr.flush()
+        for memory in memories:
+            store_memory(user_id, session_id, memory)
+    except Exception as e:
+        print(f"⚠️ Async memory processing error: {e}", file=sys.stderr)
+        sys.stderr.flush()
+
+
+def retrieve_memories(user_id, query_text, limit=MAX_MEMORIES_PER_QUERY):
+    """Retrieve memories: semantic search + high-importance always included."""
+    try:
+        embedding = generate_embedding(query_text)
+        
+        semantic_memories = []
+        
+        # 1️⃣ SEMANTIC SEARCH (if embedding available)
+        if embedding:
+            result = supabase_admin.rpc('match_memories', {
+                'query_embedding': embedding,
+                'match_user_id': user_id,
+                'match_threshold': MEMORY_THRESHOLD,
+                'match_count': limit
+            }).execute()
+            semantic_memories = result.data if result.data else []
+
+        # 2️⃣ HIGH-IMPORTANCE MEMORIES (always fetched)
+        important_res = supabase_admin.table('user_memories') \
+            .select('id, content, category, importance') \
+            .eq('user_id', user_id) \
+            .gte('importance', IMPORTANCE_THRESHOLD) \
+            .order('importance', desc=True) \
+            .limit(3) \
+            .execute()
+        important_memories = important_res.data if important_res.data else []
+
+        # 3️⃣ MERGE (semantic + important, dedupe by id)
+        seen_ids = set()
+        merged = []
+
+        for m in semantic_memories:
+            if m['id'] not in seen_ids:
+                merged.append(m)
+                seen_ids.add(m['id'])
+
+        for m in important_memories:
+            if m['id'] not in seen_ids:
+                m['similarity'] = 0.5  # synthetic score for consistency
+                merged.append(m)
+                seen_ids.add(m['id'])
+
+        # 4️⃣ UPDATE ACCESS STATS
+        if merged:
+            memory_ids = [m['id'] for m in merged]
+            try:
+                supabase_admin.rpc('update_memory_access', {'memory_ids': memory_ids}).execute()
+            except Exception:
+                pass
+
+        return merged
+
+    except Exception as e:
+        print(f"⚠️ Retrieve memories error: {e}", file=sys.stderr)
+        sys.stderr.flush()
+        return []
+
+
+def format_memories_for_prompt(memories):
+    """Format retrieved memories as context string."""
+    if not memories:
+        return ""
+
+    lines = ["[USER MEMORY - Things you remember about this user]"]
+    for m in memories:
+        category = m.get('category', 'context').upper()
+        content = m.get('content', '')
+        lines.append(f"• [{category}] {content}")
+    lines.append("[END MEMORY]")
+    return "\n".join(lines)
+
+def cleanup_old_memories(user_id, days_old=30, importance_cutoff=5):
+    """Auto-cleanup: delete old low-importance memories."""
+    try:
+        result = supabase_admin.rpc('cleanup_old_memories', {
+            'target_user_id': user_id,
+            'days_old': days_old,
+            'importance_cutoff': importance_cutoff
+        }).execute()
+        deleted = result.data if result.data else 0
+        if deleted > 0:
+            print(f"🧹 Auto-cleanup: deleted {deleted} old memories", file=sys.stderr)
+            sys.stderr.flush()
+        return deleted
+    except Exception as e:
+        print(f"⚠️ Cleanup error: {e}", file=sys.stderr)
+        sys.stderr.flush()
+        return 0
+
+
 # Supabase Clients
 if not SUPABASE_SERVICE_ROLE_KEY:
     SUPABASE_SERVICE_ROLE_KEY = SUPABASE_KEY
@@ -72,29 +384,22 @@ app.config.update(
 )
 
 socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*", manage_session=False)
-# ============================================================
-# GEMINI HELPER — Retry + Model Fallback + AFC Disabled
-# ============================================================
+
+
 # ============================================================
 # GEMINI HELPER — Multi-Model Fallback + Smart Retry
 # ============================================================
 def call_gemini_with_retry(prompt, image_part, max_retries=2):
-    """
-    Gemini API call with:
-    - AFC (Automatic Function Calling) disabled
-    - Exponential backoff retry for 503 errors
-    - Stable model fallback chain (overloaded models avoided)
-    """
+    """Gemini API call with fallback chain + retry."""
     config = types.GenerateContentConfig(
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
     )
 
-    # ✅ Stable models — high-demand wale avoid kiye
     models_to_try = [
-        'gemini-2.5-flash',          # ✅ Most stable, reliable, free tier available
-        'gemini-3.5-flash-lite',     # ✅ Lightweight, less demand
-        'gemini-3.5-flash',          # ✅ Fallback
-        'gemini-3.1-flash-lite',     # ✅ Last resort
+        'gemini-2.5-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-3.5-flash',
+        'gemini-3.1-flash-lite',
     ]
 
     last_error = None
@@ -120,33 +425,28 @@ def call_gemini_with_retry(prompt, image_part, max_retries=2):
                 error_msg = str(e)
                 last_error = error_msg
 
-                # 503 UNAVAILABLE — transient, retry with short backoff
                 if '503' in error_msg or 'UNAVAILABLE' in error_msg or 'high demand' in error_msg:
-                    wait_time = (1.5 ** attempt) + 1  # 2s, 2.5s
+                    wait_time = (1.5 ** attempt) + 1
                     print(f"⏳ {model_name} busy. Retry in {wait_time:.1f}s...", file=sys.stderr)
                     sys.stderr.flush()
                     time.sleep(wait_time)
                     continue
 
-                # 429 RESOURCE_EXHAUSTED — quota exceeded, try next model
                 elif '429' in error_msg or 'RESOURCE_EXHAUSTED' in error_msg:
                     print(f"⚠️ {model_name} quota exhausted. Trying next model...", file=sys.stderr)
                     sys.stderr.flush()
                     break
 
-                # 404 NOT_FOUND — model doesn't exist, skip
                 elif '404' in error_msg or 'NOT_FOUND' in error_msg:
                     print(f"❌ {model_name} not found. Trying next model...", file=sys.stderr)
                     sys.stderr.flush()
                     break
 
-                # Other errors
                 else:
                     print(f"❌ Error with {model_name}: {error_msg}", file=sys.stderr)
                     sys.stderr.flush()
                     break
 
-    # All models failed
     print(f"❌ All models failed. Last error: {last_error}", file=sys.stderr)
     sys.stderr.flush()
     return "Sorry, the AI service is experiencing high demand. Please try again after some time."
@@ -240,6 +540,16 @@ def get_sessions():
         print(f"❌ /api/sessions - No user_id in session. Cookies: {list(request.cookies.keys())}", file=sys.stderr)
         sys.stderr.flush()
         return jsonify({'error': 'Not authenticated'}), 401
+        # ✅ Auto-cleanup trigger (runs once per day)
+    try:
+        last_cleanup = session.get('last_cleanup')
+        today = datetime.now().date().isoformat()
+        if last_cleanup != today:
+            cleanup_old_memories(user_id, days_old=30, importance_cutoff=5)
+            session['last_cleanup'] = today
+            session.modified = True
+    except Exception as e:
+        print(f"⚠️ Cleanup trigger error: {e}", file=sys.stderr)
 
     try:
         result = supabase_admin.table('sessions') \
@@ -250,6 +560,8 @@ def get_sessions():
         return jsonify({'sessions': result.data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+    
 
 @app.route('/api/sessions', methods=['POST'])
 def create_session():
@@ -345,6 +657,7 @@ def delete_user_data():
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
     try:
+        supabase_admin.table('user_memories').delete().eq('user_id', user_id).execute()
         supabase_admin.table('chat_history').delete().eq('user_id', user_id).execute()
         supabase_admin.table('sessions').delete().eq('user_id', user_id).execute()
         supabase_admin.table('user_profiles').delete().eq('user_id', user_id).execute()
@@ -352,6 +665,166 @@ def delete_user_data():
     except Exception as e:
         print(f"❌ Delete error: {e}", file=sys.stderr)
         return jsonify({'error': str(e)}), 500
+
+
+# ========================================
+# MEMORY API ENDPOINTS
+# ========================================
+@app.route('/api/memories', methods=['GET'])
+def get_memories():
+    """Get all memories for current user."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        result = supabase_admin.table('user_memories') \
+            .select('id, content, category, importance, created_at, updated_at, access_count') \
+            .eq('user_id', user_id) \
+            .order('importance', desc=True) \
+            .order('updated_at', desc=True) \
+            .execute()
+        return jsonify({'memories': result.data})
+    except Exception as e:
+        print(f"❌ Get memories error: {e}", file=sys.stderr)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/memories/<memory_id>', methods=['DELETE'])
+def delete_memory(memory_id):
+    """Delete a specific memory."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        check = supabase_admin.table('user_memories') \
+            .select('id') \
+            .eq('id', memory_id) \
+            .eq('user_id', user_id) \
+            .execute()
+
+        if not check.data:
+            return jsonify({'error': 'Memory not found'}), 404
+
+        supabase_admin.table('user_memories') \
+            .delete() \
+            .eq('id', memory_id) \
+            .eq('user_id', user_id) \
+            .execute()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/memories/<memory_id>', methods=['PATCH'])
+def update_memory(memory_id):
+    """Edit memory content, category, importance. Re-embeds if content changes."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        # Verify ownership
+        check = supabase_admin.table('user_memories') \
+            .select('content, category, importance') \
+            .eq('id', memory_id) \
+            .eq('user_id', user_id) \
+            .execute()
+        
+        if not check.data:
+            return jsonify({'error': 'Memory not found'}), 404
+        
+        old = check.data[0]
+        data = request.json or {}
+        
+        new_content = data.get('content', old['content']).strip()
+        new_category = data.get('category', old['category'])
+        new_importance = max(1, min(10, int(data.get('importance', old['importance']))))
+        
+        update_payload = {
+            'content': new_content,
+            'category': new_category,
+            'importance': new_importance,
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        # Re-embed only if content changed
+        if new_content != old['content']:
+            embedding = generate_embedding(new_content)
+            if embedding:
+                update_payload['embedding'] = embedding
+                print(f"✅ Re-embedded edited memory", file=sys.stderr)
+                sys.stderr.flush()
+        
+        supabase_admin.table('user_memories') \
+            .update(update_payload) \
+            .eq('id', memory_id) \
+            .eq('user_id', user_id) \
+            .execute()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"❌ Update memory error: {e}", file=sys.stderr)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/memories/<memory_id>/pin', methods=['POST'])
+def toggle_memory_pin(memory_id):
+    """Pin/unpin memory to prevent auto-cleanup."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        check = supabase_admin.table('user_memories') \
+            .select('is_pinned') \
+            .eq('id', memory_id) \
+            .eq('user_id', user_id) \
+            .execute()
+        
+        if not check.data:
+            return jsonify({'error': 'Memory not found'}), 404
+        
+        new_state = not check.data[0].get('is_pinned', False)
+        
+        supabase_admin.table('user_memories') \
+            .update({'is_pinned': new_state}) \
+            .eq('id', memory_id) \
+            .eq('user_id', user_id) \
+            .execute()
+        
+        return jsonify({'success': True, 'is_pinned': new_state})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/memories/stats', methods=['GET'])
+def get_memory_stats_endpoint():
+    """Get memory counts by category for badge and filters."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        result = supabase_admin.rpc('get_memory_stats', {
+            'target_user_id': user_id
+        }).execute()
+        
+        return jsonify(result.data or {'total': 0, 'by_category': {}})
+    except Exception as e:
+        return jsonify({'total': 0, 'by_category': {}}), 500
+
+
+@app.route('/api/memories/cleanup', methods=['POST'])
+def trigger_cleanup():
+    """Manual cleanup trigger."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    deleted = cleanup_old_memories(user_id)
+    return jsonify({'success': True, 'deleted': deleted})
 
 
 # ========================================
@@ -388,9 +861,7 @@ def handle_frame(data):
         image_data = data['image']
         user_prompt = data.get('prompt', 'Describe exactly what you see in this image in ONE short, friendly sentence.')
 
-        profile_res = supabase_admin.table('user_profiles').select('name').eq('user_id', user_id).execute()
-        user_name = profile_res.data[0]['name'] if profile_res.data else None
-
+        # ---- Fetch last 5 chat history for context ----
         history_res = supabase_admin.table('chat_history') \
             .select('prompt, response') \
             .eq('user_id', user_id) \
@@ -401,58 +872,41 @@ def handle_frame(data):
         history = history_res.data if history_res.data else []
         history.reverse()
 
-        context = ""
-        if user_name:
-            context += f"The user's name is {user_name}.\n"
+        # ---- RETRIEVE RELEVANT MEMORIES ----
+        memories = retrieve_memories(user_id, user_prompt)
+        memory_context = format_memories_for_prompt(memories)
+        if memories:
+            print(f"🧠 Retrieved {len(memories)} memories for context", file=sys.stderr)
+            sys.stderr.flush()
+
+        # ---- Build full prompt ----
+        context_parts = []
+
+        if memory_context:
+            context_parts.append(memory_context)
+
         if history:
-            context += "Previous conversation from this session:\n"
+            session_context = "Recent conversation in this session:\n"
             for entry in history:
-                context += f"User: {entry['prompt']}\nSpinal: {entry['response']}\n"
+                session_context += f"User: {entry['prompt']}\nSpinal: {entry['response']}\n"
+            context_parts.append(session_context)
 
-        full_prompt = f"{context}\nCurrent question: {user_prompt}" if context else user_prompt
-        # Prompt ko improve karo
-        system_instruction = (
-            "You are Spinal AI, a helpful and friendly AI companion. "
-            "When user asks for code, ALWAYS respond with properly formatted markdown code blocks "
-            "using ```language ... ``` syntax. Use headings, lists, and bold formatting for clarity. "
-            "Keep responses concise but complete.\n\n"
-        )
+        if context_parts:
+            full_prompt = "\n\n".join(context_parts) + f"\n\nCurrent question: {user_prompt}"
+        else:
+            full_prompt = user_prompt
 
-        full_prompt = f"{system_instruction}{context}\nCurrent question: {user_prompt}" if context else f"{system_instruction}{user_prompt}"
-        
-
-        # Decode image
+        # ---- Decode image ----
         header, encoded = image_data.split(',', 1)
         image_bytes = base64.b64decode(encoded)
         image_part = types.Part.from_bytes(data=image_bytes, mime_type='image/jpeg')
 
-        # ✅ AI call with retry + fallback + AFC disabled
+        # ---- Call Gemini with retry ----
         ai_text = call_gemini_with_retry(full_prompt, image_part)
         print(f"🤖 AI Says: {ai_text}", file=sys.stderr)
         sys.stderr.flush()
 
-        # Save name if user introduced themselves
-        if user_prompt and ("my name is" in user_prompt.lower() or "call me" in user_prompt.lower() or "i am" in user_prompt.lower()):
-            words = user_prompt.split()
-            name_candidate = None
-            for i, w in enumerate(words):
-                if w.lower() == "name" and i + 1 < len(words):
-                    name_candidate = words[i + 1].strip('.,!?')
-                    break
-                elif w.lower() in ["call", "am"] and i + 1 < len(words):
-                    name_candidate = words[i + 1].strip('.,!?')
-                    break
-            if name_candidate:
-                try:
-                    supabase_admin.table('user_profiles').upsert({
-                        'user_id': user_id,
-                        'name': name_candidate,
-                        'updated_at': datetime.now().isoformat()
-                    }, on_conflict='user_id').execute()
-                except Exception as e:
-                    print(f"⚠️ Profile update error: {e}", file=sys.stderr)
-
-        # Save chat history
+        # ---- Save chat history ----
         try:
             supabase_admin.table('chat_history').insert({
                 'user_id': user_id,
@@ -471,10 +925,19 @@ def handle_frame(data):
         except Exception as e:
             print(f"⚠️ Save history error: {e}", file=sys.stderr)
 
+        # ---- Emit response to user ----
         emit('response', {
             'data': ai_text,
             'sessionId': session_id
         })
+
+        # ---- ASYNC MEMORY EXTRACTION ----
+        memory_thread = threading.Thread(
+            target=process_memories_async,
+            args=(user_id, session_id, user_prompt, ai_text),
+            daemon=True
+        )
+        memory_thread.start()
 
     except Exception as e:
         print(f"❌ Error in handle_frame: {e}", file=sys.stderr)

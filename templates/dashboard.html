@@ -358,6 +358,628 @@
             flex-shrink: 0;
         }
 
+        /* ============================================================
+   MEMORY COUNT BADGE
+   ============================================================ */
+        .memory-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--amber);
+            color: var(--void);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.5rem;
+            font-weight: 700;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 8px var(--amber-glow);
+            border: 1.5px solid var(--panel);
+            z-index: 10;
+        }
+
+        .memory-badge.show {
+            display: flex;
+        }
+
+        /* ============================================================
+   MEMORY MODAL — Professional Redesign
+   ============================================================ */
+        .memory-modal {
+            max-width: 720px;
+            width: 100%;
+            max-height: 85vh;
+            background: #0D0E10;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .memory-modal::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 122, 26, 0.5), transparent);
+        }
+
+        .memory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .memory-title-wrap {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .memory-modal h2 {
+            font-family: 'Big Shoulders Display', sans-serif;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            color: var(--chrome-hi);
+            letter-spacing: 0.02em;
+        }
+
+        .memory-total-count {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--amber);
+            background: rgba(255, 122, 26, 0.1);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .memory-close {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--bone-dim);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .memory-close:hover {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: rgba(255, 107, 107, 0.3);
+            color: var(--red);
+        }
+
+        /* Filter Bar */
+        .memory-toolbar {
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .memory-search {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            color: var(--bone);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .memory-search:focus {
+            border-color: var(--amber);
+            background: rgba(255, 122, 26, 0.04);
+        }
+
+        .memory-search::placeholder {
+            color: var(--gunmetal);
+        }
+
+        .memory-filters {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .memory-filter-tab {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--bone-dim);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .memory-filter-tab .count {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.55rem;
+        }
+
+        .memory-filter-tab:hover {
+            border-color: rgba(255, 122, 26, 0.3);
+            color: var(--bone);
+        }
+
+        .memory-filter-tab.active {
+            background: rgba(255, 122, 26, 0.12);
+            border-color: var(--amber);
+            color: var(--amber);
+            font-weight: 600;
+        }
+
+        .memory-filter-tab.active .count {
+            background: rgba(255, 122, 26, 0.2);
+            color: var(--amber);
+        }
+
+        /* Sort dropdown */
+        .memory-sort-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .memory-sort {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--bone-dim);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .memory-sort:focus {
+            border-color: var(--amber);
+        }
+
+        .memory-sort option {
+            background: #0D0E10;
+            color: var(--bone);
+        }
+
+        /* Memory List */
+        .memory-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 24px;
+            margin-bottom: 0;
+        }
+
+        .memory-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .memory-list::-webkit-scrollbar-thumb {
+            background: var(--gunmetal-dim);
+            border-radius: 3px;
+        }
+
+        .memory-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .memory-empty {
+            text-align: center;
+            color: var(--gunmetal);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            padding: 60px 20px;
+            line-height: 1.8;
+        }
+
+        /* Memory Card */
+        .memory-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 3px solid var(--amber);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .memory-card:hover {
+            background: rgba(255, 255, 255, 0.035);
+            border-color: rgba(255, 122, 26, 0.3);
+            transform: translateX(2px);
+        }
+
+        .memory-card.pinned {
+            border-left-color: #FFD700;
+        }
+
+        .memory-card.pinned::after {
+            content: '📌';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .memory-card .memory-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .memory-card .memory-text {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.82rem;
+            color: var(--bone);
+            line-height: 1.55;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+
+        .memory-card .memory-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .memory-card .memory-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--amber);
+            background: rgba(255, 122, 26, 0.1);
+            padding: 3px 9px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .memory-card .memory-importance-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem;
+            color: var(--gunmetal);
+        }
+
+        .memory-card .importance-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--gunmetal-dim);
+        }
+
+        .memory-card .importance-dot.filled {
+            background: var(--amber);
+            box-shadow: 0 0 4px var(--amber-glow);
+        }
+
+        /* Card Actions */
+        .memory-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .memory-card:hover .memory-actions {
+            opacity: 1;
+        }
+
+        .memory-action-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--bone-dim);
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 6px 9px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 30px;
+        }
+
+        .memory-action-btn:hover {
+            background: rgba(255, 122, 26, 0.1);
+            border-color: rgba(255, 122, 26, 0.3);
+            color: var(--amber);
+        }
+
+        .memory-action-btn.delete-btn:hover {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: rgba(255, 107, 107, 0.3);
+            color: var(--red);
+        }
+
+        .memory-action-btn.pin-btn.active {
+            color: #FFD700;
+            border-color: rgba(255, 215, 0, 0.4);
+            background: rgba(255, 215, 0, 0.08);
+        }
+
+        /* Footer */
+        .memory-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .memory-cleanup-note {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem;
+            color: var(--gunmetal);
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .memory-footer .btn-close {
+            margin-top: 0;
+            width: auto;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--bone-dim);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        .memory-footer .btn-close:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: var(--bone);
+        }
+
+        /* Edit Modal (nested) */
+        .memory-edit-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .memory-edit-overlay.active {
+            display: flex;
+        }
+
+        .memory-edit-card {
+            max-width: 480px;
+            width: 100%;
+            background: #101114;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+        }
+
+        .memory-edit-card h3 {
+            font-family: 'Big Shoulders Display', sans-serif;
+            text-transform: uppercase;
+            font-size: 1.2rem;
+            color: var(--chrome-hi);
+            margin-bottom: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        .memory-edit-card .edit-sub {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem;
+            color: var(--bone-dim);
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .edit-field {
+            margin-bottom: 16px;
+        }
+
+        .edit-field label {
+            display: block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--gunmetal);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        .edit-field textarea,
+        .edit-field input[type="text"],
+        .edit-field select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            color: var(--bone);
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.8rem;
+            outline: none;
+            transition: 0.2s;
+            resize: vertical;
+        }
+
+        .edit-field textarea {
+            min-height: 80px;
+            line-height: 1.5;
+        }
+
+        .edit-field textarea:focus,
+        .edit-field input:focus,
+        .edit-field select:focus {
+            border-color: var(--amber);
+            background: rgba(255, 122, 26, 0.04);
+        }
+
+        .edit-field select option {
+            background: #101114;
+        }
+
+        /* Importance slider */
+        .importance-slider-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .importance-slider-wrap input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .importance-slider-wrap input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--amber);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--amber-glow);
+        }
+
+        .importance-slider-wrap input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--amber);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .importance-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--amber);
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .edit-actions button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .edit-cancel {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--bone-dim);
+        }
+
+        .edit-cancel:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--bone);
+        }
+
+        .edit-save {
+            background: var(--amber);
+            border: 1px solid var(--amber);
+            color: var(--void);
+            font-weight: 600;
+        }
+
+        .edit-save:hover {
+            background: #FF9A45;
+            box-shadow: 0 0 20px var(--amber-glow);
+        }
+
+        .edit-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Light theme support */
+        body[data-theme="light"] .memory-modal,
+        body[data-theme="light"] .memory-edit-card {
+            background: #FFFFFF;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body[data-theme="light"] .memory-card {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.06);
+        }
+
+        body[data-theme="light"] .memory-search,
+        body[data-theme="light"] .memory-filter-tab,
+        body[data-theme="light"] .memory-sort,
+        body[data-theme="light"] .edit-field textarea,
+        body[data-theme="light"] .edit-field input,
+        body[data-theme="light"] .edit-field select {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: #1A1D20;
+        }
+
         .profile-menu-btn:hover {
             background: rgba(255, 122, 26, 0.15);
             border-color: rgba(255, 122, 26, 0.4);
@@ -632,20 +1254,6 @@
 
         #memory-overlay.active {
             display: flex;
-        }
-
-        .memory-modal {
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            background: #0D0E10;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.95);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
         }
 
         .memory-header {
@@ -1921,6 +2529,7 @@
                 <button class="profile-menu-btn" id="profileMenuBtn"
                     onclick="event.stopPropagation(); toggleProfileMenu()">
                     <i class="fas fa-ellipsis-v"></i>
+                    <span class="memory-badge" id="memoryBadge">0</span>
                 </button>
                 <div class="profile-dropdown-menu" id="profileDropdownMenu">
                     <button onclick="openSettings()"><i class="fas fa-cog"></i> Settings</button>
@@ -2021,22 +2630,7 @@
                     </div>
                 </div>
             </div>
-            <!-- ============================================================
-    MEMORY VIEWER MODAL
-    ============================================================ -->
-            <div id="memory-overlay">
-                <div class="memory-modal">
-                    <div class="memory-header">
-                        <h2>🧠 Spinal's Memory</h2>
-                        <button class="memory-close" id="memoryCloseBtn"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div class="sub mono">Everything Spinal remembers about you</div>
-                    <div class="memory-list" id="memoryList">
-                        <div class="memory-empty">No memories yet. Start chatting!</div>
-                    </div>
-                    <button class="btn-close" id="memoryCloseBtn2">Close</button>
-                </div>
-            </div>
+
             <div class="setting-item">
                 <div class="info">
                     <i class="fas fa-brain"></i>
@@ -2047,6 +2641,7 @@
                 </div>
                 <button class="btn-secondary" id="memoryViewBtn">View</button>
             </div>
+
             <div class="setting-item">
                 <div class="info">
                     <i class="fas fa-trash"></i>
@@ -2073,6 +2668,104 @@
         </div>
     </div>
 
+    <!-- ============================================================
+        MEMORY VIEWER MODAL — OUTSIDE settings modal
+        ============================================================ -->
+    <div id="memory-overlay">
+        <div class="memory-modal">
+            <div class="memory-header">
+                <div class="memory-title-wrap">
+                    <h2>🧠 Spinal's Memory</h2>
+                    <span class="memory-total-count" id="memoryTotalCount">0</span>
+                </div>
+                <button class="memory-close" id="memoryCloseBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="memory-toolbar">
+                <input type="text" class="memory-search" id="memorySearch" placeholder="Search memories...">
+
+                <div class="memory-filters" id="memoryFilters">
+                    <button class="memory-filter-tab active" data-category="all">
+                        All <span class="count" id="countAll">0</span>
+                    </button>
+                    <button class="memory-filter-tab" data-category="identity">
+                        Identity <span class="count" id="countIdentity">0</span>
+                    </button>
+                    <button class="memory-filter-tab" data-category="preference">
+                        Preference <span class="count" id="countPreference">0</span>
+                    </button>
+                    <button class="memory-filter-tab" data-category="project">
+                        Project <span class="count" id="countProject">0</span>
+                    </button>
+                    <button class="memory-filter-tab" data-category="goal">
+                        Goal <span class="count" id="countGoal">0</span>
+                    </button>
+                    <button class="memory-filter-tab" data-category="context">
+                        Context <span class="count" id="countContext">0</span>
+                    </button>
+                </div>
+
+                <div class="memory-sort-row">
+                    <select class="memory-sort" id="memorySort">
+                        <option value="importance">Sort: Importance (High → Low)</option>
+                        <option value="recent">Sort: Recently Updated</option>
+                        <option value="accessed">Sort: Most Accessed</option>
+                        <option value="oldest">Sort: Oldest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="memory-list" id="memoryList">
+                <div class="memory-empty">Loading memories...</div>
+            </div>
+
+            <div class="memory-footer">
+                <div class="memory-cleanup-note">
+                    💡 Low-importance memories auto-clean after 30 days
+                </div>
+                <button class="btn-close" id="memoryCloseBtn2">Close</button>
+            </div>
+
+            <!-- Edit Modal -->
+            <div class="memory-edit-overlay" id="memoryEditOverlay">
+                <div class="memory-edit-card">
+                    <h3>Edit Memory</h3>
+                    <div class="edit-sub mono">Update content, category, or importance</div>
+
+                    <div class="edit-field">
+                        <label>Content</label>
+                        <textarea id="editMemoryContent" placeholder="What should Spinal remember?"></textarea>
+                    </div>
+
+                    <div class="edit-field">
+                        <label>Category</label>
+                        <select id="editMemoryCategory">
+                            <option value="identity">Identity</option>
+                            <option value="preference">Preference</option>
+                            <option value="project">Project</option>
+                            <option value="goal">Goal</option>
+                            <option value="context">Context</option>
+                        </select>
+                    </div>
+
+                    <div class="edit-field">
+                        <label>Importance</label>
+                        <div class="importance-slider-wrap">
+                            <input type="range" id="editMemoryImportance" min="1" max="10" value="5">
+                            <span class="importance-value" id="editImportanceValue">5</span>
+                        </div>
+                    </div>
+
+                    <div class="edit-actions">
+                        <button class="edit-cancel" id="editMemoryCancel">Cancel</button>
+                        <button class="edit-save" id="editMemorySave">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 
@@ -3187,72 +3880,250 @@
         // ============================================================
         // MEMORY VIEWER
         // ============================================================
+        // ============================================================
+        // MEMORY SYSTEM — Professional
+        // ============================================================
+        let allMemories = [];
+        let currentFilter = 'all';
+        let currentSort = 'importance';
+        let editingMemoryId = null;
+
         async function loadMemories() {
             try {
                 const res = await fetch('/api/memories', { credentials: 'include' });
                 const data = await res.json();
 
                 if (!data.memories) {
-                    document.getElementById('memoryCount').innerText = 'Error loading';
+                    document.getElementById('memoryList').innerHTML =
+                        '<div class="memory-empty">Failed to load memories</div>';
                     return;
                 }
 
-                // Update count in settings
-                const count = data.memories.length;
-                document.getElementById('memoryCount').innerText =
-                    count === 0 ? 'No memories yet' : `${count} ${count === 1 ? 'memory' : 'memories'} stored`;
-
-                // Render list in modal
-                const listEl = document.getElementById('memoryList');
-                if (count === 0) {
-                    listEl.innerHTML = '<div class="memory-empty">No memories yet. Start chatting!</div>';
-                    return;
-                }
-
-                listEl.innerHTML = data.memories.map(m => `
-            <div class="memory-card" data-memory-id="${m.id}">
-                <div class="memory-content">
-                    <div class="memory-text">${m.content}</div>
-                    <div class="memory-meta">
-                        <span class="memory-tag">${m.category}</span>
-                        <span class="memory-importance">Importance: ${m.importance}/10</span>
-                    </div>
-                </div>
-                <button class="memory-delete" onclick="deleteMemory('${m.id}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `).join('');
+                allMemories = data.memories;
+                updateMemoryCounts();
+                renderFilteredMemories();
+                updateMemoryBadge(allMemories.length);
             } catch (e) {
                 console.error('Load memories error:', e);
             }
         }
 
+        function updateMemoryCounts() {
+            const counts = {
+                all: allMemories.length,
+                identity: 0, preference: 0, project: 0, goal: 0, context: 0
+            };
+
+            allMemories.forEach(m => {
+                if (counts[m.category] !== undefined) counts[m.category]++;
+            });
+
+            document.getElementById('countAll').textContent = counts.all;
+            document.getElementById('countIdentity').textContent = counts.identity;
+            document.getElementById('countPreference').textContent = counts.preference;
+            document.getElementById('countProject').textContent = counts.project;
+            document.getElementById('countGoal').textContent = counts.goal;
+            document.getElementById('countContext').textContent = counts.context;
+            document.getElementById('memoryTotalCount').textContent = counts.all;
+        }
+
+        function updateMemoryBadge(count) {
+            const badge = document.getElementById('memoryBadge');
+            if (!badge) return;
+
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+        }
+
+        function renderFilteredMemories() {
+            const searchTerm = (document.getElementById('memorySearch').value || '').toLowerCase().trim();
+
+            let filtered = allMemories.filter(m => {
+                const matchesCategory = currentFilter === 'all' || m.category === currentFilter;
+                const matchesSearch = !searchTerm || m.content.toLowerCase().includes(searchTerm);
+                return matchesCategory && matchesSearch;
+            });
+
+            // Sort
+            switch (currentSort) {
+                case 'importance':
+                    filtered.sort((a, b) => b.importance - a.importance);
+                    break;
+                case 'recent':
+                    filtered.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+                    break;
+                case 'accessed':
+                    filtered.sort((a, b) => (b.access_count || 0) - (a.access_count || 0));
+                    break;
+                case 'oldest':
+                    filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    break;
+            }
+
+            const listEl = document.getElementById('memoryList');
+
+            if (filtered.length === 0) {
+                if (allMemories.length === 0) {
+                    listEl.innerHTML = '<div class="memory-empty">🧠 No memories yet.<br>Start chatting and Spinal will remember things about you!</div>';
+                } else {
+                    listEl.innerHTML = '<div class="memory-empty">No memories match your filter.<br>Try a different category or search term.</div>';
+                }
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(m => {
+                const dots = Array.from({ length: 10 }, (_, i) =>
+                    `<span class="importance-dot ${i < m.importance ? 'filled' : ''}"></span>`
+                ).join('');
+
+                const pinned = m.is_pinned ? 'pinned' : '';
+
+                return `
+            <div class="memory-card ${pinned}" data-id="${m.id}">
+                <div class="memory-content">
+                    <div class="memory-text">${escapeHtml(m.content)}</div>
+                    <div class="memory-meta">
+                        <span class="memory-tag">${m.category}</span>
+                        <div class="memory-importance-bar" title="Importance: ${m.importance}/10">
+                            ${dots}
+                        </div>
+                    </div>
+                </div>
+                <div class="memory-actions">
+                    <button class="memory-action-btn pin-btn ${m.is_pinned ? 'active' : ''}" 
+                            onclick="togglePin('${m.id}')" 
+                            title="${m.is_pinned ? 'Unpin' : 'Pin (prevents auto-cleanup)'}">
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                    <button class="memory-action-btn" onclick="openEditMemory('${m.id}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="memory-action-btn delete-btn" onclick="deleteMemory('${m.id}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         async function deleteMemory(memoryId) {
-            if (!confirm('Delete this memory?')) return;
+            if (!confirm('Delete this memory? This action cannot be undone.')) return;
             try {
                 await fetch(`/api/memories/${memoryId}`, {
                     method: 'DELETE',
                     credentials: 'include'
                 });
-                loadMemories();
+                await loadMemories();
             } catch (e) {
                 console.error('Delete memory error:', e);
             }
         }
 
-        // Event listeners
+        async function togglePin(memoryId) {
+            try {
+                const res = await fetch(`/api/memories/${memoryId}/pin`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Update local state
+                    const mem = allMemories.find(m => m.id === memoryId);
+                    if (mem) mem.is_pinned = data.is_pinned;
+                    renderFilteredMemories();
+                }
+            } catch (e) {
+                console.error('Toggle pin error:', e);
+            }
+        }
+
+        function openEditMemory(memoryId) {
+            const memory = allMemories.find(m => m.id === memoryId);
+            if (!memory) return;
+
+            editingMemoryId = memoryId;
+
+            document.getElementById('editMemoryContent').value = memory.content;
+            document.getElementById('editMemoryCategory').value = memory.category;
+            document.getElementById('editMemoryImportance').value = memory.importance;
+            document.getElementById('editImportanceValue').textContent = memory.importance;
+
+            document.getElementById('memoryEditOverlay').classList.add('active');
+        }
+
+        function closeEditMemory() {
+            editingMemoryId = null;
+            document.getElementById('memoryEditOverlay').classList.remove('active');
+        }
+
+        async function saveEditedMemory() {
+            if (!editingMemoryId) return;
+
+            const content = document.getElementById('editMemoryContent').value.trim();
+            const category = document.getElementById('editMemoryCategory').value;
+            const importance = parseInt(document.getElementById('editMemoryImportance').value);
+
+            if (!content || content.length < 3) {
+                showToast('⚠️ Memory content must be at least 3 characters', 'error');
+                return;
+            }
+
+            const saveBtn = document.getElementById('editMemorySave');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(`/api/memories/${editingMemoryId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ content, category, importance })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('✅ Memory updated', 'success');
+                    closeEditMemory();
+                    await loadMemories();
+                } else {
+                    showToast('❌ Failed to update memory', 'error');
+                }
+            } catch (e) {
+                console.error('Save memory error:', e);
+                showToast('❌ Network error', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes';
+            }
+        }
+
+        // ============================================================
+        // EVENT LISTENERS — Memory Modal
+        // ============================================================
+
+        // Open memory modal
         document.getElementById('memoryViewBtn')?.addEventListener('click', () => {
             document.getElementById('memory-overlay').classList.add('active');
             loadMemories();
         });
 
-        document.getElementById('memoryCloseBtn')?.addEventListener('click', () => {
-            document.getElementById('memory-overlay').classList.remove('active');
-        });
-
-        document.getElementById('memoryCloseBtn2')?.addEventListener('click', () => {
-            document.getElementById('memory-overlay').classList.remove('active');
+        // Close buttons
+        ['memoryCloseBtn', 'memoryCloseBtn2'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', () => {
+                document.getElementById('memory-overlay').classList.remove('active');
+            });
         });
 
         // Close on outside click
@@ -3262,11 +4133,71 @@
             }
         });
 
-        // Load memories when settings opens
-        const originalOpenSettings = window.openSettings;
-        window.openSettings = function () {
-            if (originalOpenSettings) originalOpenSettings();
-            loadMemories();
+        // Filter tabs
+        document.getElementById('memoryFilters')?.addEventListener('click', (e) => {
+            const tab = e.target.closest('.memory-filter-tab');
+            if (!tab) return;
+
+            document.querySelectorAll('.memory-filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentFilter = tab.dataset.category;
+            renderFilteredMemories();
+        });
+
+        // Search
+        document.getElementById('memorySearch')?.addEventListener('input', renderFilteredMemories);
+
+        // Sort
+        document.getElementById('memorySort')?.addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            renderFilteredMemories();
+        });
+
+        // Edit modal
+        document.getElementById('editMemoryCancel')?.addEventListener('click', closeEditMemory);
+        document.getElementById('editMemorySave')?.addEventListener('click', saveEditedMemory);
+
+        // Importance slider live update
+        document.getElementById('editMemoryImportance')?.addEventListener('input', (e) => {
+            document.getElementById('editImportanceValue').textContent = e.target.value;
+        });
+
+        // Close edit modal on outside click
+        document.getElementById('memoryEditOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'memoryEditOverlay') closeEditMemory();
+        });
+
+        // ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const editOverlay = document.getElementById('memoryEditOverlay');
+                if (editOverlay?.classList.contains('active')) {
+                    closeEditMemory();
+                }
+            }
+        });
+
+        // Make functions globally accessible
+        window.deleteMemory = deleteMemory;
+        window.togglePin = togglePin;
+        window.openEditMemory = openEditMemory;
+
+        // Load memory badge count on page load
+        async function loadMemoryBadge() {
+            try {
+                const res = await fetch('/api/memories/stats', { credentials: 'include' });
+                const data = await res.json();
+                updateMemoryBadge(data.total || 0);
+            } catch (e) {
+                // Silent fail
+            }
+        }
+
+        // Call badge load after auth
+        const originalCheckAuth = checkAuth;
+        checkAuth = async function () {
+            await originalCheckAuth();
+            loadMemoryBadge();
         };
 
         // Make deleteMemory globally accessible
