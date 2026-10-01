@@ -358,9 +358,20 @@
             flex-shrink: 0;
         }
 
+        .profile-menu-btn:hover {
+            background: rgba(255, 122, 26, 0.15);
+            border-color: rgba(255, 122, 26, 0.4);
+            color: #FF7A1A;
+            transform: scale(1.05);
+        }
+
+        .profile-menu-btn:active {
+            transform: scale(0.95);
+        }
+
         /* ============================================================
-   MEMORY COUNT BADGE
-   ============================================================ */
+           MEMORY COUNT BADGE
+           ============================================================ */
         .memory-badge {
             position: absolute;
             top: -4px;
@@ -387,8 +398,8 @@
         }
 
         /* ============================================================
-   MEMORY MODAL — Professional Redesign
-   ============================================================ */
+           MEMORY MODAL — Professional Redesign
+           ============================================================ */
         .memory-modal {
             max-width: 720px;
             width: 100%;
@@ -541,7 +552,6 @@
             color: var(--amber);
         }
 
-        /* Sort dropdown */
         .memory-sort-row {
             display: flex;
             justify-content: space-between;
@@ -570,7 +580,6 @@
             color: var(--bone);
         }
 
-        /* Memory List */
         .memory-list {
             flex: 1;
             overflow-y: auto;
@@ -600,7 +609,6 @@
             line-height: 1.8;
         }
 
-        /* Memory Card */
         .memory-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -687,7 +695,6 @@
             box-shadow: 0 0 4px var(--amber-glow);
         }
 
-        /* Card Actions */
         .memory-actions {
             display: flex;
             gap: 4px;
@@ -734,7 +741,6 @@
             background: rgba(255, 215, 0, 0.08);
         }
 
-        /* Footer */
         .memory-footer {
             padding: 16px 24px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -774,7 +780,6 @@
             color: var(--bone);
         }
 
-        /* Edit Modal (nested) */
         .memory-edit-overlay {
             position: absolute;
             inset: 0;
@@ -865,7 +870,6 @@
             background: #101114;
         }
 
-        /* Importance slider */
         .importance-slider-wrap {
             display: flex;
             align-items: center;
@@ -980,13 +984,6 @@
             color: #1A1D20;
         }
 
-        .profile-menu-btn:hover {
-            background: rgba(255, 122, 26, 0.15);
-            border-color: rgba(255, 122, 26, 0.4);
-            color: #FF7A1A;
-            transform: scale(1.05);
-        }
-
         .profile-dropdown-menu::after {
             content: '';
             position: absolute;
@@ -1000,22 +997,11 @@
             transform: rotate(45deg);
         }
 
-
-        .profile-menu-btn:active {
-            transform: scale(0.95);
-        }
-
-        .profile-menu-btn:hover {
-            background: rgba(255, 255, 255, 0.06);
-            color: var(--bone);
-        }
-
         .profile-dropdown-menu {
             display: none;
             position: absolute;
             right: 0;
             bottom: calc(100% + 10px);
-            /* ✅ Upar open hoga */
             top: auto;
             background: #0A0B0D;
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1074,17 +1060,6 @@
 
         .profile-dropdown-menu button:hover i {
             transform: rotate(45deg);
-            /* ⚙️ Icon rotate on hover */
-        }
-
-        .profile-dropdown-menu button:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--bone);
-        }
-
-        .profile-dropdown-menu button i {
-            width: 18px;
-            color: var(--gunmetal);
         }
 
         #settings-overlay {
@@ -1218,9 +1193,6 @@
             color: var(--bone);
         }
 
-        /* ============================================================
-   MEMORY VIEWER
-   ============================================================ */
         .settings-modal .btn-secondary {
             background: rgba(255, 122, 26, 0.1);
             border: 1px solid rgba(255, 122, 26, 0.3);
@@ -1254,142 +1226,6 @@
 
         #memory-overlay.active {
             display: flex;
-        }
-
-        .memory-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-
-        .memory-modal h2 {
-            font-family: 'Big Shoulders Display', sans-serif;
-            text-transform: uppercase;
-            font-size: 1.4rem;
-            color: var(--chrome-hi);
-            letter-spacing: 0.02em;
-        }
-
-        .memory-close {
-            background: transparent;
-            border: none;
-            color: var(--bone-dim);
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 6px 10px;
-            border-radius: 4px;
-            transition: 0.2s;
-        }
-
-        .memory-close:hover {
-            background: rgba(255, 107, 107, 0.1);
-            color: var(--red);
-        }
-
-        .memory-modal .sub {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.6rem;
-            color: var(--bone-dim);
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .memory-list {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 8px;
-            margin-bottom: 16px;
-        }
-
-        .memory-list::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .memory-list::-webkit-scrollbar-thumb {
-            background: var(--gunmetal-dim);
-            border-radius: 2px;
-        }
-
-        .memory-empty {
-            text-align: center;
-            color: var(--gunmetal);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.7rem;
-            padding: 40px 0;
-        }
-
-        .memory-card {
-            background: rgba(255, 255, 255, 0.025);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-left: 3px solid var(--amber);
-            border-radius: 6px;
-            padding: 12px 14px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-            transition: 0.2s;
-        }
-
-        .memory-card:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-left-color: #FF9A45;
-        }
-
-        .memory-card .memory-content {
-            flex: 1;
-        }
-
-        .memory-card .memory-text {
-            font-family: 'IBM Plex Sans', sans-serif;
-            font-size: 0.8rem;
-            color: var(--bone);
-            line-height: 1.5;
-            margin-bottom: 6px;
-        }
-
-        .memory-card .memory-meta {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .memory-card .memory-tag {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.55rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--amber);
-            background: rgba(255, 122, 26, 0.1);
-            padding: 2px 8px;
-            border-radius: 3px;
-        }
-
-        .memory-card .memory-importance {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.55rem;
-            color: var(--gunmetal);
-        }
-
-        .memory-delete {
-            background: transparent;
-            border: none;
-            color: var(--gunmetal);
-            cursor: pointer;
-            font-size: 0.8rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: 0.2s;
-            flex-shrink: 0;
-        }
-
-        .memory-delete:hover {
-            background: rgba(255, 107, 107, 0.1);
-            color: var(--red);
         }
 
         .session-item .session-actions {
@@ -1614,13 +1450,31 @@
             line-height: 1.5;
             word-wrap: break-word;
             white-space: pre-wrap;
-            /* ✅ Newlines aur spaces preserve karega */
             overflow-wrap: break-word;
             animation: messageFade 0.3s ease;
             border-radius: 4px;
         }
 
-        /* ✅ Code blocks ke liye styling */
+        .message.streaming .streaming-text::after {
+            content: '▌';
+            color: var(--amber);
+            margin-left: 2px;
+            animation: blinkCursor 0.7s step-end infinite;
+            font-weight: 400;
+        }
+
+        @keyframes blinkCursor {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
         .message pre {
             background: #0B0C0E;
             border: 1px solid var(--line);
@@ -1651,7 +1505,6 @@
             font-size: 0.75rem;
         }
 
-        /* ✅ Lists */
         .message ul,
         .message ol {
             padding-left: 20px;
@@ -1662,7 +1515,6 @@
             margin-bottom: 4px;
         }
 
-        /* ✅ Headings */
         .message h1,
         .message h2,
         .message h3 {
@@ -1684,13 +1536,11 @@
             font-size: 0.92rem;
         }
 
-        /* ✅ Bold */
         .message strong {
             color: var(--chrome-hi);
             font-weight: 600;
         }
 
-        /* Light theme */
         body[data-theme="light"] .message pre {
             background: #F1F3F5;
             border-color: #DEE2E6;
@@ -1889,7 +1739,6 @@
             text-transform: uppercase;
             cursor: pointer;
             transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.02);
             position: relative;
             overflow: hidden;
             display: inline-flex;
@@ -1935,7 +1784,6 @@
             text-transform: uppercase;
             cursor: pointer;
             transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.02);
             position: relative;
             overflow: hidden;
             display: inline-flex;
@@ -2247,8 +2095,6 @@
         }
 
         @media (max-width: 820px) {
-
-            /* ✅ Mobile par Screen Share button hide karo */
             #shareScreenBtn {
                 display: none !important;
             }
@@ -2270,14 +2116,12 @@
                 grid-template-columns: 1fr !important;
             }
 
-            /* Reset desktop collapse behavior */
             body.sidebar-collapsed .sidebar {
                 padding: 20px 16px;
                 border-right: 1px solid var(--line);
                 overflow-y: auto;
             }
 
-            /* ✅ Mobile Sidebar — Full Screen Overlay */
             .sidebar {
                 display: flex !important;
                 position: fixed !important;
@@ -2303,7 +2147,6 @@
                 box-shadow: 0 0 80px rgba(0, 0, 0, 0.9);
             }
 
-            /* ✅ Scrim (background dark overlay) */
             body.mobile-sidebar-open::after {
                 content: '';
                 position: fixed;
@@ -2314,17 +2157,24 @@
                 animation: fadeIn 0.25s ease;
             }
 
-            /* ✅ Hide hamburger when sidebar open */
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+
+                to {
+                    opacity: 1;
+                }
+            }
+
             body.mobile-sidebar-open .floating-toggle {
                 display: none !important;
             }
 
-            /* Show hamburger when sidebar closed */
             .floating-toggle {
                 display: flex !important;
             }
 
-            /* ✅ Change collapse button icon to X on mobile */
             .sidebar-collapse-btn {
                 display: flex !important;
             }
@@ -2335,7 +2185,6 @@
                 font-weight: 900;
             }
 
-            /* ✅ Main content ka top padding badhaao taake hamburger overlap na kare */
             .main {
                 padding: 70px 12px 30px;
                 justify-content: flex-start;
@@ -2413,7 +2262,6 @@
                 font-size: 1.2rem;
             }
         }
-
 
         @media (max-width: 480px) {
             .main {
@@ -3516,35 +3364,181 @@
             return cleaned.length === 0 ? text : cleaned;
         }
 
+        // Kept for the initial "Spinal AI is ready..." connect message
         socket.on('response', async (msg) => {
             const text = msg.data;
-            showTyping(false);
-
-            if (msg.sessionId) {
-                currentSessionId = msg.sessionId;
-                loadSessions();
-                highlightSession(currentSessionId);
+            // Only show system messages (connect greeting) via this handler
+            // Actual AI replies come via response_start/chunk/end
+            if (text === 'Spinal AI is ready...') {
+                return; // Skip system connect message from chat
             }
-
+            // Fallback for any non-streaming response
+            showTyping(false);
             addMessage(text, 'ai');
-
-            window.isSpeaking = true;
-            fallbackSpeak(text);
-
             updateStatus('Ready', '');
             askBtn.disabled = false;
             voiceBtn.disabled = false;
             shareScreenBtn.disabled = false;
             isProcessing = false;
-
-            if (!text.startsWith('Error')) {
-                loadSessions();
-            } else {
-                updateStatus('Error', 'error');
-                showToast('❌ ' + text, 'error');
-            }
         });
 
+        // ============================================================
+        // 🌊 STREAMING RESPONSE HANDLERS
+        // ============================================================
+        // ============================================================
+        // 🌊 STREAMING RESPONSE HANDLERS — ChatGPT-style smooth typing
+        // ============================================================
+        let streamingMessageEl = null;
+        let streamingPending = '';       // queue: chars waiting to display
+        let streamingRendered = '';      // chars already displayed
+        let streamingFinalized = false;  // backend done?
+        let streamingFinalText = '';     // complete text
+        let streamingRAF = null;         // requestAnimationFrame id
+        let streamingLastTick = 0;
+        let streamingCurrentSessionId = null;
+
+        // Typing speed — chars per second (adjust for feel)
+        const STREAM_CHARS_PER_SECOND = 110;
+
+        function startStreamingLoop() {
+            if (streamingRAF) return;
+            streamingLastTick = performance.now();
+
+            const tick = (now) => {
+                const dt = now - streamingLastTick;
+                streamingLastTick = now;
+
+                // Pull chars from queue based on elapsed time
+                if (streamingPending.length > 0) {
+                    const charsToAdd = Math.max(
+                        1,
+                        Math.floor(STREAM_CHARS_PER_SECOND * dt / 1000)
+                    );
+                    const take = Math.min(charsToAdd, streamingPending.length);
+                    streamingRendered += streamingPending.slice(0, take);
+                    streamingPending = streamingPending.slice(take);
+
+                    if (streamingMessageEl) {
+                        const textEl = streamingMessageEl.querySelector('.streaming-text');
+                        if (textEl) textEl.textContent = streamingRendered;
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                }
+
+                // Done: queue empty + backend finished
+                if (streamingPending.length === 0 && streamingFinalized) {
+                    streamingRAF = null;
+                    finalizeStreaming();
+                    return;
+                }
+
+                streamingRAF = requestAnimationFrame(tick);
+            };
+
+            streamingRAF = requestAnimationFrame(tick);
+        }
+
+        function finalizeStreaming() {
+            const fullText = streamingFinalText || streamingRendered;
+
+            if (streamingMessageEl) {
+                const time = new Date().toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                let formatted = fullText;
+
+                if (typeof marked !== 'undefined') {
+                    try {
+                        marked.setOptions({
+                            breaks: true,
+                            gfm: true,
+                            headerIds: false,
+                            mangle: false
+                        });
+                        formatted = marked.parse(fullText);
+                    } catch (e) {
+                        console.warn('Markdown parse failed:', e);
+                    }
+                }
+
+                streamingMessageEl.classList.remove('streaming');
+                streamingMessageEl.innerHTML = `${formatted}<span class="time">${time}</span>`;
+                streamingMessageEl = null;
+            }
+
+            // Reset state
+            streamingPending = '';
+            streamingRendered = '';
+            streamingFinalized = false;
+            streamingFinalText = '';
+            streamingRAF = null;
+
+            if (streamingCurrentSessionId) {
+                currentSessionId = streamingCurrentSessionId;
+                loadSessions();
+                highlightSession(currentSessionId);
+                streamingCurrentSessionId = null;
+            }
+
+            // Voice output
+            window.isSpeaking = true;
+            fallbackSpeak(fullText);
+
+            // Re-enable UI
+            updateStatus('Ready', '');
+            askBtn.disabled = false;
+            voiceBtn.disabled = false;
+            shareScreenBtn.disabled = false;
+            isProcessing = false;
+        }
+
+        socket.on('response_start', (msg) => {
+            showTyping(false);
+
+            if (msg.sessionId) {
+                streamingCurrentSessionId = msg.sessionId;
+                highlightSession(msg.sessionId);
+            }
+
+            // Create empty AI bubble with cursor
+            const div = document.createElement('div');
+            div.className = 'message ai streaming';
+            div.innerHTML = '<span class="streaming-text"></span>';
+            messageArea.appendChild(div);
+
+            streamingMessageEl = div;
+            streamingPending = '';
+            streamingRendered = '';
+            streamingFinalized = false;
+            streamingFinalText = '';
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            startStreamingLoop();
+        });
+
+        socket.on('response_chunk', (msg) => {
+            const chunk = msg.chunk || '';
+            if (!chunk) return;
+
+            // Add to queue (chars will be pulled smoothly by animation loop)
+            streamingPending += chunk;
+            streamingFinalText += chunk;
+
+            // Safety: if loop somehow stopped, restart
+            if (!streamingRAF) startStreamingLoop();
+        });
+
+        socket.on('response_end', (msg) => {
+            streamingFinalText = msg.data || streamingFinalText;
+            streamingFinalized = true;
+
+            // If queue already empty, finalize now
+            if (streamingPending.length === 0 && !streamingRAF) {
+                finalizeStreaming();
+            }
+            // Otherwise, the animation loop will detect it and finalize
+        });
         function fallbackSpeak(text) {
             if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
             let cleanedText = cleanText(text);

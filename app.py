@@ -451,7 +451,75 @@ def call_gemini_with_retry(prompt, image_part, max_retries=2):
     sys.stderr.flush()
     return "Sorry, the AI service is experiencing high demand. Please try again after some time."
 
+def call_gemini_streaming(prompt, image_part):
+    """
+    Generator — yields text chunks from Gemini streaming API.
+    Fallback chain if model fails BEFORE first chunk.
+    """
+    config = types.GenerateContentConfig(
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+    )
 
+    models_to_try = [
+        'gemini-2.5-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-3.5-flash',
+        'gemini-3.1-flash-lite',
+    ]
+
+    for model_name in models_to_try:
+        first_chunk_received = False
+        try:
+            print(f"🌊 Streaming with {model_name}...", file=sys.stderr)
+            sys.stderr.flush()
+
+            stream = client.models.generate_content_stream(
+                model=model_name,
+                contents=[prompt, image_part],
+                config=config
+            )
+
+            for chunk in stream:
+                # Gemini chunks mein text hamesha nahi hota — safe access
+                chunk_text = getattr(chunk, 'text', None)
+                if chunk_text:
+                    first_chunk_received = True
+                    yield chunk_text
+
+            if first_chunk_received:
+                print(f"✅ Stream complete with {model_name}", file=sys.stderr)
+                sys.stderr.flush()
+                return
+
+        except Exception as e:
+            error_msg = str(e)
+
+            # If we already sent chunks, we can't fallback — just stop
+            if first_chunk_received:
+                print(f"⚠️ Stream interrupted after chunks: {error_msg}", file=sys.stderr)
+                sys.stderr.flush()
+                return
+
+            if '404' in error_msg or 'NOT_FOUND' in error_msg:
+                print(f"❌ {model_name} not found. Next...", file=sys.stderr)
+                sys.stderr.flush()
+                continue
+            elif '503' in error_msg or 'UNAVAILABLE' in error_msg:
+                print(f"⏳ {model_name} busy. Next...", file=sys.stderr)
+                sys.stderr.flush()
+                time.sleep(1)
+                continue
+            elif '429' in error_msg or 'RESOURCE_EXHAUSTED' in error_msg:
+                print(f"⚠️ {model_name} quota. Next...", file=sys.stderr)
+                sys.stderr.flush()
+                continue
+            else:
+                print(f"❌ Error {model_name}: {error_msg}", file=sys.stderr)
+                sys.stderr.flush()
+                continue
+
+    # All models failed
+    yield "Sorry, the AI service is experiencing high demand. Please try again after some time."
 # ========================================
 # DEBUG ROUTE
 # ========================================
@@ -902,8 +970,21 @@ def handle_frame(data):
         image_part = types.Part.from_bytes(data=image_bytes, mime_type='image/jpeg')
 
         # ---- Call Gemini with retry ----
-        ai_text = call_gemini_with_retry(full_prompt, image_part)
-        print(f"🤖 AI Says: {ai_text}", file=sys.stderr)
+        # ---- 🌊 STREAMING: Signal start ----
+        emit('response_start', {'sessionId': session_id})
+
+        # ---- Stream chunks ----
+        ai_text_parts = []
+        try:
+            for chunk in call_gemini_streaming(full_prompt, image_part):
+                ai_text_parts.append(chunk)
+                emit('response_chunk', {'chunk': chunk})
+        except Exception as e:
+            print(f"❌ Stream error: {e}", file=sys.stderr)
+            sys.stderr.flush()
+
+        ai_text = "".join(ai_text_parts)
+        print(f"🤖 AI Says (streamed): {ai_text[:100]}...", file=sys.stderr)
         sys.stderr.flush()
 
         # ---- Save chat history ----
@@ -914,7 +995,7 @@ def handle_frame(data):
                 'prompt': user_prompt,
                 'response': ai_text
             }).execute()
-
+            
             session_check = supabase_admin.table('sessions').select('title').eq('id', session_id).eq('user_id', user_id).execute()
             if session_check.data and session_check.data[0]['title'] == 'New Chat':
                 new_title = user_prompt[:50] + ('...' if len(user_prompt) > 50 else '')
@@ -925,12 +1006,12 @@ def handle_frame(data):
         except Exception as e:
             print(f"⚠️ Save history error: {e}", file=sys.stderr)
 
-        # ---- Emit response to user ----
-        emit('response', {
+        # ---- 🌊 Signal end with full text ----
+        emit('response_end', {
             'data': ai_text,
             'sessionId': session_id
         })
-
+        
         # ---- ASYNC MEMORY EXTRACTION ----
         memory_thread = threading.Thread(
             target=process_memories_async,
