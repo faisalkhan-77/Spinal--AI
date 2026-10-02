@@ -1215,9 +1215,285 @@
             color: var(--void);
         }
 
-                .settings-modal .btn-secondary:hover {
+        .settings-modal .btn-secondary:hover {
             background: var(--amber);
             color: var(--void);
+        }
+
+        #export-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10001;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #export-overlay.active {
+            display: flex;
+        }
+
+        .export-modal {
+            max-width: 480px;
+            width: 100%;
+            background: #0D0E10;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+            overflow: hidden;
+            position: relative;
+            animation: exportPop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes exportPop {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .export-modal::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 122, 26, 0.5), transparent);
+        }
+
+        .export-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 22px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .export-header h2 {
+            font-family: 'Big Shoulders Display', sans-serif;
+            text-transform: uppercase;
+            font-size: 1.3rem;
+            color: var(--chrome-hi);
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .export-header h2 i {
+            color: var(--amber);
+            font-size: 1.05rem;
+        }
+
+        .export-close {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--bone-dim);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .export-close:hover {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: rgba(255, 107, 107, 0.3);
+            color: var(--red);
+        }
+
+        .export-sub {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--bone-dim);
+            padding: 12px 22px 0;
+            letter-spacing: 0.06em;
+        }
+
+        .export-formats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 20px 22px;
+        }
+
+        .export-format {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 18px 10px 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--bone-dim);
+            font-family: inherit;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-format:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .export-format:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .export-format .export-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            transition: all 0.25s ease;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .export-format .export-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--bone);
+        }
+
+        .export-format .export-desc {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.6rem;
+            color: var(--gunmetal);
+            line-height: 1.35;
+        }
+
+        /* Per-format accent colors */
+        .export-format[data-format="pdf"] .export-icon {
+            color: #FF6B6B;
+            background: rgba(255, 107, 107, 0.08);
+        }
+
+        .export-format[data-format="pdf"]:hover:not(:disabled) {
+            border-color: rgba(255, 107, 107, 0.4);
+            box-shadow: 0 0 24px rgba(255, 107, 107, 0.12);
+        }
+
+        .export-format[data-format="pdf"]:hover:not(:disabled) .export-icon {
+            background: rgba(255, 107, 107, 0.15);
+            transform: scale(1.08);
+        }
+
+        .export-format[data-format="md"] .export-icon {
+            color: var(--chrome-hi);
+            background: rgba(201, 203, 207, 0.08);
+        }
+
+        .export-format[data-format="md"]:hover:not(:disabled) {
+            border-color: rgba(201, 203, 207, 0.4);
+            box-shadow: 0 0 24px rgba(201, 203, 207, 0.08);
+        }
+
+        .export-format[data-format="md"]:hover:not(:disabled) .export-icon {
+            background: rgba(201, 203, 207, 0.15);
+            transform: scale(1.08);
+        }
+
+        .export-format[data-format="json"] .export-icon {
+            color: var(--amber);
+            background: rgba(255, 122, 26, 0.08);
+        }
+
+        .export-format[data-format="json"]:hover:not(:disabled) {
+            border-color: rgba(255, 122, 26, 0.4);
+            box-shadow: 0 0 24px var(--amber-glow);
+        }
+
+        .export-format[data-format="json"]:hover:not(:disabled) .export-icon {
+            background: rgba(255, 122, 26, 0.15);
+            transform: scale(1.08);
+        }
+
+        .export-format.loading .export-icon i {
+            animation: exportSpin 0.9s linear infinite;
+        }
+
+        @keyframes exportSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .export-footer {
+            padding: 0 22px 18px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem;
+            color: var(--gunmetal);
+            text-align: center;
+            letter-spacing: 0.05em;
+        }
+
+        /* Light theme */
+        body[data-theme="light"] .export-modal {
+            background: #FFFFFF;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body[data-theme="light"] .export-format {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body[data-theme="light"] .export-format .export-name {
+            color: #1A1D20;
+        }
+
+        @media (max-width: 480px) {
+            .export-modal {
+                max-width: 100%;
+            }
+
+            .export-formats {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .export-format {
+                flex-direction: row;
+                padding: 14px 16px;
+                gap: 14px;
+                text-align: left;
+                align-items: center;
+            }
+
+            .export-format .export-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 1.15rem;
+                flex-shrink: 0;
+            }
+
+            .export-format > div:not(.export-icon) {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
         }
 
         /* ============================================================
@@ -1624,11 +1900,13 @@
         }
 
         .session-item .dropdown-menu button {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             width: 100%;
             background: transparent;
             border: none;
-            padding: 8px 16px;
+            padding: 9px 14px;
             text-align: left;
             font-family: 'IBM Plex Mono', monospace;
             font-size: 0.7rem;
@@ -1637,7 +1915,19 @@
             transition: background 0.2s, color 0.2s;
         }
 
-        .session-item .dropdown-menu button:hover {
+        .session-item .dropdown-menu button i {
+            font-size: 0.75rem;
+            width: 14px;
+            text-align: center;
+            opacity: 0.85;
+        }
+
+        .session-item .dropdown-menu button.export-action:hover {
+            background: rgba(255, 122, 26, 0.1);
+            color: var(--amber);
+        }
+
+        .session-item .dropdown-menu button.delete-action:hover {
             background: rgba(255, 107, 107, 0.1);
             color: var(--red);
         }
@@ -3003,7 +3293,8 @@
             </button>
         </div>
 
-        <div class="share-note mono">💡 For better experience, share your <strong>entire screen</strong> (monitor).</div>
+        <div class="share-note mono">💡 For better experience, share your <strong>entire screen</strong> (monitor).
+        </div>
     </div>
 
     <div id="toast-container"></div>
@@ -3194,6 +3485,45 @@
             </div>
         </div>
     </div>
+    <!-- ============================================================
+        EXPORT MODAL — PDF / Markdown / JSON
+        ============================================================ -->
+    <div id="export-overlay">
+        <div class="export-modal">
+            <div class="export-header">
+                <h2><i class="fas fa-file-arrow-down"></i> Export Chat</h2>
+                <button class="export-close" id="exportCloseBtn" aria-label="Close export dialog">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="export-sub mono" id="exportSubtitle">Save this conversation in your preferred format</div>
+
+            <div class="export-formats" id="exportFormats">
+                <button class="export-format" data-format="pdf" type="button">
+                    <div class="export-icon"><i class="fas fa-file-pdf"></i></div>
+                    <div class="export-name">PDF</div>
+                    <div class="export-desc">Print-ready document</div>
+                </button>
+                <button class="export-format" data-format="md" type="button">
+                    <div class="export-icon"><i class="fas fa-file-lines"></i></div>
+                    <div class="export-name">Markdown</div>
+                    <div class="export-desc">Portable &amp; editable</div>
+                </button>
+                <button class="export-format" data-format="json" type="button">
+                    <div class="export-icon"><i class="fas fa-file-code"></i></div>
+                    <div class="export-name">JSON</div>
+                    <div class="export-desc">Structured data</div>
+                </button>
+            </div>
+
+            <div class="export-footer">
+                Your data · ready in seconds · no server storage
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 
@@ -3669,7 +3999,12 @@
                             <div class="session-actions">
                                 <button class="menu-btn" onclick="event.stopPropagation(); toggleMenu(this)"><i class="fas fa-ellipsis-v"></i></button>
                                 <div class="dropdown-menu">
-                                    <button onclick="event.stopPropagation(); deleteSession('${session.id}', event)">Delete</button>
+                                    <button class="export-action" onclick="event.stopPropagation(); openExportModal('${session.id}', '${title.replace(/'/g, "\\'")}'); closeAllDropdowns();">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                    <button class="delete-action" onclick="event.stopPropagation(); deleteSession('${session.id}', event)">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -4923,7 +5258,7 @@
             const card = e.target.closest('.personality-card');
             if (!card) return;
             savePersonality(card.dataset.personality);
-        }); 
+        });
 
         function updateStyleSelectorUI(style) {
             document.querySelectorAll('.style-pill').forEach(pill => {
@@ -4976,6 +5311,539 @@
         });
 
         // Call badge load after auth
+        // ============================================================
+        // 📤 CHAT EXPORT — PDF / Markdown / JSON
+        // ============================================================
+        let exportSessionId = null;
+        let exportSessionTitle = '';
+        let isExporting = false;
+
+        function openExportModal(sessionId, title) {
+            exportSessionId = sessionId;
+            exportSessionTitle = title || 'Chat';
+            document.getElementById('exportSubtitle').textContent =
+                `"${title.length > 40 ? title.slice(0, 40) + '…' : title}"`;
+            document.getElementById('export-overlay').classList.add('active');
+        }
+
+        function closeExportModal() {
+            if (isExporting) return;   // don't close mid-export
+            document.getElementById('export-overlay').classList.remove('active');
+            exportSessionId = null;
+            // Reset any loading states
+            document.querySelectorAll('.export-format').forEach(b => {
+                b.disabled = false;
+                b.classList.remove('loading');
+                const icon = b.querySelector('.export-icon i');
+                if (icon) {
+                    const f = b.dataset.format;
+                    icon.className = f === 'pdf' ? 'fas fa-file-pdf'
+                        : f === 'md' ? 'fas fa-file-lines'
+                            : 'fas fa-file-code';
+                }
+            });
+        }
+
+        function setExportLoading(format) {
+            isExporting = true;
+            document.querySelectorAll('.export-format').forEach(b => {
+                b.disabled = true;
+                if (b.dataset.format === format) {
+                    b.classList.add('loading');
+                    const icon = b.querySelector('.export-icon i');
+                    if (icon) icon.className = 'fas fa-spinner';
+                }
+            });
+        }
+
+        function clearExportLoading() {
+            isExporting = false;
+            document.querySelectorAll('.export-format').forEach(b => {
+                b.disabled = false;
+                b.classList.remove('loading');
+                const f = b.dataset.format;
+                const icon = b.querySelector('.export-icon i');
+                if (icon) {
+                    icon.className = f === 'pdf' ? 'fas fa-file-pdf'
+                        : f === 'md' ? 'fas fa-file-lines'
+                            : 'fas fa-file-code';
+                }
+            });
+        }
+
+        // Main export dispatcher
+        async function handleExport(format) {
+            if (!exportSessionId || isExporting) return;
+
+            if (format === 'pdf') {
+                await exportAsPDF();
+            } else {
+                await exportAsFile(format);
+            }
+        }
+
+        // Markdown + JSON: backend route → blob download (or native share on mobile)
+        async function exportAsFile(format) {
+            setExportLoading(format);
+            try {
+                const res = await fetch(
+                    `/api/sessions/${exportSessionId}/export?format=${format}`,
+                    { credentials: 'include' }
+                );
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || `HTTP ${res.status}`);
+                }
+
+                // Parse filename from Content-Disposition
+                const cd = res.headers.get('Content-Disposition') || '';
+                const match = cd.match(/filename="([^"]+)"/);
+                const fallbackExt = format === 'md' ? 'md' : 'json';
+                const fallbackName = `Spinal_${(exportSessionTitle || 'chat').replace(/\s+/g, '_').slice(0, 40)}.${fallbackExt}`;
+                const filename = match ? match[1] : fallbackName;
+
+                const blob = await res.blob();
+
+                // 🌐 Mobile: try native share sheet first
+                const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+                if (isMobile && navigator.canShare && window.File) {
+                    try {
+                        const file = new File([blob], filename, { type: blob.type });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: 'Spinal Chat' });
+                            showToast('📤 Shared successfully', 'success');
+                            closeExportModal();
+                            return;
+                        }
+                    } catch (shareErr) {
+                        // User cancelled or share failed → fall through to download
+                        if (shareErr.name === 'AbortError') {
+                            clearExportLoading();
+                            return;
+                        }
+                    }
+                }
+
+                // 💻 Desktop (or fallback): trigger download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+                showToast(`✅ Exported as ${format.toUpperCase()}`, 'success');
+                closeExportModal();
+            } catch (e) {
+                console.error('Export error:', e);
+                showToast(`❌ Export failed: ${e.message}`, 'error');
+            } finally {
+                clearExportLoading();
+            }
+        }
+
+        // PDF: open new window (before fetch, to bypass popup blocker) with branded print layout
+        async function exportAsPDF() {
+            setExportLoading('pdf');
+
+            // 1️⃣ Open window synchronously (user gesture chain intact)
+            const win = window.open('', '_blank');
+            if (!win) {
+                showToast('❌ Popup blocked. Allow popups for this site.', 'error');
+                clearExportLoading();
+                return;
+            }
+
+            // Show interim loading
+            win.document.write(`
+                <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Preparing PDF…</title>
+                <style>body{font-family:-apple-system,sans-serif;background:#0B0C0E;color:#F2F1ED;
+                display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+                .l{font-size:14px;letter-spacing:.1em;opacity:.7}</style></head>
+                <body><div class="l">Preparing your PDF…</div></body></html>
+            `);
+
+            try {
+                const res = await fetch(
+                    `/api/sessions/${exportSessionId}/messages`,
+                    { credentials: 'include' }
+                );
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const messages = data.messages || [];
+
+                if (messages.length === 0) {
+                    win.close();
+                    showToast('⚠️ No messages to export', 'info');
+                    clearExportLoading();
+                    return;
+                }
+
+                // 2️⃣ Build branded, print-ready HTML
+                const html = buildPrintHTML(exportSessionTitle, messages);
+
+                // 3️⃣ Write + let its onload trigger print
+                win.document.open();
+                win.document.write(html);
+                win.document.close();
+
+                showToast('🖨️ Print dialog opened — choose "Save as PDF"', 'info');
+                closeExportModal();
+            } catch (e) {
+                console.error('PDF export error:', e);
+                try { win.close(); } catch (_) { }
+                showToast(`❌ PDF export failed: ${e.message}`, 'error');
+            } finally {
+                clearExportLoading();
+            }
+        }
+
+        // Build a beautiful, branded print document (matches Spinal aesthetic)
+        function buildPrintHTML(title, messages) {
+            const esc = (s) => (s || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            const exchanges = messages.map((m, i) => {
+                const ts = m.created_at
+                    ? new Date(m.created_at).toLocaleString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    })
+                    : '';
+
+                return `
+                    <section class="exchange">
+                        <div class="exchange-meta">
+                            <span class="exchange-num">#${String(i + 1).padStart(2, '0')}</span>
+                            ${ts ? `<span class="exchange-time">${esc(ts)}</span>` : ''}
+                        </div>
+                        <div class="msg user">
+                            <div class="speaker">You</div>
+                            <div class="bubble">${esc(m.prompt)}</div>
+                        </div>
+                        <div class="msg ai">
+                            <div class="speaker">Spinal</div>
+                            <div class="bubble markdown">${esc(m.response)}</div>
+                        </div>
+                    </section>
+                `;
+            }).join('');
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${esc(title)} — Spinal Chat Export</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"><\/script>
+<style>
+  @page { margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    color: #1a1d20;
+    line-height: 1.65;
+    margin: 0;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 20px 0; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #FF7A1A;
+    margin-bottom: 32px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 32px; height: 32px;
+    background: #0B0C0E;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-mark svg { width: 20px; height: 20px; }
+  .brand-name {
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #0B0C0E;
+    line-height: 1;
+  }
+  .brand-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #6C757D;
+    margin-top: 3px;
+  }
+  .header-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: #6C757D;
+    text-align: right;
+    letter-spacing: 0.05em;
+    line-height: 1.6;
+  }
+
+  /* Title block */
+  .title-block { margin-bottom: 32px; }
+  h1 {
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 2.2rem;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    color: #0B0C0E;
+    margin: 0 0 12px;
+  }
+  .title-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: #6C757D;
+    letter-spacing: 0.06em;
+    padding-top: 12px;
+    border-top: 1px solid #E5E7EB;
+  }
+  .title-meta strong { color: #FF7A1A; font-weight: 600; }
+
+  /* Exchanges */
+  .exchange {
+    margin-bottom: 28px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .exchange-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: #9AA0A6;
+    letter-spacing: 0.06em;
+  }
+  .exchange-num {
+    background: #0B0C0E;
+    color: #FF7A1A;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+
+  .msg { margin-bottom: 10px; }
+  .speaker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6C757D;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .bubble {
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  .msg.user .bubble {
+    background: #FFF4EA;
+    border-left: 3px solid #FF7A1A;
+    color: #1A1D20;
+  }
+  .msg.ai .bubble {
+    background: #F8F9FA;
+    border-left: 3px solid #C9CBCF;
+    color: #1A1D20;
+  }
+
+  /* Markdown-rendered content */
+  .bubble.markdown { white-space: normal; }
+  .bubble.markdown p { margin: 0 0 10px; }
+  .bubble.markdown p:last-child { margin-bottom: 0; }
+  .bubble.markdown code {
+    background: #ECEEF1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82em;
+    color: #D35400;
+  }
+  .bubble.markdown pre {
+    background: #0B0C0E;
+    color: #F2F1ED;
+    padding: 12px 14px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: 10px 0;
+    white-space: pre-wrap;
+  }
+  .bubble.markdown pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  .bubble.markdown ul, .bubble.markdown ol { padding-left: 22px; margin: 8px 0; }
+  .bubble.markdown li { margin-bottom: 3px; }
+  .bubble.markdown h1, .bubble.markdown h2, .bubble.markdown h3 {
+    margin: 12px 0 6px;
+    color: #0B0C0E;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .bubble.markdown h1 { font-size: 1.1rem; }
+  .bubble.markdown h2 { font-size: 1rem; }
+  .bubble.markdown h3 { font-size: 0.92rem; }
+  .bubble.markdown strong { color: #0B0C0E; font-weight: 600; }
+  .bubble.markdown blockquote {
+    border-left: 3px solid #FF7A1A;
+    padding-left: 12px;
+    color: #6C757D;
+    margin: 10px 0;
+    font-style: italic;
+  }
+
+  /* Divider between exchanges */
+  .exchange + .exchange {
+    padding-top: 24px;
+    border-top: 1px dashed #E5E7EB;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: #9AA0A6;
+    letter-spacing: 0.06em;
+  }
+  footer .dot { color: #FF7A1A; }
+
+  @media print {
+    .container { padding: 0; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="9" y="1" width="8" height="5" fill="#C9CBCF"/>
+          <rect x="6" y="8" width="14" height="5" fill="#C9CBCF"/>
+          <rect x="3" y="15" width="20" height="5" fill="#C9CBCF"/>
+          <circle cx="13" cy="3.5" r="1.4" fill="#FF7A1A"/>
+          <line x1="13" y1="6" x2="13" y2="20" stroke="#FF7A1A" stroke-width="1"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">Spinal</div>
+        <div class="brand-tag">Vision-native AI</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      Chat Export<br>
+      ${esc(dateStr)} · ${esc(timeStr)}
+    </div>
+  </header>
+
+  <div class="title-block">
+    <h1>${esc(title)}</h1>
+    <div class="title-meta">
+      <span><strong>${messages.length}</strong> message${messages.length !== 1 ? 's' : ''}</span>
+      <span>Exported <strong>${esc(dateStr)}</strong></span>
+      <span>spinal.site</span>
+    </div>
+  </div>
+
+  ${exchanges}
+
+  <footer>
+    <span>End of chat <span class="dot">·</span> ${messages.length} exchange${messages.length !== 1 ? 's' : ''}</span>
+    <span>spinal.site</span>
+  </footer>
+
+</div>
+<script>
+  // Render markdown in AI bubbles, then trigger print
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      if (window.marked) {
+        marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+        document.querySelectorAll('.bubble.markdown').forEach(function (el) {
+          el.innerHTML = marked.parse(el.textContent);
+        });
+      }
+    } catch (e) { /* fall back to plain text */ }
+    setTimeout(function () { window.focus(); window.print(); }, 500);
+  });
+<\/script>
+</body>
+</html>`;
+        }
+
+        // ---- Event listeners for export modal ----
+        document.getElementById('exportCloseBtn')?.addEventListener('click', closeExportModal);
+        document.getElementById('export-overlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'export-overlay') closeExportModal();
+        });
+        document.getElementById('exportFormats')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('.export-format');
+            if (!btn || btn.disabled) return;
+            handleExport(btn.dataset.format);
+        });
+        // ESC closes export modal (in addition to existing ESC handlers)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('export-overlay')?.classList.contains('active')) {
+                closeExportModal();
+            }
+        });
+
+        // Make helpers globally accessible
+        window.openExportModal = openExportModal;
+        window.handleExport = handleExport;
+
+        // ============================================================
+        // Existing final init
+        // ============================================================
         const originalCheckAuth = checkAuth;
         checkAuth = async function () {
             await originalCheckAuth();
@@ -4986,7 +5854,7 @@
 
         checkAuth();
 
-        console.log("✅ Dashboard v19 — ChatGPT-style Sessions (Full)");
+        console.log("✅ Dashboard v20 — Personality + Chat Export");
     </script>
 
 </body>

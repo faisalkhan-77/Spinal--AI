@@ -2,11 +2,12 @@ import sys
 print("🚀 Script started", file=sys.stderr)
 sys.stderr.flush()
 
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify, Response
 from flask_socketio import SocketIO, emit
 import base64
 import os
 import time
+import re
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -858,7 +859,131 @@ def update_session_title(session_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+# ========================================
+# CHAT EXPORT
+# ========================================
+def _build_markdown_export(sess_data, messages):
+    """Build a clean Markdown representation of a chat session."""
+    title = sess_data.get('title') or 'New Chat'
+    created = (sess_data.get('created_at') or '')[:19].replace('T', ' ')
+    total = len(messages)
 
+    lines = []
+    lines.append(f"# {title}")
+    lines.append("")
+    lines.append(f"> **Exported from Spinal AI** · {datetime.now().strftime('%B %d, %Y')}")
+    lines.append(f">")
+    lines.append(f"> **Messages:** {total}  ·  **Started:** {created}")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+
+    for i, m in enumerate(messages, 1):
+        prompt = (m.get('prompt') or '').strip()
+        response = (m.get('response') or '').strip()
+        ts = (m.get('created_at') or '')[:19].replace('T', ' ')
+
+        lines.append(f"### 💬 Exchange {i}")
+        if ts:
+            lines.append(f"*{ts}*")
+        lines.append("")
+        lines.append("**🧑 You**")
+        lines.append("")
+        lines.append(prompt)
+        lines.append("")
+        lines.append("**⚡ Spinal**")
+        lines.append("")
+        lines.append(response)
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+
+    lines.append(f"*End of chat · {total} exchange{'s' if total != 1 else ''} · Exported {datetime.now().strftime('%Y-%m-%d %H:%M')}*")
+    return "\n".join(lines)
+
+
+@app.route('/api/sessions/<session_id>/export', methods=['GET'])
+def export_session(session_id):
+    """Export a chat session as Markdown or JSON."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    fmt = (request.args.get('format') or 'md').lower()
+    if fmt not in ('md', 'json'):
+        return jsonify({'error': 'Invalid format. Use: md or json'}), 400
+
+    try:
+        # Fetch session (ownership-checked)
+        sess_res = supabase_admin.table('sessions') \
+            .select('id, title, created_at, updated_at') \
+            .eq('id', session_id) \
+            .eq('user_id', user_id) \
+            .execute()
+
+        if not sess_res.data:
+            return jsonify({'error': 'Session not found'}), 404
+        sess_data = sess_res.data[0]
+
+        # Fetch messages
+        msg_res = supabase_admin.table('chat_history') \
+            .select('prompt, response, created_at') \
+            .eq('session_id', session_id) \
+            .eq('user_id', user_id) \
+            .order('created_at', desc=False) \
+            .execute()
+        messages = msg_res.data or []
+
+        # Safe filename: Spinal_<title>_<YYYY-MM-DD>
+        raw_title = (sess_data.get('title') or 'chat').strip()
+        safe_title = re.sub(r'[^\w\s\-]', '', raw_title)[:40].strip().replace(' ', '_') or 'chat'
+        date_str = datetime.now().strftime('%Y-%m-%d')
+        base_name = f"Spinal_{safe_title}_{date_str}"
+
+        if fmt == 'md':
+            content = _build_markdown_export(sess_data, messages)
+            print(f"📄 Markdown export: {base_name}.md ({len(messages)} messages)", file=sys.stderr)
+            sys.stderr.flush()
+            return Response(
+                content,
+                mimetype='text/markdown; charset=utf-8',
+                headers={'Content-Disposition': f'attachment; filename="{base_name}.md"'}
+            )
+
+        # fmt == 'json'
+        payload = {
+            'app': 'Spinal AI',
+            'exported_at': datetime.now().isoformat(),
+            'session': {
+                'id': sess_data['id'],
+                'title': sess_data.get('title') or 'New Chat',
+                'created_at': sess_data.get('created_at'),
+                'updated_at': sess_data.get('updated_at'),
+                'message_count': len(messages)
+            },
+            'messages': [
+                {
+                    'user': m.get('prompt', ''),
+                    'assistant': m.get('response', ''),
+                    'timestamp': m.get('created_at')
+                }
+                for m in messages
+            ]
+        }
+        json_str = json.dumps(payload, indent=2, ensure_ascii=False)
+        print(f"📦 JSON export: {base_name}.json ({len(messages)} messages)", file=sys.stderr)
+        sys.stderr.flush()
+        return Response(
+            json_str,
+            mimetype='application/json; charset=utf-8',
+            headers={'Content-Disposition': f'attachment; filename="{base_name}.json"'}
+        )
+
+    except Exception as e:
+        print(f"❌ Export error: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 # ========================================
 # DELETE USER DATA
