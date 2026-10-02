@@ -373,6 +373,64 @@ STYLE_INSTRUCTIONS = {
 }
 
 
+# ============================================================
+# PERSONALITY MODES
+# ============================================================
+PERSONALITY_INSTRUCTIONS = {
+    'professional': (
+        "PERSONALITY MODE: PROFESSIONAL\n"
+        "- Communicate with a formal, business-like tone.\n"
+        "- Be direct, efficient, and solution-oriented.\n"
+        "- Avoid slang, emojis, and casual filler phrases.\n"
+        "- Use clear, structured language suitable for a workplace.\n"
+        "- Treat the user as a capable professional peer."
+    ),
+    'friendly': (
+        "PERSONALITY MODE: FRIENDLY\n"
+        "- Communicate in a warm, conversational, and approachable tone.\n"
+        "- Speak like a helpful, knowledgeable friend — not a corporate bot.\n"
+        "- Light use of emojis is fine (1-2 per reply, only when natural).\n"
+        "- Match the user's language (Hinglish if they use it).\n"
+        "- Show genuine interest and empathy; celebrate their wins."
+    ),
+    'motivational': (
+        "PERSONALITY MODE: MOTIVATIONAL\n"
+        "- Communicate with high energy and an inspiring tone.\n"
+        "- Use action-oriented, empowering language (power verbs, forward momentum).\n"
+        "- Frame answers as opportunities, not obstacles.\n"
+        "- Push the user gently toward their goals and next steps.\n"
+        "- End replies with a short action nudge or encouraging line.\n"
+        "- Avoid empty hype — back motivation with real, concrete guidance."
+    )
+}
+
+
+def get_user_personality(user_id):
+    """Fetch user's preferred personality mode. Default: friendly."""
+    try:
+        result = supabase_admin.table('user_preferences') \
+            .select('personality') \
+            .eq('user_id', user_id) \
+            .limit(1) \
+            .execute()
+
+        if result.data and len(result.data) > 0:
+            p = result.data[0].get('personality', 'friendly')
+            if p in PERSONALITY_INSTRUCTIONS:
+                return p
+        return 'friendly'
+    except Exception as e:
+        print(f"⚠️ Get personality error: {e}", file=sys.stderr)
+        sys.stderr.flush()
+        return 'friendly'
+
+
+def build_personality_instruction(personality):
+    """Build the personality directive block for the AI prompt."""
+    instruction = PERSONALITY_INSTRUCTIONS.get(personality, PERSONALITY_INSTRUCTIONS['friendly'])
+    return f"[PERSONALITY DIRECTIVE]\n{instruction}\n[END DIRECTIVE]"
+
+
 def get_user_response_style(user_id):
     """Fetch user's preferred response style from Supabase. Default: balanced."""
     try:
@@ -988,58 +1046,73 @@ def trigger_cleanup():
 # ========================================
 @app.route('/api/preferences', methods=['GET'])
 def get_preferences():
-    """Get user preferences."""
+    """Get user preferences (response_style + personality)."""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
 
     try:
         result = supabase_admin.table('user_preferences') \
-            .select('response_style') \
+            .select('response_style, personality') \
             .eq('user_id', user_id) \
             .limit(1) \
             .execute()
 
         if result.data and len(result.data) > 0:
             return jsonify({
-                'response_style': result.data[0].get('response_style', 'balanced')
+                'response_style': result.data[0].get('response_style', 'balanced'),
+                'personality': result.data[0].get('personality', 'friendly')
             })
 
         # No preferences yet — return defaults
-        return jsonify({'response_style': 'balanced'})
+        return jsonify({'response_style': 'balanced', 'personality': 'friendly'})
     except Exception as e:
         print(f"❌ Get preferences error: {e}", file=sys.stderr)
-        return jsonify({'response_style': 'balanced'}), 500
+        return jsonify({'response_style': 'balanced', 'personality': 'friendly'}), 500
 
 
 @app.route('/api/preferences', methods=['POST'])
 def update_preferences():
-    """Update user preferences (currently: response_style)."""
+    """Update user preferences (response_style + personality)."""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
 
     try:
         data = request.json or {}
-        response_style = data.get('response_style', 'balanced')
 
-        # Validate
-        if response_style not in STYLE_INSTRUCTIONS:
-            return jsonify({
-                'error': 'Invalid response_style. Must be: short, balanced, detailed'
-            }), 400
+        # ✅ Partial updates allowed — sirf bheja hua field change karo
+        update_payload = {'updated_at': datetime.now().isoformat()}
+
+        if 'response_style' in data:
+            response_style = data['response_style']
+            if response_style not in STYLE_INSTRUCTIONS:
+                return jsonify({
+                    'error': 'Invalid response_style. Must be: short, balanced, detailed'
+                }), 400
+            update_payload['response_style'] = response_style
+
+        if 'personality' in data:
+            personality = data['personality']
+            if personality not in PERSONALITY_INSTRUCTIONS:
+                return jsonify({
+                    'error': 'Invalid personality. Must be: professional, friendly, motivational'
+                }), 400
+            update_payload['personality'] = personality
+
+        if len(update_payload) == 1:  # sirf updated_at hai, kuch bhi change nahi
+            return jsonify({'error': 'No preference field provided'}), 400
 
         # Upsert (insert or update)
         supabase_admin.table('user_preferences').upsert({
             'user_id': user_id,
-            'response_style': response_style,
-            'updated_at': datetime.now().isoformat()
+            **update_payload
         }, on_conflict='user_id').execute()
 
-        print(f"✅ Preferences updated: style={response_style}", file=sys.stderr)
+        print(f"✅ Preferences updated: {list(update_payload.keys())}", file=sys.stderr)
         sys.stderr.flush()
 
-        return jsonify({'success': True, 'response_style': response_style})
+        return jsonify({'success': True, **update_payload})
     except Exception as e:
         print(f"❌ Update preferences error: {e}", file=sys.stderr)
         return jsonify({'error': str(e)}), 500
@@ -1113,13 +1186,17 @@ def handle_frame(data):
             sys.stderr.flush()
 
         # ---- Fetch user's response style preference ----
+        # ---- Fetch user's response style + personality ----
         response_style = get_user_response_style(user_id)
         style_instruction = build_style_instruction(response_style)
-        print(f"🎨 Response style: {response_style}", file=sys.stderr)
+        personality = get_user_personality(user_id)
+        personality_instruction = build_personality_instruction(personality)
+        print(f"🎨 Response style: {response_style} | 🎭 Personality: {personality}", file=sys.stderr)
         sys.stderr.flush()
 
         # ---- Build full prompt ----
-        context_parts = [style_instruction]  # Style directive goes first
+        # Order: Personality (fundamental tone) → Style (length) → Memory → History → Question
+        context_parts = [personality_instruction, style_instruction]
 
         if memory_context:
             context_parts.append(memory_context)

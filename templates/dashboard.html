@@ -1215,6 +1215,133 @@
             color: var(--void);
         }
 
+                .settings-modal .btn-secondary:hover {
+            background: var(--amber);
+            color: var(--void);
+        }
+
+        /* ============================================================
+           AI PERSONALITY SELECTOR (inside Settings)
+           ============================================================ */
+        .personality-section-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--gunmetal);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .personality-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .personality-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--bone-dim);
+            text-align: center;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .personality-card i {
+            font-size: 1.1rem;
+            color: var(--gunmetal);
+            transition: all 0.25s ease;
+        }
+
+        .personality-card .personality-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: color 0.25s;
+        }
+
+        .personality-card .personality-desc {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.55rem;
+            color: var(--gunmetal);
+            line-height: 1.3;
+            transition: color 0.25s;
+        }
+
+        .personality-card:hover:not(.active) {
+            border-color: rgba(255, 122, 26, 0.35);
+            background: rgba(255, 122, 26, 0.04);
+            transform: translateY(-1px);
+        }
+
+        .personality-card:hover:not(.active) i {
+            color: var(--amber);
+            transform: scale(1.15);
+        }
+
+        .personality-card:hover:not(.active) .personality-name {
+            color: var(--bone);
+        }
+
+        .personality-card.active {
+            background: rgba(255, 122, 26, 0.1);
+            border-color: var(--amber);
+            box-shadow: 0 0 20px rgba(255, 122, 26, 0.12);
+        }
+
+        .personality-card.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--amber), transparent);
+        }
+
+        .personality-card.active i {
+            color: var(--amber);
+            transform: scale(1.15);
+        }
+
+        .personality-card.active .personality-name {
+            color: var(--amber);
+        }
+
+        .personality-card.active .personality-desc {
+            color: var(--bone);
+        }
+
+        /* Light theme */
+        body[data-theme="light"] .personality-card {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: #6C757D;
+        }
+
+        body[data-theme="light"] .personality-card.active {
+            background: rgba(255, 107, 26, 0.08);
+            border-color: #FF6B1A;
+        }
+
+        body[data-theme="light"] .personality-card.active .personality-name {
+            color: #D35400;
+        }
+
         /* ============================================================
            RESPONSE STYLE SELECTOR — In-chat pill (ChatGPT-style)
            ============================================================ */
@@ -2922,6 +3049,27 @@
                 </div>
                 <button class="btn-secondary" id="memoryViewBtn">View</button>
             </div>
+
+            <!-- 🎭 AI PERSONALITY SELECTOR -->
+            <span class="personality-section-label">🎭 AI Personality</span>
+            <div class="personality-selector" id="personalitySelector">
+                <button class="personality-card" data-personality="professional" type="button">
+                    <i class="fas fa-briefcase"></i>
+                    <div class="personality-name">Professional</div>
+                    <div class="personality-desc">Formal & direct</div>
+                </button>
+                <button class="personality-card active" data-personality="friendly" type="button">
+                    <i class="fas fa-face-smile"></i>
+                    <div class="personality-name">Friendly</div>
+                    <div class="personality-desc">Warm & casual</div>
+                </button>
+                <button class="personality-card" data-personality="motivational" type="button">
+                    <i class="fas fa-fire"></i>
+                    <div class="personality-name">Motivational</div>
+                    <div class="personality-desc">Energetic & inspiring</div>
+                </button>
+            </div>
+
             <div class="setting-item">
                 <div class="info">
                     <i class="fas fa-trash"></i>
@@ -3251,6 +3399,8 @@
         let isLoadingSession = false;
         // Response style state
         let currentResponseStyle = 'balanced';
+        // Personality state
+        let currentPersonality = 'friendly';
 
         const video = document.getElementById('webcam');
         const statusDot = document.getElementById('status-dot');
@@ -4718,10 +4868,62 @@
                     currentResponseStyle = data.response_style;
                     updateStyleSelectorUI(data.response_style);
                 }
+                if (data.personality) {
+                    currentPersonality = data.personality;
+                    updatePersonalityUI(data.personality);
+                }
             } catch (e) {
                 console.error('Load preferences error:', e);
             }
         }
+
+        function updatePersonalityUI(personality) {
+            document.querySelectorAll('.personality-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.personality === personality);
+            });
+        }
+
+        async function savePersonality(personality) {
+            if (personality === currentPersonality) return;
+
+            // Optimistic UI update
+            updatePersonalityUI(personality);
+
+            try {
+                const res = await fetch('/api/preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ personality })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    currentPersonality = personality;
+                    const names = {
+                        professional: '💼 Professional',
+                        friendly: '😊 Friendly',
+                        motivational: '🔥 Motivational'
+                    };
+                    showToast(`${names[personality]} mode activated`, 'success');
+                } else {
+                    updatePersonalityUI(currentPersonality);
+                    showToast('❌ Failed to save personality', 'error');
+                }
+            } catch (e) {
+                console.error('Save personality error:', e);
+                updatePersonalityUI(currentPersonality);
+                showToast('❌ Network error', 'error');
+            }
+        }
+
+        // Personality card click handler
+        document.getElementById('personalitySelector')?.addEventListener('click', (e) => {
+            const card = e.target.closest('.personality-card');
+            if (!card) return;
+            savePersonality(card.dataset.personality);
+        }); 
 
         function updateStyleSelectorUI(style) {
             document.querySelectorAll('.style-pill').forEach(pill => {
