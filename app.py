@@ -12,10 +12,8 @@ from google import genai
 from google.genai import types
 import supabase
 from datetime import datetime, timedelta
-import uuid
 import threading
 import json
-import re
 
 print("✅ Imports done", file=sys.stderr)
 sys.stderr.flush()
@@ -48,9 +46,9 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 MEMORY_EXTRACTION_MODEL = 'gemini-3.5-flash-lite'
 EMBEDDING_MODEL = 'gemini-embedding-001'
 MEMORY_THRESHOLD = 0.45
-IMPORTANCE_THRESHOLD = 8      # ✅ Memories with importance >= 8 always injected
-DEDUP_THRESHOLD = 0.78          # ✅ Lowered — catches name corrections
-DEDUP_HIGH_SIMILARITY = 0.90    # Force update threshold
+IMPORTANCE_THRESHOLD = 8          # Memories with importance >= 8 always injected
+DEDUP_THRESHOLD = 0.78            # Catches name corrections
+DEDUP_HIGH_SIMILARITY = 0.90      # Force update threshold
 MAX_MEMORIES_PER_QUERY = 5
 
 MEMORY_EXTRACTION_PROMPT = """You are a memory extraction system for an AI assistant called Spinal.
@@ -202,7 +200,7 @@ def store_memory(user_id, session_id, memory_item):
         if not embedding:
             return
 
-        # 🔥 STEP 1: Get MULTIPLE candidates for dedup
+        # STEP 1: Get MULTIPLE candidates for dedup
         existing = supabase_admin.rpc('match_memories', {
             'query_embedding': embedding,
             'match_user_id': user_id,
@@ -210,7 +208,7 @@ def store_memory(user_id, session_id, memory_item):
             'match_count': 5
         }).execute()
 
-        # 🔥 STEP 2: Find best match (same category OR high similarity)
+        # STEP 2: Find best match (same category OR high similarity)
         best_match = None
         best_score = 0
 
@@ -231,7 +229,7 @@ def store_memory(user_id, session_id, memory_item):
                         best_score = sim
 
         if best_match:
-            # 🔄 UPDATE existing memory
+            # UPDATE existing memory
             supabase_admin.table('user_memories').update({
                 'content': content,
                 'category': category,
@@ -241,7 +239,7 @@ def store_memory(user_id, session_id, memory_item):
             }).eq('id', best_match['id']).execute()
             print(f"🔄 Memory UPDATED (sim={best_score:.3f}, cat={category}): {content[:50]}...", file=sys.stderr)
         else:
-            # ✅ INSERT new memory
+            # INSERT new memory
             supabase_admin.table('user_memories').insert({
                 'user_id': user_id,
                 'content': content,
@@ -277,9 +275,9 @@ def retrieve_memories(user_id, query_text, limit=MAX_MEMORIES_PER_QUERY):
     """Retrieve memories: semantic search + high-importance always included."""
     try:
         embedding = generate_embedding(query_text)
-        
+
         semantic_memories = []
-        
+
         # 1️⃣ SEMANTIC SEARCH (if embedding available)
         if embedding:
             result = supabase_admin.rpc('match_memories', {
@@ -344,6 +342,63 @@ def format_memories_for_prompt(memories):
     lines.append("[END MEMORY]")
     return "\n".join(lines)
 
+
+# ============================================================
+# RESPONSE STYLE SYSTEM
+# ============================================================
+STYLE_INSTRUCTIONS = {
+    'short': (
+        "RESPONSE STYLE: SHORT\n"
+        "- Give the direct answer in 1-3 sentences maximum.\n"
+        "- No preamble, no filler phrases like 'Great question!'.\n"
+        "- Skip examples unless the user explicitly asks.\n"
+        "- Do not ask follow-up questions.\n"
+        "- Prefer bullet points over paragraphs when listing."
+    ),
+    'balanced': (
+        "RESPONSE STYLE: BALANCED\n"
+        "- Give a clear, complete answer in 4-8 sentences.\n"
+        "- Include brief context or reasoning where helpful.\n"
+        "- One example or analogy is acceptable if it clarifies.\n"
+        "- Use light structure (short paragraph + optional bullets)."
+    ),
+    'detailed': (
+        "RESPONSE STYLE: DETAILED\n"
+        "- Give a comprehensive, thorough response.\n"
+        "- Structure with headings, bullet points, or numbered steps.\n"
+        "- Include examples, edge cases, or caveats.\n"
+        "- Add a brief summary or next-step suggestion at the end.\n"
+        "- Aim for depth over brevity."
+    )
+}
+
+
+def get_user_response_style(user_id):
+    """Fetch user's preferred response style from Supabase. Default: balanced."""
+    try:
+        result = supabase_admin.table('user_preferences') \
+            .select('response_style') \
+            .eq('user_id', user_id) \
+            .limit(1) \
+            .execute()
+
+        if result.data and len(result.data) > 0:
+            style = result.data[0].get('response_style', 'balanced')
+            if style in STYLE_INSTRUCTIONS:
+                return style
+        return 'balanced'
+    except Exception as e:
+        print(f"⚠️ Get response style error: {e}", file=sys.stderr)
+        sys.stderr.flush()
+        return 'balanced'
+
+
+def build_style_instruction(style):
+    """Build the response style instruction block for the AI prompt."""
+    instruction = STYLE_INSTRUCTIONS.get(style, STYLE_INSTRUCTIONS['balanced'])
+    return f"[SYSTEM DIRECTIVE]\n{instruction}\n[END DIRECTIVE]"
+
+
 def cleanup_old_memories(user_id, days_old=30, importance_cutoff=5):
     """Auto-cleanup: delete old low-importance memories."""
     try:
@@ -363,7 +418,9 @@ def cleanup_old_memories(user_id, days_old=30, importance_cutoff=5):
         return 0
 
 
-# Supabase Clients
+# ============================================================
+# SUPABASE CLIENTS
+# ============================================================
 if not SUPABASE_SERVICE_ROLE_KEY:
     SUPABASE_SERVICE_ROLE_KEY = SUPABASE_KEY
 
@@ -374,20 +431,28 @@ supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY or "spinal-ai-fallback-secret-key-do-not-use-in-prod"
 
+# Render sets RENDER env var in production
+IS_PRODUCTION = os.getenv("RENDER") is not None
+
 app.config.update(
     SECRET_KEY=app.secret_key,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
-    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_SECURE=IS_PRODUCTION,   # True only on HTTPS (production)
     SESSION_COOKIE_PATH='/',
     PERMANENT_SESSION_LIFETIME=timedelta(days=7),
 )
 
 socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*", manage_session=False)
 
+# ============================================================
+# STOP SIGNAL REGISTRY (per-user)
+# ============================================================
+STOP_REQUESTS = set()
+
 
 # ============================================================
-# GEMINI HELPER — Multi-Model Fallback + Smart Retry
+# GEMINI HELPERS — Multi-Model Fallback + Smart Retry
 # ============================================================
 def call_gemini_with_retry(prompt, image_part, max_retries=2):
     """Gemini API call with fallback chain + retry."""
@@ -450,6 +515,7 @@ def call_gemini_with_retry(prompt, image_part, max_retries=2):
     print(f"❌ All models failed. Last error: {last_error}", file=sys.stderr)
     sys.stderr.flush()
     return "Sorry, the AI service is experiencing high demand. Please try again after some time."
+
 
 def call_gemini_streaming(prompt, image_part):
     """
@@ -520,11 +586,24 @@ def call_gemini_streaming(prompt, image_part):
 
     # All models failed
     yield "Sorry, the AI service is experiencing high demand. Please try again after some time."
+
+
 # ========================================
-# DEBUG ROUTE
+# HEALTH CHECK (for Render)
+# ========================================
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok', 'service': 'spinal-ai'}), 200
+
+
+# ========================================
+# DEBUG ROUTE — only in local development
 # ========================================
 @app.route('/debug_session')
 def debug_session():
+    # Only available in local development, never on production
+    if os.getenv("RENDER"):
+        return jsonify({'error': 'Not available in production'}), 404
     return jsonify({
         'user_id': session.get('user_id'),
         'user_email': session.get('user_email'),
@@ -542,13 +621,16 @@ def debug_session():
 def landing():
     return render_template('landing.html')
 
+
 @app.route('/auth')
 def auth_page():
     return render_template('auth.html')
 
+
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
+
 
 @app.route('/privacy')
 def privacy():
@@ -592,6 +674,7 @@ def verify_token():
         sys.stderr.flush()
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -608,7 +691,8 @@ def get_sessions():
         print(f"❌ /api/sessions - No user_id in session. Cookies: {list(request.cookies.keys())}", file=sys.stderr)
         sys.stderr.flush()
         return jsonify({'error': 'Not authenticated'}), 401
-        # ✅ Auto-cleanup trigger (runs once per day)
+
+    # Auto-cleanup trigger (runs once per day)
     try:
         last_cleanup = session.get('last_cleanup')
         today = datetime.now().date().isoformat()
@@ -629,7 +713,6 @@ def get_sessions():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    
 
 @app.route('/api/sessions', methods=['POST'])
 def create_session():
@@ -651,6 +734,7 @@ def create_session():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/sessions/<session_id>', methods=['DELETE'])
 def delete_session(session_id):
     user_id = session.get('user_id')
@@ -668,6 +752,7 @@ def delete_session(session_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/sessions/<session_id>/messages', methods=['GET'])
 def get_session_messages(session_id):
@@ -692,6 +777,7 @@ def get_session_messages(session_id):
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/sessions/<session_id>/title', methods=['PATCH'])
 def update_session_title(session_id):
@@ -729,6 +815,7 @@ def delete_user_data():
         supabase_admin.table('chat_history').delete().eq('user_id', user_id).execute()
         supabase_admin.table('sessions').delete().eq('user_id', user_id).execute()
         supabase_admin.table('user_profiles').delete().eq('user_id', user_id).execute()
+        supabase_admin.table('user_preferences').delete().eq('user_id', user_id).execute()
         return jsonify({'success': True})
     except Exception as e:
         print(f"❌ Delete error: {e}", file=sys.stderr)
@@ -747,7 +834,7 @@ def get_memories():
 
     try:
         result = supabase_admin.table('user_memories') \
-            .select('id, content, category, importance, created_at, updated_at, access_count') \
+            .select('id, content, category, importance, created_at, updated_at, access_count, is_pinned') \
             .eq('user_id', user_id) \
             .order('importance', desc=True) \
             .order('updated_at', desc=True) \
@@ -785,13 +872,14 @@ def delete_memory(memory_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/memories/<memory_id>', methods=['PATCH'])
 def update_memory(memory_id):
     """Edit memory content, category, importance. Re-embeds if content changes."""
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
-    
+
     try:
         # Verify ownership
         check = supabase_admin.table('user_memories') \
@@ -799,24 +887,24 @@ def update_memory(memory_id):
             .eq('id', memory_id) \
             .eq('user_id', user_id) \
             .execute()
-        
+
         if not check.data:
             return jsonify({'error': 'Memory not found'}), 404
-        
+
         old = check.data[0]
         data = request.json or {}
-        
+
         new_content = data.get('content', old['content']).strip()
         new_category = data.get('category', old['category'])
         new_importance = max(1, min(10, int(data.get('importance', old['importance']))))
-        
+
         update_payload = {
             'content': new_content,
             'category': new_category,
             'importance': new_importance,
             'updated_at': datetime.now().isoformat()
         }
-        
+
         # Re-embed only if content changed
         if new_content != old['content']:
             embedding = generate_embedding(new_content)
@@ -824,13 +912,13 @@ def update_memory(memory_id):
                 update_payload['embedding'] = embedding
                 print(f"✅ Re-embedded edited memory", file=sys.stderr)
                 sys.stderr.flush()
-        
+
         supabase_admin.table('user_memories') \
             .update(update_payload) \
             .eq('id', memory_id) \
             .eq('user_id', user_id) \
             .execute()
-        
+
         return jsonify({'success': True})
     except Exception as e:
         print(f"❌ Update memory error: {e}", file=sys.stderr)
@@ -843,25 +931,25 @@ def toggle_memory_pin(memory_id):
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
-    
+
     try:
         check = supabase_admin.table('user_memories') \
             .select('is_pinned') \
             .eq('id', memory_id) \
             .eq('user_id', user_id) \
             .execute()
-        
+
         if not check.data:
             return jsonify({'error': 'Memory not found'}), 404
-        
+
         new_state = not check.data[0].get('is_pinned', False)
-        
+
         supabase_admin.table('user_memories') \
             .update({'is_pinned': new_state}) \
             .eq('id', memory_id) \
             .eq('user_id', user_id) \
             .execute()
-        
+
         return jsonify({'success': True, 'is_pinned': new_state})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -873,12 +961,12 @@ def get_memory_stats_endpoint():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
-    
+
     try:
         result = supabase_admin.rpc('get_memory_stats', {
             'target_user_id': user_id
         }).execute()
-        
+
         return jsonify(result.data or {'total': 0, 'by_category': {}})
     except Exception as e:
         return jsonify({'total': 0, 'by_category': {}}), 500
@@ -890,9 +978,71 @@ def trigger_cleanup():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
-    
+
     deleted = cleanup_old_memories(user_id)
     return jsonify({'success': True, 'deleted': deleted})
+
+
+# ========================================
+# USER PREFERENCES ENDPOINTS
+# ========================================
+@app.route('/api/preferences', methods=['GET'])
+def get_preferences():
+    """Get user preferences."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        result = supabase_admin.table('user_preferences') \
+            .select('response_style') \
+            .eq('user_id', user_id) \
+            .limit(1) \
+            .execute()
+
+        if result.data and len(result.data) > 0:
+            return jsonify({
+                'response_style': result.data[0].get('response_style', 'balanced')
+            })
+
+        # No preferences yet — return defaults
+        return jsonify({'response_style': 'balanced'})
+    except Exception as e:
+        print(f"❌ Get preferences error: {e}", file=sys.stderr)
+        return jsonify({'response_style': 'balanced'}), 500
+
+
+@app.route('/api/preferences', methods=['POST'])
+def update_preferences():
+    """Update user preferences (currently: response_style)."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        data = request.json or {}
+        response_style = data.get('response_style', 'balanced')
+
+        # Validate
+        if response_style not in STYLE_INSTRUCTIONS:
+            return jsonify({
+                'error': 'Invalid response_style. Must be: short, balanced, detailed'
+            }), 400
+
+        # Upsert (insert or update)
+        supabase_admin.table('user_preferences').upsert({
+            'user_id': user_id,
+            'response_style': response_style,
+            'updated_at': datetime.now().isoformat()
+        }, on_conflict='user_id').execute()
+
+        print(f"✅ Preferences updated: style={response_style}", file=sys.stderr)
+        sys.stderr.flush()
+
+        return jsonify({'success': True, 'response_style': response_style})
+    except Exception as e:
+        print(f"❌ Update preferences error: {e}", file=sys.stderr)
+        return jsonify({'error': str(e)}), 500
 
 
 # ========================================
@@ -908,10 +1058,25 @@ def handle_connect():
 @socketio.on('frame')
 def handle_frame(data):
     try:
-        user_id = data.get('userId')
-        if not user_id:
-            emit('response', {'data': 'Error: Not authenticated'})
+        # SECURITY: Server-side identity check — client-supplied userId pe trust NAHI karo
+        session_user_id = session.get('user_id')
+        client_user_id = data.get('userId')
+
+        if not session_user_id:
+            print("❌ Frame rejected: No session user_id", file=sys.stderr)
+            sys.stderr.flush()
+            emit('response', {'data': 'Error: Not authenticated. Please log in again.'})
             return
+
+        # Agar client ne userId bheja hai, toh session se match hona chahiye
+        if client_user_id and client_user_id != session_user_id:
+            print(f"⚠️ Frame rejected: userId mismatch. session={session_user_id}, client={client_user_id}", file=sys.stderr)
+            sys.stderr.flush()
+            emit('response', {'data': 'Error: Authentication mismatch. Please log in again.'})
+            return
+
+        # Always trust the SERVER session, not the client
+        user_id = session_user_id
 
         session_id = data.get('sessionId')
         if not session_id:
@@ -947,8 +1112,14 @@ def handle_frame(data):
             print(f"🧠 Retrieved {len(memories)} memories for context", file=sys.stderr)
             sys.stderr.flush()
 
+        # ---- Fetch user's response style preference ----
+        response_style = get_user_response_style(user_id)
+        style_instruction = build_style_instruction(response_style)
+        print(f"🎨 Response style: {response_style}", file=sys.stderr)
+        sys.stderr.flush()
+
         # ---- Build full prompt ----
-        context_parts = []
+        context_parts = [style_instruction]  # Style directive goes first
 
         if memory_context:
             context_parts.append(memory_context)
@@ -959,31 +1130,45 @@ def handle_frame(data):
                 session_context += f"User: {entry['prompt']}\nSpinal: {entry['response']}\n"
             context_parts.append(session_context)
 
-        if context_parts:
-            full_prompt = "\n\n".join(context_parts) + f"\n\nCurrent question: {user_prompt}"
-        else:
-            full_prompt = user_prompt
+        full_prompt = "\n\n".join(context_parts) + f"\n\nCurrent question: {user_prompt}"
 
         # ---- Decode image ----
         header, encoded = image_data.split(',', 1)
         image_bytes = base64.b64decode(encoded)
         image_part = types.Part.from_bytes(data=image_bytes, mime_type='image/jpeg')
 
-        # ---- Call Gemini with retry ----
-        # ---- 🌊 STREAMING: Signal start ----
+        # ---- STREAMING: Signal start ----
         emit('response_start', {'sessionId': session_id})
 
-        # ---- Stream chunks ----
+        # ---- Stream chunks (with stop support) ----
         ai_text_parts = []
+        stopped_by_user = False
         try:
             for chunk in call_gemini_streaming(full_prompt, image_part):
+                # Check if user requested stop
+                if user_id in STOP_REQUESTS:
+                    STOP_REQUESTS.discard(user_id)
+                    stopped_by_user = True
+                    print(f"🛑 Streaming stopped by user", file=sys.stderr)
+                    sys.stderr.flush()
+                    break
+
                 ai_text_parts.append(chunk)
                 emit('response_chunk', {'chunk': chunk})
         except Exception as e:
             print(f"❌ Stream error: {e}", file=sys.stderr)
             sys.stderr.flush()
+        finally:
+            # Cleanup just in case
+            STOP_REQUESTS.discard(user_id)
 
+        # Combine parts into final text
         ai_text = "".join(ai_text_parts)
+
+        # Fallback: agar bilkul khaali hai toh placeholder
+        if not ai_text.strip():
+            ai_text = "Response was stopped." if stopped_by_user else "Sorry, I couldn't generate a response."
+
         print(f"🤖 AI Says (streamed): {ai_text[:100]}...", file=sys.stderr)
         sys.stderr.flush()
 
@@ -995,7 +1180,7 @@ def handle_frame(data):
                 'prompt': user_prompt,
                 'response': ai_text
             }).execute()
-            
+
             session_check = supabase_admin.table('sessions').select('title').eq('id', session_id).eq('user_id', user_id).execute()
             if session_check.data and session_check.data[0]['title'] == 'New Chat':
                 new_title = user_prompt[:50] + ('...' if len(user_prompt) > 50 else '')
@@ -1006,26 +1191,43 @@ def handle_frame(data):
         except Exception as e:
             print(f"⚠️ Save history error: {e}", file=sys.stderr)
 
-        # ---- 🌊 Signal end with full text ----
+        # ---- Signal end with full text ----
         emit('response_end', {
             'data': ai_text,
             'sessionId': session_id
         })
-        
-        # ---- ASYNC MEMORY EXTRACTION ----
-        memory_thread = threading.Thread(
-            target=process_memories_async,
-            args=(user_id, session_id, user_prompt, ai_text),
-            daemon=True
-        )
-        memory_thread.start()
+
+        # ---- ASYNC MEMORY EXTRACTION (only if not stopped) ----
+        if not stopped_by_user and ai_text.strip():
+            memory_thread = threading.Thread(
+                target=process_memories_async,
+                args=(user_id, session_id, user_prompt, ai_text),
+                daemon=True
+            )
+            memory_thread.start()
 
     except Exception as e:
         print(f"❌ Error in handle_frame: {e}", file=sys.stderr)
         emit('response', {'data': f'Error: {str(e)}'})
 
 
+@socketio.on('stop_response')
+def handle_stop_response(data=None):
+    """User requested to stop the current AI response."""
+    # SECURITY: Always use server session, never trust client
+    user_id = session.get('user_id')
+
+    if user_id:
+        STOP_REQUESTS.add(user_id)
+        print(f"🛑 Stop requested by user: {user_id}", file=sys.stderr)
+        sys.stderr.flush()
+    else:
+        print(f"⚠️ Stop requested but no user_id available", file=sys.stderr)
+        sys.stderr.flush()
+
+
 if __name__ == '__main__':
     print("🚀 Starting Flask server...", file=sys.stderr)
     sys.stderr.flush()
-    socketio.run(app, debug=True, port=5000)
+    # Debug only in local dev; production mein gunicorn use hota hai
+    socketio.run(app, debug=not IS_PRODUCTION, port=5000)

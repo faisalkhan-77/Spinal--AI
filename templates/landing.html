@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spinal — An AI companion with a spine.</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
 
-  /* ============================================================
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spinal — An AI companion with a spine.</title>
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect x='9' y='1' width='8' height='5' fill='%23C9CBCF'/%3E%3Crect x='6' y='8' width='14' height='5' fill='%23C9CBCF'/%3E%3Crect x='3' y='15' width='20' height='5' fill='%23C9CBCF'/%3E%3Ccircle cx='13' cy='3.5' r='1.4' fill='%23FF7A1A'/%3E%3Cline x1='13' y1='6' x2='13' y2='20' stroke='%23FF7A1A'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ============================================================
      TOKENS
      Void Black   #0B0C0E  – base
      Deep Gunmetal#1B1D21  – panels
@@ -18,548 +23,881 @@
      Bone         #F2F1ED  – primary text (warm off-white, spine motif)
      Signal Amber #FF7A1A  – single accent, used sparingly
      ============================================================ */
-  :root{
-    --void:#0B0C0E;
-    --panel:#18191C;
-    --panel-2:#1F2124;
-    --gunmetal:#54575D;
-    --gunmetal-dim:#35373B;
-    --chrome:#C9CBCF;
-    --chrome-hi:#F3F3F4;
-    --bone:#F2F1ED;
-    --bone-dim:#9A9B98;
-    --amber:#FF7A1A;
-    --line: rgba(199,201,205,0.14);
-  }
+    :root {
+      --void: #0B0C0E;
+      --panel: #18191C;
+      --panel-2: #1F2124;
+      --gunmetal: #54575D;
+      --gunmetal-dim: #35373B;
+      --chrome: #C9CBCF;
+      --chrome-hi: #F3F3F4;
+      --bone: #F2F1ED;
+      --bone-dim: #9A9B98;
+      --amber: #FF7A1A;
+      --line: rgba(199, 201, 205, 0.14);
+    }
 
-  *{margin:0;padding:0;box-sizing:border-box;}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  html{scroll-behavior:smooth;}
+    html {
+      scroll-behavior: smooth;
+    }
 
-  body{
-    background:var(--void);
-    color:var(--bone);
-    font-family:'IBM Plex Sans', sans-serif;
-    -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
-  }
+    body {
+      background: var(--void);
+      color: var(--bone);
+      font-family: 'IBM Plex Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
 
-  ::selection{ background:var(--amber); color:var(--void); }
+    ::selection {
+      background: var(--amber);
+      color: var(--void);
+    }
 
-  a{ color:inherit; }
+    a {
+      color: inherit;
+    }
 
-  .mono{
-    font-family:'IBM Plex Mono', monospace;
-    letter-spacing:0.08em;
-  }
+    .mono {
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: 0.08em;
+    }
 
-  /* faint machined backdrop: hairline grid + brushed streaks */
-  body::before{
-    content:'';
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image:
-      linear-gradient(var(--line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line) 1px, transparent 1px);
-    background-size: 88px 88px;
-    opacity:0.35;
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 40%, transparent 90%);
-  }
-  body::after{
-    content:'';
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-    background: repeating-linear-gradient(
-      100deg,
-      rgba(255,255,255,0.012) 0px,
-      rgba(255,255,255,0.012) 1px,
-      transparent 1px,
-      transparent 4px
-    );
-  }
+    /* faint machined backdrop: hairline grid + brushed streaks */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 88px 88px;
+      opacity: 0.35;
+      mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 40%, transparent 90%);
+    }
 
-  /* ============================================================
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(100deg,
+          rgba(255, 255, 255, 0.012) 0px,
+          rgba(255, 255, 255, 0.012) 1px,
+          transparent 1px,
+          transparent 4px);
+    }
+
+    /* ============================================================
      NAVBAR
      ============================================================ */
-  header.nav{
-    position:relative; z-index:20;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:20px 5.5%;
-    border-bottom:1px solid var(--line);
-    background:rgba(11,12,14,0.82);
-    backdrop-filter: blur(14px);
-  }
-  .brand{
-    display:flex; align-items:center; gap:12px;
-    font-family:'Big Shoulders Display', sans-serif;
-    font-weight:800; font-size:1.5rem; letter-spacing:0.02em;
-    text-transform:uppercase;
-    color:var(--chrome-hi);
-  }
-  .brand-mark{ width:26px; height:26px; flex-shrink:0; }
-  .brand small{
-    display:block;
-    font-family:'IBM Plex Mono', monospace;
-    font-weight:400; font-size:0.55rem; letter-spacing:0.22em;
-    color:var(--bone-dim); text-transform:uppercase; margin-top:2px;
-  }
+    header.nav {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 5.5%;
+      border-bottom: 1px solid var(--line);
+      background: rgba(11, 12, 14, 0.82);
+      backdrop-filter: blur(14px);
+    }
 
-  .nav-right{ display:flex; align-items:center; gap:28px; }
-  .nav-links{ display:flex; gap:26px; }
-  .nav-links a{
-    text-decoration:none; color:var(--bone-dim);
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase;
-    position:relative; padding-bottom:4px;
-    transition:color .25s;
-  }
-  .nav-links a::after{
-    content:''; position:absolute; left:0; bottom:0; height:1px; width:0;
-    background:var(--amber); transition:width .25s;
-  }
-  .nav-links a:hover{ color:var(--bone); }
-  .nav-links a:hover::after{ width:100%; }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--chrome-hi);
+    }
 
-  .btn-login{
-    text-decoration:none;
-    display:inline-flex; align-items:center; gap:8px;
-    background:linear-gradient(160deg,var(--chrome-hi),var(--gunmetal) 140%);
-    color:var(--void);
-    font-family:'IBM Plex Mono', monospace;
-    font-weight:500; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
-    padding:10px 20px;
-    border-radius:0;
-    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
-    transition: transform .2s, box-shadow .2s;
-  }
-  .btn-login:hover{ transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.5); }
+    .brand-mark {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
 
-  /* ============================================================
+    .brand small {
+      display: block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 400;
+      font-size: 0.55rem;
+      letter-spacing: 0.22em;
+      color: var(--bone-dim);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 26px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--bone-dim);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      position: relative;
+      padding-bottom: 4px;
+      transition: color .25s;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 1px;
+      width: 0;
+      background: var(--amber);
+      transition: width .25s;
+    }
+
+    .nav-links a:hover {
+      color: var(--bone);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .btn-login {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(160deg, var(--chrome-hi), var(--gunmetal) 140%);
+      color: var(--void);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      border-radius: 0;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ============================================================
      HERO
      ============================================================ */
-  .hero{
-    position:relative; z-index:5;
-    display:grid;
-    grid-template-columns: 1.05fr 0.95fr;
-    align-items:center;
-    gap:40px;
-    padding: 90px 5.5% 70px;
-    max-width:1440px;
-    margin:0 auto;
-  }
+    .hero {
+      position: relative;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      align-items: center;
+      gap: 40px;
+      padding: 90px 5.5% 70px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
 
-  .eyebrow{
-    display:inline-flex; align-items:center; gap:10px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase;
-    color:var(--amber);
-    margin-bottom:22px;
-  }
-  .eyebrow .dot{
-    width:7px; height:7px; background:var(--amber);
-    box-shadow:0 0 10px var(--amber);
-    animation: pulse 2.2s ease-in-out infinite;
-  }
-  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 22px;
+    }
 
-  .hero h1{
-    font-family:'Big Shoulders Display', sans-serif;
-    font-weight:800;
-    text-transform:uppercase;
-    font-size: clamp(2.6rem, 5.2vw, 4.6rem);
-    line-height:0.96;
-    letter-spacing:0.005em;
-    color:var(--chrome-hi);
-    max-width:640px;
-  }
-  .hero h1 em{
-    font-style:normal;
-    color:transparent;
-    -webkit-text-stroke: 1.5px var(--chrome);
-  }
+    .eyebrow .dot {
+      width: 7px;
+      height: 7px;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+      animation: pulse 2.2s ease-in-out infinite;
+    }
 
-  .hero p.lede{
-    margin-top:26px;
-    font-size:1.06rem;
-    line-height:1.65;
-    color:var(--bone-dim);
-    max-width:480px;
-  }
+    @keyframes pulse {
 
-  .hero-ctas{
-    margin-top:38px;
-    display:flex; align-items:center; gap:22px; flex-wrap:wrap;
-  }
+      0%,
+      100% {
+        opacity: 1;
+      }
 
-  .cta-btn{
-    position:relative;
-    background: linear-gradient(160deg, var(--chrome-hi), var(--chrome) 55%, var(--gunmetal) 130%);
-    color:var(--void);
-    text-decoration:none;
-    font-family:'IBM Plex Mono', monospace;
-    font-weight:500;
-    font-size:0.86rem; letter-spacing:0.08em; text-transform:uppercase;
-    padding:16px 30px;
-    display:inline-flex; align-items:center; gap:12px;
-    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 100%, 16px 100%);
-    overflow:hidden;
-    transition: transform .25s, box-shadow .25s;
-    box-shadow:0 10px 30px -8px rgba(0,0,0,0.7);
-  }
-  .cta-btn::before{
-    content:'';
-    position:absolute; inset:0;
-    background:linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.65) 50%, transparent 65%);
-    background-size:220% 100%;
-    animation: shimmer 3.2s linear infinite;
-  }
-  @keyframes shimmer{ 0%{background-position:-220% 0;} 100%{background-position:220% 0;} }
-  .cta-btn:hover{ transform:translateY(-3px); box-shadow:0 16px 40px -8px rgba(0,0,0,0.85); }
-  .cta-btn svg{ width:16px; height:16px; position:relative; z-index:1; }
-  .cta-btn span{ position:relative; z-index:1; }
+      50% {
+        opacity: 0.25;
+      }
+    }
 
-  .cta-secondary{
-    text-decoration:none;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;
-    color:var(--bone-dim);
-    display:inline-flex; align-items:center; gap:8px;
-    border-bottom:1px solid var(--gunmetal-dim);
-    padding-bottom:3px;
-    transition:color .2s, border-color .2s;
-  }
-  .cta-secondary:hover{ color:var(--bone); border-color:var(--chrome); }
+    .hero h1 {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: clamp(2.6rem, 5.2vw, 4.6rem);
+      line-height: 0.96;
+      letter-spacing: 0.005em;
+      color: var(--chrome-hi);
+      max-width: 640px;
+    }
 
-  /* ---- spec strip ---- */
-  .spec-strip{
-    margin-top:56px;
-    display:flex; gap:38px; flex-wrap:wrap;
-    padding-top:26px;
-    border-top:1px solid var(--line);
-  }
-  .spec{ font-family:'IBM Plex Mono', monospace; }
-  .spec .val{ font-size:1.05rem; color:var(--chrome-hi); font-weight:500; }
-  .spec .lab{ font-size:0.66rem; color:var(--bone-dim); letter-spacing:0.14em; text-transform:uppercase; margin-top:3px; }
+    .hero h1 em {
+      font-style: normal;
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--chrome);
+    }
 
-  /* ============================================================
+    .hero p.lede {
+      margin-top: 26px;
+      font-size: 1.06rem;
+      line-height: 1.65;
+      color: var(--bone-dim);
+      max-width: 480px;
+    }
+
+    .hero-ctas {
+      margin-top: 38px;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+
+    .cta-btn {
+      position: relative;
+      background: linear-gradient(160deg, var(--chrome-hi), var(--chrome) 55%, var(--gunmetal) 130%);
+      color: var(--void);
+      text-decoration: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+      font-size: 0.86rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 16px 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 100%, 16px 100%);
+      overflow: hidden;
+      transition: transform .25s, box-shadow .25s;
+      box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.7);
+    }
+
+    .cta-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.65) 50%, transparent 65%);
+      background-size: 220% 100%;
+      animation: shimmer 3.2s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -220% 0;
+      }
+
+      100% {
+        background-position: 220% 0;
+      }
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.85);
+    }
+
+    .cta-btn svg {
+      width: 16px;
+      height: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-secondary {
+      text-decoration: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--bone-dim);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--gunmetal-dim);
+      padding-bottom: 3px;
+      transition: color .2s, border-color .2s;
+    }
+
+    .cta-secondary:hover {
+      color: var(--bone);
+      border-color: var(--chrome);
+    }
+
+    /* ---- spec strip ---- */
+    .spec-strip {
+      margin-top: 56px;
+      display: flex;
+      gap: 38px;
+      flex-wrap: wrap;
+      padding-top: 26px;
+      border-top: 1px solid var(--line);
+    }
+
+    .spec {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .spec .val {
+      font-size: 1.05rem;
+      color: var(--chrome-hi);
+      font-weight: 500;
+    }
+
+    .spec .lab {
+      font-size: 0.66rem;
+      color: var(--bone-dim);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    /* ============================================================
      SIGNATURE GRAPHIC — chrome vertebral column w/ lens
      ============================================================ */
-  .rig{
-    position:relative;
-    display:flex; justify-content:center; align-items:center;
-    height:100%;
-  }
-  .rig svg{
-    width:100%; max-width:400px; height:auto;
-    filter: drop-shadow(0 30px 60px rgba(0,0,0,0.65));
-    animation: drift 7s ease-in-out infinite;
-  }
-  @keyframes drift{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-14px);} }
+    .rig {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+    }
 
-  .vert{ fill:url(#vertGrad); stroke:var(--gunmetal-dim); stroke-width:1; }
-  .cord{ stroke:var(--amber); stroke-width:2; opacity:0.85; filter:drop-shadow(0 0 6px rgba(255,122,26,0.7)); }
-  .iris-ring{ fill:none; stroke:var(--chrome); stroke-width:1.4; }
-  .iris-core{ fill:url(#lensGrad); }
-  .iris-blade{ fill:var(--gunmetal); opacity:0.9; transform-origin:200px 96px; animation: blink 6s ease-in-out infinite; }
-  @keyframes blink{ 0%,92%,100%{ transform:scale(1);} 96%{ transform:scale(0.72);} }
+    .rig svg {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.65));
+      animation: drift 7s ease-in-out infinite;
+    }
 
-  /* ============================================================
+    @keyframes drift {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-14px);
+      }
+    }
+
+    .vert {
+      fill: url(#vertGrad);
+      stroke: var(--gunmetal-dim);
+      stroke-width: 1;
+    }
+
+    .cord {
+      stroke: var(--amber);
+      stroke-width: 2;
+      opacity: 0.85;
+      filter: drop-shadow(0 0 6px rgba(255, 122, 26, 0.7));
+    }
+
+    .iris-ring {
+      fill: none;
+      stroke: var(--chrome);
+      stroke-width: 1.4;
+    }
+
+    .iris-core {
+      fill: url(#lensGrad);
+    }
+
+    .iris-blade {
+      fill: var(--gunmetal);
+      opacity: 0.9;
+      transform-origin: 200px 96px;
+      animation: blink 6s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      92%,
+      100% {
+        transform: scale(1);
+      }
+
+      96% {
+        transform: scale(0.72);
+      }
+    }
+
+    /* ============================================================
      FEATURE ROW — vertebral levels, sharp cut panels
      ============================================================ */
-  .levels{
-    position:relative; z-index:5;
-    max-width:1440px; margin:10px auto 0;
-    padding: 40px 5.5% 100px;
-  }
-  .levels-head{
-    display:flex; justify-content:space-between; align-items:flex-end;
-    gap:24px; margin-bottom:36px; flex-wrap:wrap;
-    border-bottom:1px solid var(--line);
-    padding-bottom:22px;
-  }
-  .levels-head h2{
-    font-family:'Big Shoulders Display', sans-serif;
-    font-weight:700; text-transform:uppercase;
-    font-size:clamp(1.6rem,3vw,2.3rem);
-    color:var(--chrome-hi);
-  }
-  .levels-head p{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.75rem; color:var(--bone-dim);
-    max-width:280px; line-height:1.6;
-  }
+    .levels {
+      position: relative;
+      z-index: 5;
+      max-width: 1440px;
+      margin: 10px auto 0;
+      padding: 40px 5.5% 100px;
+    }
 
-  .level-grid{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap:1px;
-    background:var(--line);
-    border:1px solid var(--line);
-  }
-  .level{
-    background:var(--panel);
-    padding:34px 30px 38px;
-    position:relative;
-    transition: background .3s;
-  }
-  .level:hover{ background:var(--panel-2); }
-  .level-id{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.7rem; color:var(--amber);
-    letter-spacing:0.14em;
-    display:block; margin-bottom:22px;
-  }
-  .level-icon{ width:38px; height:38px; margin-bottom:20px; color:var(--chrome-hi); }
-  .level-icon svg{ width:100%; height:100%; }
-  .level h3{
-    font-family:'Big Shoulders Display', sans-serif;
-    font-weight:700; text-transform:uppercase;
-    font-size:1.28rem; letter-spacing:0.01em;
-    margin-bottom:10px; color:var(--bone);
-  }
-  .level p{ color:var(--bone-dim); font-size:0.92rem; line-height:1.6; }
-  .level .tag{
-    display:inline-block; margin-top:18px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase;
-    color:var(--gunmetal);
-    border:1px solid var(--gunmetal-dim);
-    padding:4px 9px;
-  }
-  .level.soon .tag{ color:var(--amber); border-color:rgba(255,122,26,0.35); }
+    .levels-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 22px;
+    }
 
-  /* corner notch on each panel — machined plate detail */
-  .level::before{
-    content:'';
-    position:absolute; top:0; right:0;
-    width:0; height:0;
-    border-style:solid;
-    border-width:0 16px 16px 0;
-    border-color: transparent var(--void) transparent transparent;
-  }
+    .levels-head h2 {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: clamp(1.6rem, 3vw, 2.3rem);
+      color: var(--chrome-hi);
+    }
 
-  /* ============================================================
+    .levels-head p {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--bone-dim);
+      max-width: 280px;
+      line-height: 1.6;
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .level {
+      background: var(--panel);
+      padding: 34px 30px 38px;
+      position: relative;
+      transition: background .3s;
+    }
+
+    .level:hover {
+      background: var(--panel-2);
+    }
+
+    .level-id {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--amber);
+      letter-spacing: 0.14em;
+      display: block;
+      margin-bottom: 22px;
+    }
+
+    .level-icon {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 20px;
+      color: var(--chrome-hi);
+    }
+
+    .level-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .level h3 {
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 1.28rem;
+      letter-spacing: 0.01em;
+      margin-bottom: 10px;
+      color: var(--bone);
+    }
+
+    .level p {
+      color: var(--bone-dim);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .level .tag {
+      display: inline-block;
+      margin-top: 18px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gunmetal);
+      border: 1px solid var(--gunmetal-dim);
+      padding: 4px 9px;
+    }
+
+    .level.soon .tag {
+      color: var(--amber);
+      border-color: rgba(255, 122, 26, 0.35);
+    }
+
+    /* corner notch on each panel — machined plate detail */
+    .level::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 16px 16px 0;
+      border-color: transparent var(--void) transparent transparent;
+    }
+
+    /* ============================================================
      FOOTER
      ============================================================ */
-  footer{
-    position:relative; z-index:5;
-    border-top:1px solid var(--line);
-    padding:30px 5.5%;
-    display:flex; justify-content:space-between; align-items:center;
-    flex-wrap:wrap; gap:14px;
-  }
-  footer .fmono{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.7rem; color:var(--gunmetal);
-    letter-spacing:0.1em; text-transform:uppercase;
-  }
-  .foot-icons{ display:flex; gap:18px; }
-  .foot-icons a{ color:var(--gunmetal); transition:color .2s; }
-  .foot-icons a:hover{ color:var(--chrome-hi); }
-  .foot-icons svg{ width:17px; height:17px; }
+    footer {
+      position: relative;
+      z-index: 5;
+      border-top: 1px solid var(--line);
+      padding: 30px 5.5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
 
-  /* ============================================================
+    footer .fmono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--gunmetal);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .foot-icons {
+      display: flex;
+      gap: 18px;
+    }
+
+    .foot-icons a {
+      color: var(--gunmetal);
+      transition: color .2s;
+    }
+
+    .foot-icons a:hover {
+      color: var(--chrome-hi);
+    }
+
+    .foot-icons svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    /* ============================================================
      RESPONSIVE
      ============================================================ */
-  @media (max-width: 980px){
-    .hero{ grid-template-columns:1fr; padding-top:60px; }
-    .rig{ order:-1; margin-bottom:10px; }
-    .rig svg{ max-width:260px; }
-    .level-grid{ grid-template-columns:1fr; }
-    .nav-links{ display:none; }
-    .spec-strip{ gap:26px; }
-  }
-  @media (max-width: 480px){
-    header.nav{ padding:16px 6%; }
-    .hero{ padding:44px 6% 40px; }
-    .levels{ padding:20px 6% 70px; }
-  }
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 60px;
+      }
 
-  @media (prefers-reduced-motion: reduce){
-    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; }
-    html{ scroll-behavior:auto; }
-  }
-</style>
+      .rig {
+        order: -1;
+        margin-bottom: 10px;
+      }
+
+      .rig svg {
+        max-width: 260px;
+      }
+
+      .level-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .spec-strip {
+        gap: 26px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header.nav {
+        padding: 16px 6%;
+      }
+
+      .hero {
+        padding: 44px 6% 40px;
+      }
+
+      .levels {
+        padding: 20px 6% 70px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+      }
+
+      html {
+        scroll-behavior: auto;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<header class="nav">
-  <div class="brand">
-    <svg class="brand-mark" viewBox="0 0 26 26" fill="none">
-      <rect x="9" y="1" width="8" height="5" fill="var(--chrome)"/>
-      <rect x="6" y="8" width="14" height="5" fill="var(--chrome)"/>
-      <rect x="3" y="15" width="20" height="5" fill="var(--chrome)"/>
-      <circle cx="13" cy="3.5" r="1.4" fill="var(--amber)"/>
-      <line x1="13" y1="6" x2="13" y2="20" stroke="var(--amber)" stroke-width="1"/>
-    </svg>
+  <header class="nav">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 26 26" fill="none">
+        <rect x="9" y="1" width="8" height="5" fill="var(--chrome)" />
+        <rect x="6" y="8" width="14" height="5" fill="var(--chrome)" />
+        <rect x="3" y="15" width="20" height="5" fill="var(--chrome)" />
+        <circle cx="13" cy="3.5" r="1.4" fill="var(--amber)" />
+        <line x1="13" y1="6" x2="13" y2="20" stroke="var(--amber)" stroke-width="1" />
+      </svg>
+      <div>
+        Spinal
+        <small>Vision-native AI</small>
+      </div>
+    </div>
+    <div class="nav-right">
+      <nav class="nav-links">
+        <a href="#levels">Capabilities</a>
+        <a href="#specs">Specs</a>
+      </nav>
+      <a href="/auth" class="btn-login">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <path d="M10 17l5-5-5-5" />
+          <path d="M15 12H3" />
+        </svg>
+        Log in
+      </a>
+    </div>
+  </header>
+
+  <section class="hero">
     <div>
-      Spinal
-      <small>Vision-native AI</small>
-    </div>
-  </div>
-  <div class="nav-right">
-    <nav class="nav-links">
-      <a href="#levels">Capabilities</a>
-      <a href="#specs">Specs</a>
-    </nav>
-    <a href="/auth" class="btn-login">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
-      Log in
-    </a>
-  </div>
-</header>
+      <div class="eyebrow"><span class="dot"></span> Live camera + voice model</div>
+      <h1>An AI companion<br>with a <em>spine.</em></h1>
+      <p class="lede">
+        Spinal watches through your camera and listens through your mic, then answers in a voice
+        that comes from a chrome companion standing right in front of you — not a chat bubble.
+      </p>
 
-<section class="hero">
-  <div>
-    <div class="eyebrow"><span class="dot"></span> Live camera + voice model</div>
-    <h1>An AI companion<br>with a <em>spine.</em></h1>
-    <p class="lede">
-      Spinal watches through your camera and listens through your mic, then answers in a voice
-      that comes from a chrome companion standing right in front of you — not a chat bubble.
-    </p>
-
-    <div class="hero-ctas">
-      <a href="/auth" class="cta-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
-        <span>Get started — it's free</span>
-      </a>
-      <a href="#levels" class="cta-secondary">
-        See what it does
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-      </a>
-    </div>
-
-    <div class="spec-strip" id="specs">
-      <div class="spec"><div class="val">24fps</div><div class="lab">Vision refresh</div></div>
-      <div class="spec"><div class="val">&lt;300ms</div><div class="lab">Voice latency</div></div>
-      <div class="spec"><div class="val">C1–C7</div><div class="lab">Reasoning levels</div></div>
-    </div>
-  </div>
-
-  <div class="rig" aria-hidden="true">
-    <svg viewBox="0 0 400 640" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="vertGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#F1F1F2"/>
-          <stop offset="45%" stop-color="#B7B9BD"/>
-          <stop offset="100%" stop-color="#4B4D52"/>
-        </linearGradient>
-        <radialGradient id="lensGrad" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stop-color="#FFE3C7"/>
-          <stop offset="35%" stop-color="#FF9A45"/>
-          <stop offset="100%" stop-color="#7A2E00"/>
-        </radialGradient>
-      </defs>
-
-      <!-- spinal cord line -->
-      <path class="cord" d="M200,120 L198,220 L204,320 L197,420 L202,520 L199,600" fill="none"/>
-
-      <!-- vertebrae, C1 (top, near lens) to C6 (base) -->
-      <g class="vert">
-        <polygon points="152,150 248,150 264,182 236,196 164,196 136,182"/>
-        <polygon points="118,168 92,182 96,196" opacity="0.9"/>
-        <polygon points="282,168 308,182 304,196" opacity="0.9"/>
-      </g>
-      <g class="vert">
-        <polygon points="140,222 260,222 278,256 246,272 154,272 122,256"/>
-        <polygon points="104,240 76,256 80,272" opacity="0.9"/>
-        <polygon points="296,240 324,256 320,272" opacity="0.9"/>
-      </g>
-      <g class="vert">
-        <polygon points="132,300 268,300 288,336 252,354 148,354 112,336"/>
-        <polygon points="94,320 64,336 68,354" opacity="0.9"/>
-        <polygon points="306,320 336,336 332,354" opacity="0.9"/>
-      </g>
-      <g class="vert">
-        <polygon points="128,380 272,380 294,418 254,438 146,438 106,418"/>
-        <polygon points="88,400 56,418 60,438" opacity="0.9"/>
-        <polygon points="312,400 344,418 340,438" opacity="0.9"/>
-      </g>
-      <g class="vert">
-        <polygon points="130,464 270,464 292,502 252,522 148,522 108,502"/>
-        <polygon points="90,484 58,502 62,522" opacity="0.9"/>
-        <polygon points="310,484 342,502 338,522" opacity="0.9"/>
-      </g>
-      <g class="vert">
-        <polygon points="140,546 260,546 280,582 244,600 156,600 120,582"/>
-      </g>
-
-      <!-- lens / iris at the top -->
-      <circle class="iris-ring" cx="200" cy="96" r="72"/>
-      <circle class="iris-ring" cx="200" cy="96" r="58" stroke-opacity="0.5"/>
-      <g>
-        <polygon class="iris-blade" points="200,96 246,66 254,84"/>
-        <polygon class="iris-blade" points="200,96 254,84 240,126" transform="rotate(51.4 200 96)"/>
-        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(102.8 200 96)"/>
-        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(154.2 200 96)"/>
-        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(205.6 200 96)"/>
-        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(257 200 96)"/>
-        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(308.4 200 96)"/>
-      </g>
-      <circle class="iris-core" cx="200" cy="96" r="26"/>
-      <circle cx="192" cy="88" r="6" fill="#FFF6EC" opacity="0.85"/>
-    </svg>
-  </div>
-</section>
-
-<section class="levels" id="levels">
-  <div class="levels-head">
-    <h2>Three levels, built to hold weight</h2>
-    <p class="mono">Each level of the column takes on one job — named the way a spine is, from the neck down.</p>
-  </div>
-
-  <div class="level-grid">
-
-    <div class="level">
-      <span class="level-id mono">LEVEL C1 — VISION</span>
-      <div class="level-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="12" cy="12" r="9"/>
-          <circle cx="12" cy="12" r="3.4"/>
-          <path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-width="1.2"/>
-        </svg>
+      <div class="hero-ctas">
+        <a href="/auth" class="cta-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+          </svg>
+          <span>Get started — it's free</span>
+        </a>
+        <a href="#levels" class="cta-secondary">
+          See what it does
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M12 5v14M5 12l7 7 7-7" />
+          </svg>
+        </a>
       </div>
-      <h3>Real-time vision</h3>
-      <p>Points the camera at anything and Spinal reads the room — objects, expressions, text on a page — and answers before you finish the sentence.</p>
-      <span class="tag">Shipping</span>
-    </div>
 
-    <div class="level">
-      <span class="level-id mono">LEVEL C4 — PRESENCE</span>
-      <div class="level-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M4 15c0-4 3.6-7 8-7s8 3 8 7"/>
-          <path d="M2 12v2M22 12v2M6 9v-1M18 9v-1"/>
-          <circle cx="12" cy="6" r="2.4"/>
-        </svg>
+      <div class="spec-strip" id="specs">
+        <div class="spec">
+          <div class="val">24fps</div>
+          <div class="lab">Vision refresh</div>
+        </div>
+        <div class="spec">
+          <div class="val">&lt;300ms</div>
+          <div class="lab">Voice latency</div>
+        </div>
+        <div class="spec">
+          <div class="val">C1–C7</div>
+          <div class="lab">Reasoning levels</div>
+        </div>
       </div>
-      <h3>A voice, not a chatbox</h3>
-      <p>The chrome companion speaks in a natural voice and holds a conversation like it's standing in the room with you, not typing from behind a screen.</p>
-      <span class="tag">Shipping</span>
     </div>
 
-    <div class="level soon">
-      <span class="level-id mono">LEVEL C7 — MEMORY</span>
-      <div class="level-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="4" y="4" width="16" height="16" rx="0"/>
-          <path d="M4 9h16M9 4v16"/>
-        </svg>
+    <div class="rig" aria-hidden="true">
+      <svg viewBox="0 0 400 640" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="vertGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#F1F1F2" />
+            <stop offset="45%" stop-color="#B7B9BD" />
+            <stop offset="100%" stop-color="#4B4D52" />
+          </linearGradient>
+          <radialGradient id="lensGrad" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#FFE3C7" />
+            <stop offset="35%" stop-color="#FF9A45" />
+            <stop offset="100%" stop-color="#7A2E00" />
+          </radialGradient>
+        </defs>
+
+        <!-- spinal cord line -->
+        <path class="cord" d="M200,120 L198,220 L204,320 L197,420 L202,520 L199,600" fill="none" />
+
+        <!-- vertebrae, C1 (top, near lens) to C6 (base) -->
+        <g class="vert">
+          <polygon points="152,150 248,150 264,182 236,196 164,196 136,182" />
+          <polygon points="118,168 92,182 96,196" opacity="0.9" />
+          <polygon points="282,168 308,182 304,196" opacity="0.9" />
+        </g>
+        <g class="vert">
+          <polygon points="140,222 260,222 278,256 246,272 154,272 122,256" />
+          <polygon points="104,240 76,256 80,272" opacity="0.9" />
+          <polygon points="296,240 324,256 320,272" opacity="0.9" />
+        </g>
+        <g class="vert">
+          <polygon points="132,300 268,300 288,336 252,354 148,354 112,336" />
+          <polygon points="94,320 64,336 68,354" opacity="0.9" />
+          <polygon points="306,320 336,336 332,354" opacity="0.9" />
+        </g>
+        <g class="vert">
+          <polygon points="128,380 272,380 294,418 254,438 146,438 106,418" />
+          <polygon points="88,400 56,418 60,438" opacity="0.9" />
+          <polygon points="312,400 344,418 340,438" opacity="0.9" />
+        </g>
+        <g class="vert">
+          <polygon points="130,464 270,464 292,502 252,522 148,522 108,502" />
+          <polygon points="90,484 58,502 62,522" opacity="0.9" />
+          <polygon points="310,484 342,502 338,522" opacity="0.9" />
+        </g>
+        <g class="vert">
+          <polygon points="140,546 260,546 280,582 244,600 156,600 120,582" />
+        </g>
+
+        <!-- lens / iris at the top -->
+        <circle class="iris-ring" cx="200" cy="96" r="72" />
+        <circle class="iris-ring" cx="200" cy="96" r="58" stroke-opacity="0.5" />
+        <g>
+          <polygon class="iris-blade" points="200,96 246,66 254,84" />
+          <polygon class="iris-blade" points="200,96 254,84 240,126" transform="rotate(51.4 200 96)" />
+          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(102.8 200 96)" />
+          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(154.2 200 96)" />
+          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(205.6 200 96)" />
+          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(257 200 96)" />
+          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(308.4 200 96)" />
+        </g>
+        <circle class="iris-core" cx="200" cy="96" r="26" />
+        <circle cx="192" cy="88" r="6" fill="#FFF6EC" opacity="0.85" />
+      </svg>
+    </div>
+  </section>
+
+  <section class="levels" id="levels">
+    <div class="levels-head">
+      <h2>Three levels, built to hold weight</h2>
+      <p class="mono">Each level of the column takes on one job — named the way a spine is, from the neck down.</p>
+    </div>
+
+    <div class="level-grid">
+
+      <div class="level">
+        <span class="level-id mono">LEVEL C1 — VISION</span>
+        <div class="level-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="3.4" />
+            <path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-width="1.2" />
+          </svg>
+        </div>
+        <h3>Real-time vision</h3>
+        <p>Points the camera at anything and Spinal reads the room — objects, expressions, text on a page — and answers
+          before you finish the sentence.</p>
+        <span class="tag">Shipping</span>
       </div>
-      <h3>Memory & screen share</h3>
-      <p>Spinal starts remembering what matters between sessions, and can watch your screen to follow along with your actual work.</p>
-      <span class="tag">Coming soon</span>
+
+      <div class="level">
+        <span class="level-id mono">LEVEL C4 — PRESENCE</span>
+        <div class="level-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M4 15c0-4 3.6-7 8-7s8 3 8 7" />
+            <path d="M2 12v2M22 12v2M6 9v-1M18 9v-1" />
+            <circle cx="12" cy="6" r="2.4" />
+          </svg>
+        </div>
+        <h3>A voice, not a chatbox</h3>
+        <p>The chrome companion speaks in a natural voice and holds a conversation like it's standing in the room with
+          you, not typing from behind a screen.</p>
+        <span class="tag">Shipping</span>
+      </div>
+
+      <div class="level soon">
+        <span class="level-id mono">LEVEL C7 — MEMORY</span>
+        <div class="level-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="4" y="4" width="16" height="16" rx="0" />
+            <path d="M4 9h16M9 4v16" />
+          </svg>
+        </div>
+        <h3>Memory & screen share</h3>
+        <p>Spinal starts remembering what matters between sessions, and can watch your screen to follow along with your
+          actual work.</p>
+        <span class="tag">Coming soon</span>
+      </div>
+
     </div>
+  </section>
 
-  </div>
-</section>
-
-<footer>
-  <div class="fmono">© 2026 Spinal AI — Built with a backbone</div>
-  <div class="foot-icons">
-    <a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.13-4.56-5.02 0-1.11.39-2.02 1.03-2.73-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.04a9.3 9.3 0 0 1 5 0c1.91-1.31 2.75-1.04 2.75-1.04.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.73 0 3.9-2.34 4.76-4.57 5.01.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg></a>
-    <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3l7.5 9.6L3.2 21h2.3l6.3-7.2 5 7.2H21l-7.8-10 6.9-8H18l-5.7 6.5L7.4 3H3z"/></svg></a>
-    <a href="#" aria-label="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14"/><path d="M3 6l9 7 9-7"/></svg></a>
-  </div>
-</footer>
+  <footer>
+    <div class="fmono">© 2026 Spinal AI — Built with a backbone</div>
+    <div class="foot-icons">
+      <a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.13-4.56-5.02 0-1.11.39-2.02 1.03-2.73-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.04a9.3 9.3 0 0 1 5 0c1.91-1.31 2.75-1.04 2.75-1.04.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.73 0 3.9-2.34 4.76-4.57 5.01.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z" />
+        </svg></a>
+      <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 3l7.5 9.6L3.2 21h2.3l6.3-7.2 5 7.2H21l-7.8-10 6.9-8H18l-5.7 6.5L7.4 3H3z" />
+        </svg></a>
+      <a href="#" aria-label="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <rect x="3" y="5" width="18" height="14" />
+          <path d="M3 6l9 7 9-7" />
+        </svg></a>
+    </div>
+  </footer>
 
 </body>
+
 </html>

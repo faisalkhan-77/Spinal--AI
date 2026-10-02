@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spinal · Dashboard</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect x='9' y='1' width='8' height='5' fill='%23C9CBCF'/%3E%3Crect x='6' y='8' width='14' height='5' fill='%23C9CBCF'/%3E%3Crect x='3' y='15' width='20' height='5' fill='%23C9CBCF'/%3E%3Ccircle cx='13' cy='3.5' r='1.4' fill='%23FF7A1A'/%3E%3Cline x1='13' y1='6' x2='13' y2='20' stroke='%23FF7A1A'/%3E%3C/svg%3E">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -1212,6 +1215,231 @@
             color: var(--void);
         }
 
+        /* ============================================================
+           RESPONSE STYLE SELECTOR — In-chat pill (ChatGPT-style)
+           ============================================================ */
+        .chat-style-selector {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 20;
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: rgba(11, 12, 14, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 999px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .style-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--bone-dim);
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .style-pill i {
+            font-size: 0.7rem;
+            opacity: 0.75;
+            transition: all 0.25s ease;
+        }
+
+        .style-pill:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--bone);
+        }
+
+        .style-pill:hover:not(.active) i {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .style-pill.active {
+            background: var(--amber);
+            color: var(--void);
+            border-color: var(--amber);
+            box-shadow: 0 0 16px var(--amber-glow);
+            font-weight: 600;
+        }
+
+        .style-pill.active i {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        /* Light theme */
+        body[data-theme="light"] .chat-style-selector {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body[data-theme="light"] .style-pill {
+            color: #6C757D;
+        }
+
+        body[data-theme="light"] .style-pill:hover:not(.active) {
+            background: rgba(0, 0, 0, 0.04);
+            color: #1A1D20;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 820px) {
+            .chat-style-selector {
+                top: 8px;
+                right: 8px;
+                padding: 3px;
+                gap: 2px;
+            }
+
+            .style-pill {
+                padding: 4px 8px;
+                font-size: 0.5rem;
+                gap: 4px;
+            }
+
+            .style-pill i {
+                font-size: 0.6rem;
+            }
+
+            .style-pill span {
+                display: none;
+                /* Only icons on mobile */
+            }
+
+            .style-pill.active span {
+                display: inline;
+                /* Show active label */
+            }
+        }
+
+        /* Extra narrow screens */
+        @media (max-width: 480px) {
+            .chat-style-selector {
+                top: 6px;
+                right: 6px;
+            }
+
+            .style-pill {
+                padding: 4px 6px;
+            }
+
+            .style-pill.active span {
+                display: none;
+                /* Just icons everywhere */
+            }
+        }
+
+        /* ============================================================
+           RESPONSE STYLE SELECTOR
+           ============================================================ */
+
+
+        .style-tab::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(160deg, rgba(255, 122, 26, 0.06), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.25s;
+            pointer-events: none;
+        }
+
+        .style-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 122, 26, 0.25);
+            color: var(--bone);
+            transform: translateY(-1px);
+        }
+
+        .style-tab:hover:not(.active)::before {
+            opacity: 0.5;
+        }
+
+        .style-tab.active {
+            background: rgba(255, 122, 26, 0.12);
+            border-color: var(--amber);
+            color: var(--amber);
+            box-shadow: 0 0 24px rgba(255, 122, 26, 0.15);
+        }
+
+        .style-tab.active::before {
+            opacity: 1;
+        }
+
+        .style-tab.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--amber), transparent);
+        }
+
+        .style-tab i {
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+            transition: transform 0.25s ease;
+        }
+
+        .style-tab:hover i {
+            transform: scale(1.1);
+        }
+
+        .style-tab.active i {
+            transform: scale(1.15);
+        }
+
+        .style-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .style-hint {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.5rem;
+            opacity: 0.7;
+            letter-spacing: 0.04em;
+        }
+
+        .style-tab.active .style-hint {
+            opacity: 0.9;
+        }
+
+        /* Light theme */
+        body[data-theme="light"] .style-tab {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: #6C757D;
+        }
+
+        body[data-theme="light"] .style-tab.active {
+            background: rgba(255, 107, 26, 0.1);
+            border-color: #FF6B1A;
+            color: #D35400;
+        }
+
+        /* Mobile: stack vertically if very narrow */
+
+
         #memory-overlay {
             position: fixed;
             inset: 0;
@@ -1424,6 +1652,7 @@
             scroll-behavior: smooth;
             flex-shrink: 0;
             border-radius: 4px;
+            position: relative;
         }
 
         #chat-container::-webkit-scrollbar {
@@ -1770,6 +1999,179 @@
             flex-shrink: 0;
             width: 100%;
             max-width: 520px;
+        }
+
+        /* ============================================================
+           STOP RESPONSE BUTTON
+           ============================================================ */
+        .stop-row {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 520px;
+            margin-top: 12px;
+            flex-shrink: 0;
+            animation: stopSlideIn 0.25s ease;
+        }
+
+        .stop-row.active {
+            display: flex;
+        }
+
+        /* ============================================================
+           JUMP TO BOTTOM BUTTON
+           ============================================================ */
+        .jump-to-bottom {
+            position: sticky;
+            bottom: 12px;
+            align-self: center;
+            margin-top: auto;
+            background: var(--panel-2);
+            border: 1px solid var(--amber);
+            color: var(--amber);
+            padding: 8px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 24px var(--amber-glow);
+            z-index: 15;
+        }
+
+        .jump-to-bottom.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .jump-to-bottom:hover {
+            background: var(--amber);
+            color: var(--void);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 32px var(--amber-glow);
+        }
+
+        .jump-to-bottom i {
+            font-size: 0.75rem;
+            animation: jumpBounce 1.5s ease-in-out infinite;
+        }
+
+        @keyframes jumpBounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(3px);
+            }
+        }
+
+        /* Light theme */
+        body[data-theme="light"] .jump-to-bottom {
+            background: #FFFFFF;
+            border-color: #FF6B1A;
+            color: #D35400;
+        }
+
+        body[data-theme="light"] .jump-to-bottom:hover {
+            background: #FF6B1A;
+            color: #FFFFFF;
+        }
+
+        /* Mobile: hide the "New messages" text */
+        @media (max-width: 480px) {
+            .jump-to-bottom {
+                padding: 8px 12px;
+            }
+
+            .jump-to-bottom .jump-text {
+                display: none;
+            }
+        }
+
+        @keyframes stopSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stop-btn {
+            background: rgba(255, 107, 107, 0.08);
+            border: 1px solid rgba(255, 107, 107, 0.4);
+            color: var(--red);
+            padding: 10px 24px;
+            border-radius: 999px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s ease;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.1);
+            animation: stopPulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes stopPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(255, 107, 107, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 28px rgba(255, 107, 107, 0.25);
+            }
+        }
+
+        .stop-btn:hover {
+            background: var(--red);
+            color: var(--void);
+            border-color: var(--red);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 107, 107, 0.35);
+            animation: none;
+        }
+
+        .stop-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .stop-btn i {
+            font-size: 1rem;
+        }
+
+        /* Light theme */
+        body[data-theme="light"] .stop-btn {
+            background: rgba(220, 53, 69, 0.06);
+            border-color: rgba(220, 53, 69, 0.35);
+            color: #DC3545;
+        }
+
+        body[data-theme="light"] .stop-btn:hover {
+            background: #DC3545;
+            color: #FFFFFF;
         }
 
         .ask-btn {
@@ -2408,22 +2810,54 @@
         <div id="avatar-container"></div>
 
         <div id="chat-container">
+            <!-- 🎨 RESPONSE STYLE SELECTOR — top-right of chat -->
+            <div class="chat-style-selector" id="styleSelector">
+                <button class="style-pill" data-style="short" type="button" title="Short — 1-3 lines">
+                    <i class="fas fa-bolt"></i>
+                    <span>Short</span>
+                </button>
+                <button class="style-pill active" data-style="balanced" type="button" title="Balanced — 4-8 lines">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Balanced</span>
+                </button>
+                <button class="style-pill" data-style="detailed" type="button" title="Detailed — Deep dive">
+                    <i class="fas fa-list-ul"></i>
+                    <span>Detailed</span>
+                </button>
+            </div>
+
             <div id="message-area"></div>
+
             <div class="typing-indicator" id="typing-indicator">
                 <span class="dot"></span>
                 <span class="dot"></span>
                 <span class="dot"></span>
             </div>
+
             <div id="status-dot-container">
                 <span id="status-dot"></span>
                 <span id="status-text">Connected</span>
             </div>
+
+            <!-- ✅ Jump to bottom button -->
+            <button class="jump-to-bottom" id="jumpToBottom" type="button" title="Jump to latest">
+                <i class="fas fa-arrow-down"></i>
+                <span class="jump-text">New messages</span>
+            </button>
         </div>
 
         <div class="input-row">
             <input type="text" id="questionInput" placeholder="Type your question...">
             <button id="shareScreenBtn" class="share-btn">
                 <i class="fas fa-desktop"></i> <span>Share Screen</span>
+            </button>
+        </div>
+
+        <!-- 🛑 Stop Response Button (only shows during streaming) -->
+        <div class="stop-row" id="stopRow">
+            <button class="stop-btn" id="stopBtn" type="button">
+                <i class="fas fa-stop-circle"></i>
+                <span>Stop Response</span>
             </button>
         </div>
 
@@ -2442,8 +2876,7 @@
             </button>
         </div>
 
-        <div class="share-note mono">💡 For better experience, share your <strong>entire screen</strong> (monitor).
-        </div>
+        <div class="share-note mono">💡 For better experience, share your <strong>entire screen</strong> (monitor).</div>
     </div>
 
     <div id="toast-container"></div>
@@ -2489,7 +2922,6 @@
                 </div>
                 <button class="btn-secondary" id="memoryViewBtn">View</button>
             </div>
-
             <div class="setting-item">
                 <div class="info">
                     <i class="fas fa-trash"></i>
@@ -2817,6 +3249,8 @@
 
         let currentSessionId = null;
         let isLoadingSession = false;
+        // Response style state
+        let currentResponseStyle = 'balanced';
 
         const video = document.getElementById('webcam');
         const statusDot = document.getElementById('status-dot');
@@ -2936,7 +3370,7 @@
 
             div.innerHTML = `${formattedText}<span class="time">${time}</span>`;
             messageArea.appendChild(div);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            smartScroll();
         }
 
         function clearChatArea() {
@@ -2945,7 +3379,7 @@
 
         function showTyping(show) {
             typingIndicator.style.display = show ? 'flex' : 'none';
-            if (show) chatContainer.scrollTop = chatContainer.scrollHeight;
+            if (show) smartScroll();
         }
 
         function createNewSession() {
@@ -2967,6 +3401,7 @@
                         addMessage("📷 Camera is off. Click 'Camera On' to enable vision.", 'ai');
                         loadSessions();
                         highlightSession(currentSessionId);
+                        smartScroll(true);   // ✅ ADD THIS LINE
                     }
                 })
                 .catch(err => console.error('Create session error:', err));
@@ -3008,7 +3443,7 @@
                     currentSessionId = sessionId;
                     highlightSession(sessionId);
                     isLoadingSession = false;
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    smartScroll(true);
                 })
                 .catch(err => {
                     console.error('Load session messages error:', err);
@@ -3189,6 +3624,40 @@
 
         let speechPrimed = false;
 
+        // ============================================================
+        // SMART SCROLL — Auto-scroll only if user is at bottom
+        // ============================================================
+        let isUserScrolledUp = false;
+
+        function isNearBottom(threshold = 60) {
+            return (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight) < threshold;
+        }
+
+        function smartScroll(force = false) {
+            if (force || !isUserScrolledUp) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        // Track user scroll
+        chatContainer.addEventListener('scroll', () => {
+            const atBottom = isNearBottom();
+            const wasScrolledUp = isUserScrolledUp;
+            isUserScrolledUp = !atBottom;
+
+            // Show/hide "jump to bottom" button
+            const jumpBtn = document.getElementById('jumpToBottom');
+            if (jumpBtn) {
+                jumpBtn.classList.toggle('show', isUserScrolledUp);
+            }
+        }, { passive: true });
+
+        // Jump to bottom button
+        document.getElementById('jumpToBottom')?.addEventListener('click', () => {
+            isUserScrolledUp = false;
+            smartScroll(true);
+            document.getElementById('jumpToBottom')?.classList.remove('show');
+        });
         function primeSpeechSynthesis() {
             if (speechPrimed) return;
             try {
@@ -3309,6 +3778,9 @@
             updateStatus('Camera OFF', '');
             updateCameraButton();
             updateRecordingIndicator(false);
+
+            // Load user preferences (response style)
+            await loadPreferences();
         }
 
         let sessionTimeoutTimer = null;
@@ -3383,9 +3855,6 @@
         });
 
         // ============================================================
-        // 🌊 STREAMING RESPONSE HANDLERS
-        // ============================================================
-        // ============================================================
         // 🌊 STREAMING RESPONSE HANDLERS — ChatGPT-style smooth typing
         // ============================================================
         let streamingMessageEl = null;
@@ -3421,7 +3890,7 @@
                     if (streamingMessageEl) {
                         const textEl = streamingMessageEl.querySelector('.streaming-text');
                         if (textEl) textEl.textContent = streamingRendered;
-                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                        smartScroll();
                     }
                 }
 
@@ -3439,6 +3908,7 @@
         }
 
         function finalizeStreaming() {
+            hideStopButton();
             const fullText = streamingFinalText || streamingRendered;
 
             if (streamingMessageEl) {
@@ -3499,6 +3969,7 @@
             if (msg.sessionId) {
                 streamingCurrentSessionId = msg.sessionId;
                 highlightSession(msg.sessionId);
+                showStopButton();  // ✅ Show stop button
             }
 
             // Create empty AI bubble with cursor
@@ -3513,7 +3984,7 @@
             streamingFinalized = false;
             streamingFinalText = '';
 
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            smartScroll();
             startStreamingLoop();
         });
 
@@ -3530,6 +4001,7 @@
         });
 
         socket.on('response_end', (msg) => {
+            // ❌ hideStopButton() yahan se hata diya — button ab finalizeStreaming() tak dikhega
             streamingFinalText = msg.data || streamingFinalText;
             streamingFinalized = true;
 
@@ -3539,6 +4011,54 @@
             }
             // Otherwise, the animation loop will detect it and finalize
         });
+
+        // ============================================================
+        // 🛑 STOP RESPONSE
+        // ============================================================
+        let isStreamingStopped = false;
+
+        function showStopButton() {
+            const row = document.getElementById('stopRow');
+            if (row) row.classList.add('active');
+            isStreamingStopped = false;
+        }
+
+        function hideStopButton() {
+            const row = document.getElementById('stopRow');
+            if (row) row.classList.remove('active');
+        }
+
+        function stopResponse() {
+            if (!streamingMessageEl && !streamingRAF && streamingPending.length === 0) {
+                hideStopButton();
+                return;
+            }
+
+            isStreamingStopped = true;
+
+            // Tell backend to stop generating further chunks
+            socket.emit('stop_response', { userId: currentUser.id });
+            // Clear pending queue (drain)
+            streamingPending = '';
+
+            // Finalize with what we have so far
+            streamingFinalText = streamingRendered;
+            streamingFinalized = true;
+
+            // Cancel animation frame if running
+            if (streamingRAF) {
+                cancelAnimationFrame(streamingRAF);
+                streamingRAF = null;
+            }
+
+            // Force finalize
+            finalizeStreaming();
+            hideStopButton();
+            showToast('⏹️ Response stopped', 'info');
+        }
+
+        document.getElementById('stopBtn')?.addEventListener('click', stopResponse);
+
         function fallbackSpeak(text) {
             if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
             let cleanedText = cleanText(text);
@@ -3872,9 +4392,6 @@
         });
 
         // ============================================================
-        // MEMORY VIEWER
-        // ============================================================
-        // ============================================================
         // MEMORY SYSTEM — Professional
         // ============================================================
         let allMemories = [];
@@ -4187,15 +4704,81 @@
             }
         }
 
+        // ============================================================
+        // RESPONSE STYLE — Load / Save
+        // ============================================================
+        async function loadPreferences() {
+            try {
+                const res = await fetch('/api/preferences', {
+                    credentials: 'include'
+                });
+                const data = await res.json();
+
+                if (data.response_style) {
+                    currentResponseStyle = data.response_style;
+                    updateStyleSelectorUI(data.response_style);
+                }
+            } catch (e) {
+                console.error('Load preferences error:', e);
+            }
+        }
+
+        function updateStyleSelectorUI(style) {
+            document.querySelectorAll('.style-pill').forEach(pill => {
+                pill.classList.toggle('active', pill.dataset.style === style);
+            });
+        }
+
+        async function saveResponseStyle(style) {
+            if (style === currentResponseStyle) return;
+
+            // Optimistic UI update
+            updateStyleSelectorUI(style);
+
+            try {
+                const res = await fetch('/api/preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ response_style: style })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    currentResponseStyle = style;
+                    const styleNames = {
+                        short: '⚡ Short',
+                        balanced: '⚖️ Balanced',
+                        detailed: '📋 Detailed'
+                    };
+                    showToast(`${styleNames[style]} mode activated`, 'success');
+                } else {
+                    // Revert
+                    updateStyleSelectorUI(currentResponseStyle);
+                    showToast('❌ Failed to save preference', 'error');
+                }
+            } catch (e) {
+                console.error('Save style error:', e);
+                // Revert
+                updateStyleSelectorUI(currentResponseStyle);
+                showToast('❌ Network error', 'error');
+            }
+        }
+
+        // Style tabs click handler
+        document.getElementById('styleSelector')?.addEventListener('click', (e) => {
+            const pill = e.target.closest('.style-pill');
+            if (!pill) return;
+            saveResponseStyle(pill.dataset.style);
+        });
+
         // Call badge load after auth
         const originalCheckAuth = checkAuth;
         checkAuth = async function () {
             await originalCheckAuth();
             loadMemoryBadge();
         };
-
-        // Make deleteMemory globally accessible
-        window.deleteMemory = deleteMemory;
 
         newChatBtn.addEventListener('click', createNewSession);
 

@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy · Spinal</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect x='9' y='1' width='8' height='5' fill='%23C9CBCF'/%3E%3Crect x='6' y='8' width='14' height='5' fill='%23C9CBCF'/%3E%3Crect x='3' y='15' width='20' height='5' fill='%23C9CBCF'/%3E%3Ccircle cx='13' cy='3.5' r='1.4' fill='%23FF7A1A'/%3E%3Cline x1='13' y1='6' x2='13' y2='20' stroke='%23FF7A1A'/%3E%3C/svg%3E">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --void: #0B0C0E;
@@ -17,7 +23,13 @@
             --line: rgba(199, 201, 205, 0.14);
             --chrome-hi: #F3F3F4;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: var(--void);
             color: var(--bone);
@@ -27,10 +39,12 @@
             justify-content: center;
             min-height: 100vh;
         }
+
         .container {
             max-width: 700px;
             width: 100%;
         }
+
         h1 {
             font-family: 'Big Shoulders Display', sans-serif;
             text-transform: uppercase;
@@ -39,6 +53,7 @@
             margin-bottom: 10px;
             letter-spacing: 0.02em;
         }
+
         .sub {
             font-family: 'IBM Plex Mono', monospace;
             font-size: 0.7rem;
@@ -47,6 +62,7 @@
             border-bottom: 1px solid var(--line);
             padding-bottom: 15px;
         }
+
         h2 {
             font-family: 'Big Shoulders Display', sans-serif;
             text-transform: uppercase;
@@ -55,17 +71,23 @@
             margin: 30px 0 10px 0;
             letter-spacing: 0.02em;
         }
+
         p {
             line-height: 1.7;
             color: var(--bone-dim);
             margin-bottom: 12px;
         }
+
         ul {
             color: var(--bone-dim);
             padding-left: 20px;
             margin-bottom: 12px;
         }
-        ul li { margin-bottom: 6px; }
+
+        ul li {
+            margin-bottom: 6px;
+        }
+
         .back-link {
             display: inline-block;
             margin-top: 40px;
@@ -78,50 +100,60 @@
             clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 100%, 6px 100%);
             transition: 0.3s;
         }
+
         .back-link:hover {
             border-color: var(--chrome-hi);
             color: var(--chrome-hi);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Privacy Policy</h1>
         <div class="sub">Last updated: August 2026</div>
 
-        <p>At <strong>Spinal AI</strong>, your privacy is our priority. This policy explains how we handle your data.</p>
+        <p>At <strong>Spinal AI</strong>, your privacy is our priority. This policy explains how we handle your data.
+        </p>
 
         <h2>1. Data Storage</h2>
         <p>We store the following information in our secure database (Supabase):</p>
         <ul>
             <li><strong>User Account:</strong> Email address and authentication details.</li>
-            <li><strong>Chat History:</strong> Your questions and Spinal's responses, solely to provide you with a continuous conversation experience.</li>
+            <li><strong>Chat History:</strong> Your questions and Spinal's responses, solely to provide you with a
+                continuous conversation experience.</li>
             <li><strong>User Profile:</strong> Your name (if you choose to share it).</li>
         </ul>
 
         <h2>2. Camera & Screen Sharing</h2>
         <ul>
-            <li><strong>🛑 NOT RECORDED:</strong> We <strong>do not</strong> record, store, or upload any video footage from your camera or screen.</li>
-            <li>Frames are processed in <strong>real-time</strong> using Google Gemini API and are immediately discarded after generating a response.</li>
+            <li><strong>🛑 NOT RECORDED:</strong> We <strong>do not</strong> record, store, or upload any video footage
+                from your camera or screen.</li>
+            <li>Frames are processed in <strong>real-time</strong> using Google Gemini API and are immediately discarded
+                after generating a response.</li>
             <li>No facial recognition data or biometric data is extracted or stored.</li>
         </ul>
 
         <h2>3. Microphone (Voice Input)</h2>
         <ul>
             <li>Audio is processed locally via your browser's Web Speech API.</li>
-            <li>Audio is <strong>not</strong> transmitted to our servers. It is converted to text directly in your browser.</li>
+            <li>Audio is <strong>not</strong> transmitted to our servers. It is converted to text directly in your
+                browser.</li>
         </ul>
 
         <h2>4. Your Control</h2>
         <ul>
-            <li>You can <strong>delete all your data</strong> anytime using the "Delete My Data" button in the dashboard sidebar.</li>
+            <li>You can <strong>delete all your data</strong> anytime using the "Delete My Data" button in the dashboard
+                sidebar.</li>
             <li>You can revoke camera/microphone access anytime via your browser settings.</li>
         </ul>
 
         <h2>5. Third-Party Services</h2>
-        <p>We use Google Gemini API for AI processing. Please refer to Google's privacy policy for details on how they handle data.</p>
+        <p>We use Google Gemini API for AI processing. Please refer to Google's privacy policy for details on how they
+            handle data.</p>
 
         <a href="/dashboard" class="back-link">← Back to Dashboard</a>
     </div>
 </body>
+
 </html>
