@@ -4,3 +4,4 @@ gunicorn
 google-genai
 supabase
 python-dotenv
+fpdf2

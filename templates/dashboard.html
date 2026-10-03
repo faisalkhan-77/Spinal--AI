@@ -1215,11 +1215,6 @@
             color: var(--void);
         }
 
-        .settings-modal .btn-secondary:hover {
-            background: var(--amber);
-            color: var(--void);
-        }
-
         #export-overlay {
             position: fixed;
             inset: 0;
@@ -1488,7 +1483,7 @@
                 flex-shrink: 0;
             }
 
-            .export-format > div:not(.export-icon) {
+            .export-format>div:not(.export-icon) {
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
@@ -3524,9 +3519,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
-
     <script type="module">
         import * as THREE from 'three';
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -4162,9 +4154,13 @@
             dropdown.classList.toggle('open');
         }
 
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('open'));
+        }
+
         document.addEventListener('click', function (e) {
             if (!e.target.closest('.session-actions')) {
-                document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('open'));
+                closeAllDropdowns();
             }
         });
 
@@ -5446,380 +5442,73 @@
         }
 
         // PDF: open new window (before fetch, to bypass popup blocker) with branded print layout
+        // Lazy-load external script helper
+        // PDF: server-side generation with fpdf2 — text-based, reliable, no blank
         async function exportAsPDF() {
             setExportLoading('pdf');
-
-            // 1️⃣ Open window synchronously (user gesture chain intact)
-            const win = window.open('', '_blank');
-            if (!win) {
-                showToast('❌ Popup blocked. Allow popups for this site.', 'error');
-                clearExportLoading();
-                return;
-            }
-
-            // Show interim loading
-            win.document.write(`
-                <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Preparing PDF…</title>
-                <style>body{font-family:-apple-system,sans-serif;background:#0B0C0E;color:#F2F1ED;
-                display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-                .l{font-size:14px;letter-spacing:.1em;opacity:.7}</style></head>
-                <body><div class="l">Preparing your PDF…</div></body></html>
-            `);
-
             try {
                 const res = await fetch(
-                    `/api/sessions/${exportSessionId}/messages`,
+                    `/api/sessions/${exportSessionId}/export/pdf`,
                     { credentials: 'include' }
                 );
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                const messages = data.messages || [];
 
-                if (messages.length === 0) {
-                    win.close();
-                    showToast('⚠️ No messages to export', 'info');
-                    clearExportLoading();
-                    return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || `HTTP ${res.status}`);
                 }
 
-                // 2️⃣ Build branded, print-ready HTML
-                const html = buildPrintHTML(exportSessionTitle, messages);
+                // Parse filename from Content-Disposition
+                const cd = res.headers.get('Content-Disposition') || '';
+                const match = cd.match(/filename="([^"]+)"/);
+                const fallbackName = `Spinal_${(exportSessionTitle || 'chat').replace(/\s+/g, '_').slice(0, 40)}.pdf`;
+                const filename = match ? match[1] : fallbackName;
 
-                // 3️⃣ Write + let its onload trigger print
-                win.document.open();
-                win.document.write(html);
-                win.document.close();
+                const blob = await res.blob();
 
-                showToast('🖨️ Print dialog opened — choose "Save as PDF"', 'info');
+                // 🌐 Mobile: try native share sheet first
+                const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+                if (isMobile && navigator.canShare && window.File) {
+                    try {
+                        const file = new File([blob], filename, { type: 'application/pdf' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: 'Spinal Chat' });
+                            showToast('📤 PDF shared', 'success');
+                            closeExportModal();
+                            return;
+                        }
+                    } catch (shareErr) {
+                        if (shareErr.name === 'AbortError') {
+                            clearExportLoading();
+                            return;
+                        }
+                    }
+                }
+
+                // 💻 Desktop: direct download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+                showToast('✅ PDF downloaded', 'success');
                 closeExportModal();
             } catch (e) {
                 console.error('PDF export error:', e);
-                try { win.close(); } catch (_) { }
                 showToast(`❌ PDF export failed: ${e.message}`, 'error');
             } finally {
                 clearExportLoading();
             }
         }
 
-        // Build a beautiful, branded print document (matches Spinal aesthetic)
-        function buildPrintHTML(title, messages) {
-            const esc = (s) => (s || '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
+        // ---- Event listeners for export modal ----
 
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-            const exchanges = messages.map((m, i) => {
-                const ts = m.created_at
-                    ? new Date(m.created_at).toLocaleString('en-US', {
-                        month: 'short', day: 'numeric', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                    })
-                    : '';
-
-                return `
-                    <section class="exchange">
-                        <div class="exchange-meta">
-                            <span class="exchange-num">#${String(i + 1).padStart(2, '0')}</span>
-                            ${ts ? `<span class="exchange-time">${esc(ts)}</span>` : ''}
-                        </div>
-                        <div class="msg user">
-                            <div class="speaker">You</div>
-                            <div class="bubble">${esc(m.prompt)}</div>
-                        </div>
-                        <div class="msg ai">
-                            <div class="speaker">Spinal</div>
-                            <div class="bubble markdown">${esc(m.response)}</div>
-                        </div>
-                    </section>
-                `;
-            }).join('');
-
-            return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>${esc(title)} — Spinal Chat Export</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"><\/script>
-<style>
-  @page { margin: 18mm 16mm; }
-  * { box-sizing: border-box; }
-  body {
-    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
-    color: #1a1d20;
-    line-height: 1.65;
-    margin: 0;
-    background: #fff;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  .container { max-width: 720px; margin: 0 auto; padding: 20px 0; }
-
-  /* Header */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #FF7A1A;
-    margin-bottom: 32px;
-  }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-mark {
-    width: 32px; height: 32px;
-    background: #0B0C0E;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .brand-mark svg { width: 20px; height: 20px; }
-  .brand-name {
-    font-family: 'Big Shoulders Display', sans-serif;
-    font-weight: 800;
-    font-size: 1.4rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: #0B0C0E;
-    line-height: 1;
-  }
-  .brand-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.55rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #6C757D;
-    margin-top: 3px;
-  }
-  .header-meta {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    color: #6C757D;
-    text-align: right;
-    letter-spacing: 0.05em;
-    line-height: 1.6;
-  }
-
-  /* Title block */
-  .title-block { margin-bottom: 32px; }
-  h1 {
-    font-family: 'Big Shoulders Display', sans-serif;
-    font-weight: 800;
-    text-transform: uppercase;
-    font-size: 2.2rem;
-    line-height: 1.05;
-    letter-spacing: 0.01em;
-    color: #0B0C0E;
-    margin: 0 0 12px;
-  }
-  .title-meta {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    color: #6C757D;
-    letter-spacing: 0.06em;
-    padding-top: 12px;
-    border-top: 1px solid #E5E7EB;
-  }
-  .title-meta strong { color: #FF7A1A; font-weight: 600; }
-
-  /* Exchanges */
-  .exchange {
-    margin-bottom: 28px;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-  .exchange-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    color: #9AA0A6;
-    letter-spacing: 0.06em;
-  }
-  .exchange-num {
-    background: #0B0C0E;
-    color: #FF7A1A;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-weight: 600;
-  }
-
-  .msg { margin-bottom: 10px; }
-  .speaker {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #6C757D;
-    margin-bottom: 4px;
-    font-weight: 500;
-  }
-  .bubble {
-    padding: 12px 16px;
-    border-radius: 6px;
-    font-size: 0.88rem;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-  }
-  .msg.user .bubble {
-    background: #FFF4EA;
-    border-left: 3px solid #FF7A1A;
-    color: #1A1D20;
-  }
-  .msg.ai .bubble {
-    background: #F8F9FA;
-    border-left: 3px solid #C9CBCF;
-    color: #1A1D20;
-  }
-
-  /* Markdown-rendered content */
-  .bubble.markdown { white-space: normal; }
-  .bubble.markdown p { margin: 0 0 10px; }
-  .bubble.markdown p:last-child { margin-bottom: 0; }
-  .bubble.markdown code {
-    background: #ECEEF1;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82em;
-    color: #D35400;
-  }
-  .bubble.markdown pre {
-    background: #0B0C0E;
-    color: #F2F1ED;
-    padding: 12px 14px;
-    border-radius: 5px;
-    overflow-x: auto;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    line-height: 1.5;
-    margin: 10px 0;
-    white-space: pre-wrap;
-  }
-  .bubble.markdown pre code {
-    background: transparent;
-    color: inherit;
-    padding: 0;
-    font-size: inherit;
-  }
-  .bubble.markdown ul, .bubble.markdown ol { padding-left: 22px; margin: 8px 0; }
-  .bubble.markdown li { margin-bottom: 3px; }
-  .bubble.markdown h1, .bubble.markdown h2, .bubble.markdown h3 {
-    margin: 12px 0 6px;
-    color: #0B0C0E;
-    font-weight: 600;
-    line-height: 1.3;
-  }
-  .bubble.markdown h1 { font-size: 1.1rem; }
-  .bubble.markdown h2 { font-size: 1rem; }
-  .bubble.markdown h3 { font-size: 0.92rem; }
-  .bubble.markdown strong { color: #0B0C0E; font-weight: 600; }
-  .bubble.markdown blockquote {
-    border-left: 3px solid #FF7A1A;
-    padding-left: 12px;
-    color: #6C757D;
-    margin: 10px 0;
-    font-style: italic;
-  }
-
-  /* Divider between exchanges */
-  .exchange + .exchange {
-    padding-top: 24px;
-    border-top: 1px dashed #E5E7EB;
-  }
-
-  /* Footer */
-  footer {
-    margin-top: 48px;
-    padding-top: 16px;
-    border-top: 1px solid #E5E7EB;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    color: #9AA0A6;
-    letter-spacing: 0.06em;
-  }
-  footer .dot { color: #FF7A1A; }
-
-  @media print {
-    .container { padding: 0; }
-    a { color: inherit; text-decoration: none; }
-  }
-</style>
-</head>
-<body>
-<div class="container">
-
-  <header>
-    <div class="brand">
-      <div class="brand-mark">
-        <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="9" y="1" width="8" height="5" fill="#C9CBCF"/>
-          <rect x="6" y="8" width="14" height="5" fill="#C9CBCF"/>
-          <rect x="3" y="15" width="20" height="5" fill="#C9CBCF"/>
-          <circle cx="13" cy="3.5" r="1.4" fill="#FF7A1A"/>
-          <line x1="13" y1="6" x2="13" y2="20" stroke="#FF7A1A" stroke-width="1"/>
-        </svg>
-      </div>
-      <div>
-        <div class="brand-name">Spinal</div>
-        <div class="brand-tag">Vision-native AI</div>
-      </div>
-    </div>
-    <div class="header-meta">
-      Chat Export<br>
-      ${esc(dateStr)} · ${esc(timeStr)}
-    </div>
-  </header>
-
-  <div class="title-block">
-    <h1>${esc(title)}</h1>
-    <div class="title-meta">
-      <span><strong>${messages.length}</strong> message${messages.length !== 1 ? 's' : ''}</span>
-      <span>Exported <strong>${esc(dateStr)}</strong></span>
-      <span>spinal.site</span>
-    </div>
-  </div>
-
-  ${exchanges}
-
-  <footer>
-    <span>End of chat <span class="dot">·</span> ${messages.length} exchange${messages.length !== 1 ? 's' : ''}</span>
-    <span>spinal.site</span>
-  </footer>
-
-</div>
-<script>
-  // Render markdown in AI bubbles, then trigger print
-  document.addEventListener('DOMContentLoaded', function () {
-    try {
-      if (window.marked) {
-        marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
-        document.querySelectorAll('.bubble.markdown').forEach(function (el) {
-          el.innerHTML = marked.parse(el.textContent);
-        });
-      }
-    } catch (e) { /* fall back to plain text */ }
-    setTimeout(function () { window.focus(); window.print(); }, 500);
-  });
-<\/script>
-</body>
-</html>`;
-        }
-
+        // ---- Event listeners for export modal ----
+        // ---- Event listeners for export modal ----
         // ---- Event listeners for export modal ----
         document.getElementById('exportCloseBtn')?.addEventListener('click', closeExportModal);
         document.getElementById('export-overlay')?.addEventListener('click', (e) => {
