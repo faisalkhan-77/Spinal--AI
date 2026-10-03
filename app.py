@@ -860,6 +860,84 @@ def update_session_title(session_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# ========================================
+# CHAT SEARCH
+# ========================================
+@app.route('/api/sessions/search', methods=['GET'])
+def search_sessions():
+    """Search user's chat sessions by title + message prompts."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    query = (request.args.get('q') or '').strip()
+    if len(query) < 2:
+        return jsonify({'sessions': [], 'query': query})
+
+    try:
+        pattern = f"%{_escape_ilike(query)}%"
+
+        # 1️⃣ Search sessions by title
+        title_res = supabase_admin.table('sessions') \
+            .select('id, title, created_at, updated_at') \
+            .eq('user_id', user_id) \
+            .ilike('title', pattern) \
+            .order('updated_at', desc=True) \
+            .limit(20) \
+            .execute()
+        title_matches = title_res.data or []
+        title_match_ids = {s['id'] for s in title_matches}
+
+        # 2️⃣ Search chat_history prompts
+        history_res = supabase_admin.table('chat_history') \
+            .select('session_id, prompt, created_at') \
+            .eq('user_id', user_id) \
+            .ilike('prompt', pattern) \
+            .order('created_at', desc=True) \
+            .limit(50) \
+            .execute()
+        history_matches = history_res.data or []
+
+        # 3️⃣ First prompt that matched per session → snippet source
+        snippet_by_session = {}
+        for h in history_matches:
+            sid = h.get('session_id')
+            if sid and sid not in snippet_by_session:
+                snippet_by_session[sid] = h.get('prompt', '')
+
+        # 4️⃣ Fetch sessions that matched only via prompt (not title)
+        extra_ids = [sid for sid in snippet_by_session if sid not in title_match_ids]
+        extra_sessions = []
+        if extra_ids:
+            extra_res = supabase_admin.table('sessions') \
+                .select('id, title, created_at, updated_at') \
+                .eq('user_id', user_id) \
+                .in_('id', extra_ids[:20]) \
+                .execute()
+            extra_sessions = extra_res.data or []
+
+        # 5️⃣ Merge + attach snippet + sort by updated_at desc
+        all_sessions = title_matches + extra_sessions
+        for s in all_sessions:
+            snip = snippet_by_session.get(s['id'])
+            if snip:
+                s['snippet'] = snip[:140]
+        all_sessions.sort(key=lambda x: x.get('updated_at', ''), reverse=True)
+
+        print(f"🔍 Search '{query}': {len(all_sessions)} matches", file=sys.stderr)
+        sys.stderr.flush()
+
+        return jsonify({
+            'sessions': all_sessions[:30],
+            'query': query,
+            'total': len(all_sessions)
+        })
+    except Exception as e:
+        print(f"❌ Search error: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 # ========================================
 # CHAT EXPORT
 # ========================================
@@ -901,6 +979,11 @@ def _build_markdown_export(sess_data, messages):
 
     lines.append(f"*End of chat · {total} exchange{'s' if total != 1 else ''} · Exported {datetime.now().strftime('%Y-%m-%d %H:%M')}*")
     return "\n".join(lines)
+
+def _escape_ilike(text):
+    """Escape special chars for Postgres ILIKE pattern."""
+    return text.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+
 
 
 def _sanitize_pdf_text(text):

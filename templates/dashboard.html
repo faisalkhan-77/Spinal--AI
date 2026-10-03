@@ -220,6 +220,471 @@
             font-size: 0.9rem;
         }
 
+        /* ============================================================
+           SIDEBAR SEARCH
+           ============================================================ */
+
+
+        /* ============================================================
+           LOADING SKELETON
+           ============================================================ */
+        @keyframes skeletonShimmer {
+            0% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg,
+                    rgba(255, 255, 255, 0.05) 25%,
+                    rgba(255, 255, 255, 0.18) 50%,
+                    rgba(255, 255, 255, 0.05) 75%);
+            background-size: 400% 100%;
+            animation: skeletonShimmer 1.4s ease-in-out infinite;
+            border-radius: 4px;
+        }
+
+        body[data-theme="light"] .skeleton {
+            background: linear-gradient(90deg,
+                    rgba(0, 0, 0, 0.04) 25%,
+                    rgba(0, 0, 0, 0.09) 50%,
+                    rgba(0, 0, 0, 0.04) 75%);
+            background-size: 400% 100%;
+        }
+
+        /* ---- Sidebar skeleton ---- */
+        .skeleton-session {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        body[data-theme="light"] .skeleton-session {
+            border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .skeleton-session .skeleton-avatar {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .skeleton-session .skeleton-line {
+            flex: 1;
+            height: 10px;
+        }
+
+        .skeleton-session:nth-child(2) .skeleton-line {
+            max-width: 75%;
+        }
+
+        .skeleton-session:nth-child(3) .skeleton-line {
+            max-width: 90%;
+        }
+
+        .skeleton-session:nth-child(4) .skeleton-line {
+            max-width: 60%;
+        }
+
+        /* ---- Chat message skeleton ---- */
+        .skeleton-msg {
+            padding: 12px 14px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        body[data-theme="light"] .skeleton-msg {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .skeleton-msg.user {
+            align-self: flex-end;
+            width: 45%;
+            min-width: 180px;
+        }
+
+        .skeleton-msg.ai {
+            align-self: flex-start;
+            width: 70%;
+            min-width: 220px;
+        }
+
+        .skeleton-msg .skeleton-line {
+            height: 10px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-msg .skeleton-line:last-child {
+            margin-bottom: 0;
+            width: 60%;
+        }
+
+        .skeleton-msg .skeleton-line:nth-child(2) {
+            width: 85%;
+        }
+
+        /* ---- Memory modal skeleton ---- */
+        .skeleton-memory {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 3px solid rgba(255, 122, 26, 0.25);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .skeleton-memory .skeleton-memory-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .skeleton-memory .skeleton-line {
+            height: 11px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-memory .skeleton-line:last-child {
+            margin-bottom: 0;
+            width: 40%;
+            height: 8px;
+        }
+
+        .skeleton-memory .skeleton-line:nth-child(2) {
+            width: 90%;
+        }
+
+        /* ============================================================
+           RENAME SESSION MODAL
+           ============================================================ */
+        #rename-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10002;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #rename-overlay.active {
+            display: flex;
+        }
+
+        .rename-modal {
+            max-width: 440px;
+            width: 100%;
+            background: #0D0E10;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+            overflow: hidden;
+            position: relative;
+            animation: renamePop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes renamePop {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .rename-modal::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 122, 26, 0.5), transparent);
+        }
+
+        .rename-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 22px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .rename-header h2 {
+            font-family: 'Big Shoulders Display', sans-serif;
+            text-transform: uppercase;
+            font-size: 1.3rem;
+            color: var(--chrome-hi);
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rename-header h2 i {
+            color: var(--amber);
+            font-size: 1rem;
+        }
+
+        .rename-close {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--bone-dim);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .rename-close:hover {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: rgba(255, 107, 107, 0.3);
+            color: var(--red);
+        }
+
+        .rename-body {
+            padding: 20px 22px 18px;
+        }
+
+        .rename-field-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--gunmetal);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .rename-input-wrap {
+            position: relative;
+        }
+
+        .rename-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            color: var(--bone);
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .rename-input:focus {
+            border-color: var(--amber);
+            background: rgba(255, 122, 26, 0.04);
+            box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.08);
+        }
+
+        .rename-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem;
+            color: var(--gunmetal);
+            letter-spacing: 0.05em;
+        }
+
+        .rename-meta .char-count.warn {
+            color: var(--amber);
+        }
+
+        .rename-meta .char-count.over {
+            color: var(--red);
+        }
+
+        .rename-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 0 22px 20px;
+        }
+
+        .rename-actions button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rename-cancel {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--bone-dim);
+        }
+
+        .rename-cancel:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--bone);
+        }
+
+        .rename-save {
+            background: var(--amber);
+            border: 1px solid var(--amber);
+            color: var(--void);
+            font-weight: 600;
+        }
+
+        .rename-save:hover:not(:disabled) {
+            background: #FF9A45;
+            box-shadow: 0 0 20px var(--amber-glow);
+        }
+
+        .rename-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Light theme */
+        body[data-theme="light"] .rename-modal {
+            background: #FFFFFF;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body[data-theme="light"] .rename-input {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: #1A1D20;
+        }
+
+        body[data-theme="light"] .rename-input:focus {
+            background: rgba(255, 107, 26, 0.05);
+        }
+
+        /* ============================================================
+           SIDEBAR SEARCH
+           ============================================================ */
+        .sidebar-search {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 9px 32px 9px 32px;
+            background: var(--void);
+            border: 1px solid var(--gunmetal-dim);
+            border-radius: 4px;
+            color: var(--bone);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .sidebar-search input::placeholder {
+            color: var(--gunmetal);
+            font-size: 0.68rem;
+            letter-spacing: 0.04em;
+        }
+
+        .sidebar-search input:focus {
+            border-color: var(--amber);
+            background: rgba(255, 122, 26, 0.03);
+            box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.08);
+        }
+
+        .sidebar-search .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gunmetal);
+            font-size: 0.7rem;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .sidebar-search:focus-within .search-icon {
+            color: var(--amber);
+        }
+
+        .sidebar-search .search-clear {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--gunmetal);
+            cursor: pointer;
+            padding: 4px 7px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            display: none;
+            transition: 0.2s;
+            line-height: 1;
+        }
+
+        .sidebar-search .search-clear.show {
+            display: block;
+        }
+
+        .sidebar-search .search-clear:hover {
+            color: var(--red);
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        /* Search result snippets + highlight */
+        .session-item .session-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .session-item .snippet {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.6rem;
+            color: var(--gunmetal);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            letter-spacing: 0.01em;
+            font-weight: 400;
+        }
+
+        .session-item mark {
+            background: rgba(255, 122, 26, 0.25);
+            color: var(--amber);
+            padding: 0 2px;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+
         .history-list {
             flex: 1;
             display: flex;
@@ -277,7 +742,8 @@
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
-            flex: 1;
+            display: block;
+            width: 100%;
         }
 
         .history-empty {
@@ -1917,6 +2383,11 @@
             opacity: 0.85;
         }
 
+        .session-item .dropdown-menu button.rename-action:hover {
+            background: rgba(201, 203, 207, 0.1);
+            color: var(--chrome-hi);
+        }
+
         .session-item .dropdown-menu button.export-action:hover {
             background: rgba(255, 122, 26, 0.1);
             color: var(--amber);
@@ -3178,6 +3649,14 @@
             <i class="fas fa-plus"></i> New Chat
         </button>
 
+        <div class="sidebar-search">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="chatSearchInput" placeholder="Search chats..." autocomplete="off" spellcheck="false">
+            <button class="search-clear" id="searchClearBtn" type="button" aria-label="Clear search">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
         <div class="history-list" id="historyList">
             <div class="history-empty mono">No sessions yet.<br>Start a new chat.</div>
         </div>
@@ -3480,6 +3959,41 @@
             </div>
         </div>
     </div>
+    <!-- ============================================================
+        EXPORT MODAL — PDF / Markdown / JSON
+        ============================================================ -->
+    <!-- ============================================================
+        RENAME SESSION MODAL
+        ============================================================ -->
+    <div id="rename-overlay">
+        <div class="rename-modal">
+            <div class="rename-header">
+                <h2><i class="fas fa-pen-to-square"></i> Rename Chat</h2>
+                <button class="rename-close" id="renameCloseBtn" aria-label="Close rename dialog">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="rename-body">
+                <label class="rename-field-label" for="renameInput">Chat title</label>
+                <div class="rename-input-wrap">
+                    <input type="text" class="rename-input" id="renameInput" maxlength="100"
+                        placeholder="Give this chat a name..." autocomplete="off" spellcheck="false">
+                </div>
+                <div class="rename-meta">
+                    <span><i class="fas fa-lightbulb" style="color: var(--amber);"></i> Enter to save · Esc to
+                        cancel</span>
+                    <span class="char-count" id="renameCharCount">0 / 100</span>
+                </div>
+            </div>
+            <div class="rename-actions">
+                <button class="rename-cancel" id="renameCancelBtn">Cancel</button>
+                <button class="rename-save" id="renameSaveBtn">
+                    <i class="fas fa-check"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ============================================================
         EXPORT MODAL — PDF / Markdown / JSON
         ============================================================ -->
@@ -3879,15 +4393,91 @@
                 .catch(err => console.error('Create session error:', err));
         }
 
-        function loadSessions() {
-            fetch('/api/sessions', { credentials: 'include' })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.sessions) {
-                        renderSessions(data.sessions);
-                    }
-                })
-                .catch(err => console.error('Load sessions error:', err));
+        // ============================================================
+        // 💀 LOADING SKELETON HELPERS
+        // ============================================================
+        let sessionsLoadedOnce = false;
+
+        function showSidebarSkeleton() {
+            historyList.innerHTML = `
+                <div class="skeleton-session"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-line"></div></div>
+                <div class="skeleton-session"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-line"></div></div>
+                <div class="skeleton-session"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-line"></div></div>
+                <div class="skeleton-session"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-line"></div></div>
+            `;
+        }
+
+        function showChatSkeleton() {
+            messageArea.innerHTML = `
+                <div class="skeleton-msg user">
+                    <div class="skeleton skeleton-line"></div>
+                </div>
+                <div class="skeleton-msg ai">
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                </div>
+                <div class="skeleton-msg user">
+                    <div class="skeleton skeleton-line"></div>
+                </div>
+                <div class="skeleton-msg ai">
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                </div>
+            `;
+        }
+
+        function showMemorySkeleton() {
+            const listEl = document.getElementById('memoryList');
+            if (!listEl) return;
+            listEl.innerHTML = `
+                <div class="skeleton-memory"><div class="skeleton-memory-content">
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                </div></div>
+                <div class="skeleton-memory"><div class="skeleton-memory-content">
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                </div></div>
+                <div class="skeleton-memory"><div class="skeleton-memory-content">
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                </div></div>
+            `;
+        }
+
+        async function loadSessions() {
+            const shouldShowSkeleton = !sessionsLoadedOnce;
+            const startTime = Date.now();
+            const MIN_SKELETON_MS = 900;  // ⬅️ Bada kiya — clearly dikhega
+
+            if (shouldShowSkeleton) {
+                showSidebarSkeleton();
+            }
+
+            try {
+                const res = await fetch('/api/sessions', { credentials: 'include' });
+                const data = await res.json();
+
+                const elapsed = Date.now() - startTime;
+                const remaining = shouldShowSkeleton ? Math.max(0, MIN_SKELETON_MS - elapsed) : 0;
+
+                // ✅ Actually wait karo — pehle setTimeout fire nahi hota tha await pe
+                if (remaining > 0) {
+                    await new Promise(r => setTimeout(r, remaining));
+                }
+
+                if (data.sessions) {
+                    renderSessions(data.sessions);
+                    sessionsLoadedOnce = true;
+                }
+            } catch (err) {
+                console.error('Load sessions error:', err);
+            }
         }
 
         function loadSession(sessionId) {
@@ -3900,22 +4490,34 @@
             isLoadingSession = true;
             showTyping(false);
 
+            // 💀 Show skeleton while loading
+            // 💀 Show skeleton while loading (min 400ms so user sees it)
+            // 💀 Show skeleton while loading (min 600ms so user sees it)
+            showChatSkeleton();
+            const startTime = Date.now();
+            const MIN_SKELETON_MS = 600;
+
             fetch(`/api/sessions/${sessionId}/messages`, { credentials: 'include' })
                 .then(res => res.json())
                 .then(data => {
-                    clearChatArea();
-                    if (data.messages && data.messages.length > 0) {
-                        data.messages.forEach(msg => {
-                            addMessage(msg.prompt, 'user');
-                            addMessage(msg.response, 'ai');
-                        });
-                    } else {
-                        addMessage("📷 Camera is off. Click 'Camera On' to enable vision.", 'ai');
-                    }
-                    currentSessionId = sessionId;
-                    highlightSession(sessionId);
-                    isLoadingSession = false;
-                    smartScroll(true);
+                    const elapsed = Date.now() - startTime;
+                    const remaining = Math.max(0, MIN_SKELETON_MS - elapsed);
+
+                    setTimeout(() => {
+                        clearChatArea();
+                        if (data.messages && data.messages.length > 0) {
+                            data.messages.forEach(msg => {
+                                addMessage(msg.prompt, 'user');
+                                addMessage(msg.response, 'ai');
+                            });
+                        } else {
+                            addMessage("📷 Camera is off. Click 'Camera On' to enable vision.", 'ai');
+                        }
+                        currentSessionId = sessionId;
+                        highlightSession(sessionId);
+                        isLoadingSession = false;
+                        smartScroll(true);
+                    }, remaining);
                 })
                 .catch(err => {
                     console.error('Load session messages error:', err);
@@ -3987,10 +4589,15 @@
                     const isActive = currentSessionId === session.id;
                     html += `
                         <div class="session-item ${isActive ? 'active' : ''}" data-session-id="${session.id}" onclick="loadSession('${session.id}')">
-                            <span class="title">${truncated}</span>
+                            <div class="session-main">
+                                <span class="title">${truncated}</span>
+                            </div>
                             <div class="session-actions">
                                 <button class="menu-btn" onclick="event.stopPropagation(); toggleMenu(this)"><i class="fas fa-ellipsis-v"></i></button>
                                 <div class="dropdown-menu">
+                                    <button class="rename-action" onclick="event.stopPropagation(); openRenameModal('${session.id}', '${title.replace(/'/g, "\\'")}'); closeAllDropdowns();">
+                                        <i class="fas fa-pen"></i> Rename
+                                    </button>
                                     <button class="export-action" onclick="event.stopPropagation(); openExportModal('${session.id}', '${title.replace(/'/g, "\\'")}'); closeAllDropdowns();">
                                         <i class="fas fa-download"></i> Export
                                     </button>
@@ -4009,6 +4616,129 @@
 
         window.loadSession = loadSession;
         window.deleteSession = deleteSession;
+
+        // ============================================================
+        // 🔍 CHAT SEARCH
+        // ============================================================
+        let searchDebounceTimer = null;
+        let searchAbortController = null;
+        const chatSearchInput = document.getElementById('chatSearchInput');
+        const searchClearBtn = document.getElementById('searchClearBtn');
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function highlightMatch(text, query) {
+            if (!text) return '';
+            const safe = escapeHtml(text);
+            if (!query) return safe;
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escaped})`, 'gi');
+            return safe.replace(regex, '<mark>$1</mark>');
+        }
+
+        function renderSearchResults(sessions, query) {
+            if (!sessions || sessions.length === 0) {
+                historyList.innerHTML = `
+                    <div class="history-empty mono">
+                        No chats match<br>
+                        <strong style="color: var(--amber);">"${escapeHtml(query)}"</strong>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            sessions.forEach(session => {
+                const title = session.title || 'New Chat';
+                const truncated = title.length > 40 ? title.substring(0, 40) + '...' : title;
+                const isActive = currentSessionId === session.id;
+                const snippet = session.snippet || '';
+                const snippetTrunc = snippet.length > 90 ? snippet.slice(0, 90) + '…' : snippet;
+
+                html += `
+                    <div class="session-item ${isActive ? 'active' : ''}" data-session-id="${session.id}" onclick="loadSession('${session.id}')">
+                        <div class="session-main">
+                            <span class="title">${highlightMatch(truncated, query)}</span>
+                            ${snippetTrunc ? `<span class="snippet">${highlightMatch(snippetTrunc, query)}</span>` : ''}
+                        </div>
+                        <div class="session-actions">
+                            <button class="menu-btn" onclick="event.stopPropagation(); toggleMenu(this)"><i class="fas fa-ellipsis-v"></i></button>
+                            <div class="dropdown-menu">
+                                <button class="rename-action" onclick="event.stopPropagation(); openRenameModal('${session.id}', '${title.replace(/'/g, "\\'")}'); closeAllDropdowns();">
+                                    <i class="fas fa-pen"></i> Rename
+                                </button>
+                                <button class="export-action" onclick="event.stopPropagation(); openExportModal('${session.id}', '${title.replace(/'/g, "\\'")}'); closeAllDropdowns();">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                                <button class="delete-action" onclick="event.stopPropagation(); deleteSession('${session.id}', event)">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = html;
+        }
+
+        async function performSearch(query) {
+            // Cancel any pending request
+            if (searchAbortController) searchAbortController.abort();
+            searchAbortController = new AbortController();
+
+            try {
+                const res = await fetch(
+                    `/api/sessions/search?q=${encodeURIComponent(query)}`,
+                    { credentials: 'include', signal: searchAbortController.signal }
+                );
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                renderSearchResults(data.sessions || [], query);
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    console.error('Search error:', e);
+                }
+            }
+        }
+
+        function clearSearch() {
+            if (chatSearchInput) chatSearchInput.value = '';
+            if (searchClearBtn) searchClearBtn.classList.remove('show');
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = null;
+            }
+            loadSessions();
+        }
+
+        chatSearchInput?.addEventListener('input', (e) => {
+            const q = e.target.value.trim();
+            searchClearBtn?.classList.toggle('show', q.length > 0);
+
+            if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+
+            if (q.length === 0) {
+                loadSessions();
+                return;
+            }
+            if (q.length < 2) return;  // wait for 2+ chars
+
+            searchDebounceTimer = setTimeout(() => performSearch(q), 300);
+        });
+
+        chatSearchInput?.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                clearSearch();
+                chatSearchInput.blur();
+            }
+        });
+
+        searchClearBtn?.addEventListener('click', clearSearch);
 
         function toggleProfileMenu() {
             const dropdown = document.getElementById('profileDropdownMenu');
@@ -4208,6 +4938,10 @@
         }
 
         async function checkAuth() {
+            // 💀 Show skeletons immediately while auth resolves
+            showSidebarSkeleton();
+            showChatSkeleton();
+
             const { data } = await sb.auth.getSession();
             if (!data.session) {
                 window.location.href = '/auth';
@@ -4250,7 +4984,10 @@
             console.log("🖼️ Avatar URL:", avatarUrl);
             console.log("🆔 User ID:", currentUser.id);
 
+            // ✅ loadSessions ab skeleton time bhi wait karega
             await loadSessions();
+
+            // ✅ Ab chat skeleton ke baad hi "Camera off" message daalo
             if (!currentSessionId) {
                 clearChatArea();
                 addMessage("📷 Camera is off. Click 'Camera On' to enable vision.", 'ai');
@@ -4881,9 +5618,18 @@
         let editingMemoryId = null;
 
         async function loadMemories() {
+            // 💀 Show skeleton immediately (min 400ms)
+            showMemorySkeleton();
+            const startTime = Date.now();
+            const MIN_SKELETON_MS = 400;
+
             try {
                 const res = await fetch('/api/memories', { credentials: 'include' });
                 const data = await res.json();
+
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, MIN_SKELETON_MS - elapsed);
+                await new Promise(r => setTimeout(r, remaining));
 
                 if (!data.memories) {
                     document.getElementById('memoryList').innerHTML =
@@ -5308,8 +6054,134 @@
 
         // Call badge load after auth
         // ============================================================
-        // 📤 CHAT EXPORT — PDF / Markdown / JSON
         // ============================================================
+        // ✏️ SESSION RENAME
+        // ============================================================
+        let renamingSessionId = null;
+        let renameOriginalTitle = '';
+
+        function openRenameModal(sessionId, currentTitle) {
+            renamingSessionId = sessionId;
+            renameOriginalTitle = currentTitle || '';
+
+            const input = document.getElementById('renameInput');
+            input.value = renameOriginalTitle;
+            document.getElementById('renameCharCount').textContent = `${renameOriginalTitle.length} / 100`;
+
+            document.getElementById('rename-overlay').classList.add('active');
+
+            // Focus + select all so user can overwrite quickly
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 50);
+        }
+
+        function closeRenameModal() {
+            document.getElementById('rename-overlay').classList.remove('active');
+            renamingSessionId = null;
+            renameOriginalTitle = '';
+        }
+
+        async function saveRename() {
+            if (!renamingSessionId) return;
+
+            const input = document.getElementById('renameInput');
+            const newTitle = input.value.trim();
+
+            // Validation
+            if (newTitle.length === 0) {
+                showToast('⚠️ Title cannot be empty', 'error');
+                input.focus();
+                return;
+            }
+            if (newTitle.length > 100) {
+                showToast('⚠️ Title too long (max 100 chars)', 'error');
+                return;
+            }
+            if (newTitle === renameOriginalTitle) {
+                // No change — just close
+                closeRenameModal();
+                return;
+            }
+
+            const saveBtn = document.getElementById('renameSaveBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                const res = await fetch(`/api/sessions/${renamingSessionId}/title`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ title: newTitle })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('✅ Chat renamed', 'success');
+
+                    // Update in-memory sessions list — avoid extra fetch
+                    // But if search is active, re-render properly
+                    const searchQ = document.getElementById('chatSearchInput')?.value.trim();
+                    if (searchQ && searchQ.length >= 2) {
+                        // Search active — refresh search results
+                        performSearch(searchQ);
+                    } else {
+                        loadSessions();
+                    }
+
+                    closeRenameModal();
+                } else {
+                    showToast(`❌ ${data.error || 'Failed to rename'}`, 'error');
+                }
+            } catch (e) {
+                console.error('Rename error:', e);
+                showToast('❌ Network error', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-check"></i> Save';
+            }
+        }
+
+        // ---- Event listeners ----
+        document.getElementById('renameCloseBtn')?.addEventListener('click', closeRenameModal);
+        document.getElementById('renameCancelBtn')?.addEventListener('click', closeRenameModal);
+        document.getElementById('renameSaveBtn')?.addEventListener('click', saveRename);
+
+        document.getElementById('rename-overlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'rename-overlay') closeRenameModal();
+        });
+
+        // Live char counter + Enter to save
+        document.getElementById('renameInput')?.addEventListener('input', (e) => {
+            const len = e.target.value.length;
+            const counter = document.getElementById('renameCharCount');
+            counter.textContent = `${len} / 100`;
+            counter.classList.remove('warn', 'over');
+            if (len > 90 && len <= 100) counter.classList.add('warn');
+            if (len > 100) counter.classList.add('over');
+        });
+
+        document.getElementById('renameInput')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveRename();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeRenameModal();
+            }
+        });
+
+        // Make globally accessible
+        window.openRenameModal = openRenameModal;
+        window.closeRenameModal = closeRenameModal;
+
+        // Call badge load after auth
+        // ============================================================
+        // 📤 CHAT EXPORT — PDF / Markdown / JSON
+        // ============================================================        // ============================================================
         let exportSessionId = null;
         let exportSessionTitle = '';
         let isExporting = false;
