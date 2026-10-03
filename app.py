@@ -2,12 +2,13 @@ import sys
 print("🚀 Script started", file=sys.stderr)
 sys.stderr.flush()
 
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify, Response
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify, Response,send_file
 from flask_socketio import SocketIO, emit
 import base64
 import os
 import time
 import re
+import io
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -900,6 +901,180 @@ def _build_markdown_export(sess_data, messages):
 
     lines.append(f"*End of chat · {total} exchange{'s' if total != 1 else ''} · Exported {datetime.now().strftime('%Y-%m-%d %H:%M')}*")
     return "\n".join(lines)
+
+
+def _sanitize_pdf_text(text):
+    """Make text safe for fpdf2 built-in fonts (Latin-1). Replaces common emojis/symbols."""
+    if not text:
+        return ""
+    replacements = {
+        '✅': '[OK]', '❌': '[X]', '⚠️': '[!]', '🔥': '!!',
+        '💡': '*', '🚀': '>>', '📷': '[cam]', '🎤': '[mic]',
+        '🧠': '[brain]', '⚡': '!', '💬': '', '📄': '',
+        '😊': ':)', '😄': ':D', '🙂': ':)', '😀': ':D',
+        '❤️': '<3', '👍': '+1', '👎': '-1', '🎯': '[*]',
+        '🌊': '~', '🛑': '[STOP]', '⏹️': '[stop]', '📸': '[cam]',
+        '🖥️': '[screen]', '📤': '[>>]', '📥': '[<<]', '📦': '[pkg]',
+        '—': '-', '–': '-', '“': '"', '”': '"', '‘': "'", '’': "'",
+        '…': '...', '·': '.', '•': '*', '→': '->', '←': '<-',
+        '✕': 'x', '✓': 'v', '✔': 'v', '★': '*', '☆': '*',
+    }
+    for emoji, repl in replacements.items():
+        text = text.replace(emoji, repl)
+    # Strip anything outside Latin-1
+    text = text.encode('latin-1', 'replace').decode('latin-1')
+    return text
+
+
+def _build_pdf_export(sess_data, messages):
+    """Build a professional, text-based PDF using fpdf2."""
+    from fpdf import FPDF
+
+    title = _sanitize_pdf_text(sess_data.get('title') or 'New Chat')
+    created = (sess_data.get('created_at') or '')[:19].replace('T', ' ')
+
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_margins(15, 15, 15)
+    pdf.add_page()
+
+    # ---- Header: brand ----
+    pdf.set_text_color(255, 122, 26)
+    pdf.set_font('Helvetica', 'B', 22)
+    pdf.cell(0, 10, 'SPINAL', ln=True)
+
+    pdf.set_text_color(108, 117, 125)
+    pdf.set_font('Helvetica', '', 8)
+    pdf.cell(0, 4, 'VISION-NATIVE AI  |  CHAT EXPORT', ln=True)
+
+    pdf.ln(2)
+    pdf.set_draw_color(255, 122, 26)
+    pdf.set_line_width(0.8)
+    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+    pdf.ln(6)
+
+    # ---- Title ----
+    pdf.set_text_color(11, 12, 14)
+    pdf.set_font('Helvetica', 'B', 18)
+    pdf.multi_cell(0, 8, title)
+    pdf.ln(2)
+
+    pdf.set_font('Helvetica', '', 9)
+    pdf.set_text_color(108, 117, 125)
+    meta = f"{len(messages)} message{'s' if len(messages) != 1 else ''}  |  Started: {created}"
+    pdf.cell(0, 5, _sanitize_pdf_text(meta), ln=True)
+    pdf.ln(8)
+
+    # ---- Messages ----
+    for i, m in enumerate(messages, 1):
+        prompt = (m.get('prompt') or '').strip()
+        response = (m.get('response') or '').strip()
+        ts = (m.get('created_at') or '')[:19].replace('T', ' ')
+
+        # Exchange number badge
+        pdf.set_fill_color(11, 12, 14)
+        pdf.set_text_color(255, 122, 26)
+        pdf.set_font('Helvetica', 'B', 8)
+        pdf.cell(14, 6, f'#{i:02d}', fill=True, align='C')
+
+        if ts:
+            pdf.set_text_color(154, 160, 166)
+            pdf.set_font('Helvetica', '', 8)
+            pdf.cell(0, 6, f'  {_sanitize_pdf_text(ts)}', ln=True)
+        else:
+            pdf.ln(6)
+        pdf.ln(1)
+
+        # User message
+        pdf.set_text_color(108, 117, 125)
+        pdf.set_font('Helvetica', 'B', 8)
+        pdf.cell(0, 5, 'YOU', ln=True)
+
+        pdf.set_fill_color(255, 244, 234)
+        pdf.set_text_color(26, 29, 32)
+        pdf.set_font('Helvetica', '', 10)
+        pdf.multi_cell(0, 5, _sanitize_pdf_text(prompt), fill=True)
+        pdf.ln(2)
+
+        # AI message
+        pdf.set_text_color(108, 117, 125)
+        pdf.set_font('Helvetica', 'B', 8)
+        pdf.cell(0, 5, 'SPINAL', ln=True)
+
+        pdf.set_fill_color(248, 249, 250)
+        pdf.set_text_color(26, 29, 32)
+        pdf.set_font('Helvetica', '', 10)
+        pdf.multi_cell(0, 5, _sanitize_pdf_text(response), fill=True)
+        pdf.ln(6)
+
+        # Divider between exchanges
+        if i < len(messages):
+            pdf.set_draw_color(229, 231, 235)
+            pdf.set_line_width(0.2)
+            pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+            pdf.ln(5)
+
+    # ---- Footer ----
+    pdf.ln(4)
+    pdf.set_draw_color(229, 231, 235)
+    pdf.set_line_width(0.3)
+    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+    pdf.ln(3)
+    pdf.set_font('Helvetica', 'I', 7)
+    pdf.set_text_color(154, 160, 166)
+    footer = f'End of chat  |  {len(messages)} exchange{"s" if len(messages) != 1 else ""}  |  spinal.site'
+    pdf.cell(0, 5, _sanitize_pdf_text(footer), align='C', ln=True)
+
+    # ✅ FIX: fpdf2 returns bytearray; force to immutable bytes
+    output = pdf.output()
+    if isinstance(output, bytearray):
+        output = bytes(output)
+    return output
+
+
+@app.route('/api/sessions/<session_id>/export/pdf', methods=['GET'])
+def export_session_pdf(session_id):
+    """Export a chat session as a text-based PDF."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    try:
+        sess_res = supabase_admin.table('sessions') \
+            .select('id, title, created_at, updated_at') \
+            .eq('id', session_id).eq('user_id', user_id).execute()
+        if not sess_res.data:
+            return jsonify({'error': 'Session not found'}), 404
+        sess_data = sess_res.data[0]
+
+        msg_res = supabase_admin.table('chat_history') \
+            .select('prompt, response, created_at') \
+            .eq('session_id', session_id).eq('user_id', user_id) \
+            .order('created_at', desc=False).execute()
+        messages = msg_res.data or []
+
+        # Build PDF — guaranteed to be bytes now
+        pdf_data = _build_pdf_export(sess_data, messages)
+        print(f"📕 PDF built: {len(pdf_data)} bytes, {len(messages)} messages", file=sys.stderr)
+        sys.stderr.flush()
+
+        raw_title = (sess_data.get('title') or 'chat').strip()
+        safe_title = re.sub(r'[^\w\s\-]', '', raw_title)[:40].strip().replace(' ', '_') or 'chat'
+        base_name = f"Spinal_{safe_title}_{datetime.now().strftime('%Y-%m-%d')}.pdf"
+
+        # ✅ FIX: BytesIO + send_file — correct Content-Length, correct bytes
+        return send_file(
+            io.BytesIO(pdf_data),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=base_name,
+            max_age=0
+        )
+    except Exception as e:
+        print(f"❌ PDF export error: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/sessions/<session_id>/export', methods=['GET'])
