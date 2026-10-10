@@ -1,0 +1,4 @@
+cd D:\OneDrive\Documents\Spinal_Ai
+git add app.py templates/dashboard.html
+git commit -m "Add Chat Search: title + prompt search with snippets and match highlighting"
+git push origin main
