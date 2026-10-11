@@ -5500,21 +5500,24 @@
         askBtn.addEventListener('click', function () {
             primeSpeechSynthesis();
             if (isProcessing) return;
-            currentPrompt = questionInput.value.trim() ||
-                "Describe exactly what you see in this image in ONE short, friendly sentence.";
-            if (!questionInput.value.trim()) {
-                showToast('💡 Typing something helps Spinal understand better!', 'info');
+
+            const typed = questionInput.value.trim();
+
+            // ✅ If empty, show toast and DON'T send to AI
+            if (!typed) {
+                showToast('💡 Please type something to ask.', 'info');
+                questionInput.focus();
+                return;
             }
-            if (!isCameraOn && !isScreenSharing) {
-                showToast('ℹ️ Camera is off. Click "Camera On" to use vision.', 'info');
-            }
+
+            currentPrompt = typed;
             isVoiceQuery = false;
             addMessage(currentPrompt, 'user');
             showTyping(true);
             updateStatus('Thinking...', 'thinking');
             captureAndSendFrame(currentPrompt);
 
-            // ✅ Prompt send hone ke baad input field clear karo
+            // Clear input
             questionInput.value = '';
         });
 
@@ -5565,9 +5568,6 @@
                         addMessage(transcript, 'user');
                         showTyping(true);
                         updateStatus('Thinking...', 'thinking');
-                        if (!isCameraOn && !isScreenSharing) {
-                            showToast('ℹ️ Camera is off. Click "Camera On" to use vision.', 'info');
-                        }
                         captureAndSendFrame(transcript);
                     } else {
                         updateStatus('Could not hear you', 'error');
@@ -5666,25 +5666,25 @@
         });
 
         function captureAndSendFrame(promptText) {
-            let canvas = document.createElement('canvas');
-            let dataUrl;
+            let dataUrl = null;
 
-            if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
+            // ✅ Only capture if camera OR screen is actually active
+            if ((isCameraOn || isScreenSharing) &&
+                video.readyState === video.HAVE_ENOUGH_DATA &&
+                video.videoWidth > 0 &&
+                video.videoHeight > 0) {
+
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 console.log("📸 Frame captured.");
             } else {
-                console.warn("⚠️ Camera/Screen not ready, sending blank frame.");
-                showToast('ℹ️ No camera/screen active. Spinal will answer based on text only.', 'info');
-                canvas.width = 1;
-                canvas.height = 1;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = 'black';
-                ctx.fillRect(0, 0, 1, 1);
+                // ✅ Send NO image instead of a black 1×1 placeholder
+                console.log("📷 No camera/screen active — sending text-only request.");
             }
-            dataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
             if (!currentUser || !currentUser.id) {
                 updateStatus('User not logged in', 'error');
@@ -5701,12 +5701,13 @@
             updateStatus('Processing...', 'thinking');
 
             socket.emit('frame', {
-                image: dataUrl,
+                image: dataUrl,        // null if no camera — backend handles this
                 prompt: promptText,
                 userId: currentUser.id,
                 sessionId: sessionToSend
             });
-            console.log("📤 Frame sent with session:", sessionToSend);
+            console.log("📤 Frame sent with session:", sessionToSend,
+                dataUrl ? '📸 with image' : '📝 text-only');
         }
 
         questionInput.addEventListener('keydown', (e) => {

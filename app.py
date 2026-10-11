@@ -53,6 +53,34 @@ DEDUP_THRESHOLD = 0.78            # Catches name corrections
 DEDUP_HIGH_SIMILARITY = 0.90      # Force update threshold
 MAX_MEMORIES_PER_QUERY = 5
 
+# ============================================================
+# FILE UPLOAD CONFIG
+# ============================================================
+UPLOAD_BUCKET = 'user-uploads'
+MAX_UPLOAD_SIZE = 15 * 1024 * 1024  # 15 MB
+
+ALLOWED_MIME_TYPES = {
+    # Images
+    'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+    # Documents
+    'application/pdf',
+    # Text-based
+    'text/csv', 'text/plain', 'text/markdown', 'application/csv',
+}
+
+# Gemini-supported mimes for direct part attachment
+GEMINI_FILE_MIMES = {
+    'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+    'application/pdf',
+}
+
+# Text-based mimes that we'll read and inject into prompt
+TEXT_FILE_MIMES = {
+    'text/csv', 'text/plain', 'text/markdown', 'application/csv',
+}
+
+MAX_TEXT_FILE_CHARS = 60000  # ~60k chars for text files
+
 MEMORY_EXTRACTION_PROMPT = """You are a memory extraction system for an AI assistant called Spinal.
 
 Given a conversation exchange, extract ONLY facts about the USER that are worth remembering for future conversations.
@@ -88,6 +116,164 @@ User: {user_message}
 Assistant: {ai_response}
 
 Return ONLY valid JSON. No markdown fences, no explanation."""
+
+
+# ============================================================
+# CORE SYSTEM PROMPT — Spinal's foundational behavior
+# This is Layer 1. Personality + Style are Layers 2 & 3.
+# ============================================================
+SYSTEM_PROMPT = """You are Spinal, a vision-native AI assistant built to think clearly, answer precisely, and behave like a senior expert across every domain — coding, math, science, business, writing, and personal advice.
+
+You are not a chatbot. You are a thinking partner. Your goal is to give the user the same quality of answer a world-class expert would give, in the fewest words necessary.
+
+═══════════════════════════════════════════════════════════
+CORE BEHAVIORAL CONTRACT
+═══════════════════════════════════════════════════════════
+
+1. BE DIRECT
+   - Answer first, explain second.
+   - Skip preambles like "Great question!", "That's a good point!", "I'd be happy to help!"
+   - Never repeat the user's question back to them.
+   - Never begin with "As an AI..." or "As a language model..."
+
+2. BE HONEST
+   - If you don't know something, say "I don't know" or "I'm not sure."
+   - If a question is ambiguous, ask ONE clarifying question — not five.
+   - If the user is factually wrong, correct them respectfully but directly.
+   - Never invent facts, sources, statistics, or code.
+
+3. BE PRECISE
+   - Vague answers are failures. Give specific, actionable information.
+   - Use concrete examples where they help.
+   - Distinguish clearly between facts, opinions, and speculation.
+
+4. BE USEFUL
+   - Solve the actual problem the user has, not the one you wish they had.
+   - If the question is unclear, answer the most likely intent.
+   - Anticipate follow-ups — but don't bloat answers with unsolicited advice.
+
+═══════════════════════════════════════════════════════════
+FORMATTING STANDARDS
+═══════════════════════════════════════════════════════════
+- Use Markdown: **bold** for key terms, `code` for inline code.
+- Code blocks MUST include a language tag (```python, ```javascript).
+- Use bullet lists for 3+ parallel items; use prose for 1-2 items.
+- Use headings only for answers longer than 400 words.
+- Never use headings, lists, or bold for very short answers (1-3 sentences).
+- Emojis: use ONLY if the user used an emoji first in this conversation. 
+  Default to NO emojis. Never use 🚀, ✅, 💡, or other decorative emojis 
+  as a default ending.
+MATH & NOTATION:
+- NEVER use LaTeX notation like $O(N^2)$, \frac{}{}, \int, etc.
+- Write math in plain text: "O(N²)", "N squared", "1/2", "square root of X".
+- Use Unicode math symbols when helpful: ², ³, ×, ÷, ≈, ≤, ≥, √, π, Σ.
+- Complex equations → use a code block with clear formatting.
+
+ENDING RULES:
+- Never end with "Let me know if...", "Feel free to ask...", 
+  "Happy to help further", or any variant.
+- End when the answer is complete. Do not add filler closings.
+- Do not offer unsolicited next steps, advice, or extensions unless the 
+  user's question explicitly asks for them.
+- Do not add bonus advice or "while you're at it" suggestions.
+
+═══════════════════════════════════════════════════════════
+ANTI-PATTERNS — NEVER DO THESE
+═══════════════════════════════════════════════════════════
+
+- Never start with: "Great question!", "Certainly!", "Of course!"
+- Never say: "As an AI, I...", "As a language model, I..."
+- Never apologize unnecessarily when nothing is wrong.
+- Never repeat the user's question before answering.
+- Never end with: "Let me know if you have more questions!"
+- Never use emojis in professional, technical, or sensitive contexts.
+- Never pad short answers with unnecessary caveats or disclaimers.
+- Never give medical, legal, or financial advice as if you were a licensed professional — always recommend consulting a qualified expert for high-stakes decisions.
+
+═══════════════════════════════════════════════════════════
+LANGUAGE & TONE
+═══════════════════════════════════════════════════════════
+
+- Match the user's language. If they write in Hinglish, reply in Hinglish.
+- If they write in Hindi, reply in Hindi. If in English, reply in English.
+- Default tone is professional, warm, and direct — not robotic, not overly casual.
+- Adjust tone based on the user's Personality preference (see below).
+
+═══════════════════════════════════════════════════════════
+HANDLING EDGE CASES
+═══════════════════════════════════════════════════════════
+
+- Ambiguous question → ask ONE clarifying question, or answer the most likely intent if the ambiguity is minor.
+- Multi-part question → answer each part clearly labeled.
+- User is frustrated → acknowledge briefly, then solve the problem.
+- User is wrong → correct directly without being condescending.
+- User asks for opinion → give your honest view with reasoning, don't hedge.
+- Off-topic or harmful request → decline clearly, briefly explain why.
+
+═══════════════════════════════════════════════════════════
+INSTRUCTION HIERARCHY (in order of priority)
+═══════════════════════════════════════════════════════════
+
+1. Safety and ethics (highest)
+2. Accuracy and honesty
+3. User's explicit instructions in this conversation
+4. User's Personality preference
+5. User's Response Style preference
+6. Default behavior from this system prompt
+
+If a lower-priority instruction conflicts with a higher one, the higher wins.
+
+═══════════════════════════════════════════════════════════
+VISION & MEMORY
+═══════════════════════════════════════════════════════════
+
+Camera rules:
+
+1. ONLY discuss the camera/image if the user EXPLICITLY asks about it 
+   (e.g., "what do you see?", "camera mein kya hai?", "describe what's 
+   in front of me").
+
+2. In ALL other cases, IGNORE the camera completely. Never spontaneously 
+   say "camera dark hai", "kuch dikh nahi raha", "lens covered hai", 
+   or any camera-related comment.
+
+3. If the user asks what you see AND no image was provided (camera is 
+   off), respond EXACTLY like this in the user's language:
+   
+   English: "Your camera is currently off. Please turn it on first, 
+   then ask me again."
+   
+   Hinglish: "Camera abhi off hai. Pehle use on karo, phir mujhse 
+   pucho."
+   
+   Do NOT say "it's dark" or "I can't see anything."
+
+4. If the user asks what you see AND an image IS provided but it's dark 
+   or unclear, respond:
+   
+   English: "I can see a bit but it's too dark. Try better lighting 
+   or a clearer angle."
+   
+   Hinglish: "Thoda dikh raha hai but bahut dark hai. Light better 
+   karo ya angle change karo."
+
+5. Do NOT mention the image at all if no image was provided AND the 
+   user didn't ask about it.
+
+Microphone rules: same principle — only discuss audio if the user asks.
+
+Memory rules: 
+- Use memory silently to inform your answers. Do NOT announce that you 
+  remember something.
+- Do NOT repeatedly address the user by name. Use their name only when 
+  it's natural — typically once at the start of a new conversation, or 
+  when it adds warmth. In follow-up messages, do NOT repeat the name 
+  in every reply.
+- Never open every message with the user's name."""
+
+# ============================================================
+# MEMORY HELPER FUNCTIONS
+# ============================================================
 
 
 # ============================================================
@@ -352,9 +538,8 @@ STYLE_INSTRUCTIONS = {
     'short': (
         "RESPONSE STYLE: SHORT\n"
         "- Give the direct answer in 1-3 sentences maximum.\n"
-        "- No preamble, no filler phrases like 'Great question!'.\n"
+        "- No preamble, no filler phrases.\n"
         "- Skip examples unless the user explicitly asks.\n"
-        "- Do not ask follow-up questions.\n"
         "- Prefer bullet points over paragraphs when listing."
     ),
     'balanced': (
@@ -366,11 +551,23 @@ STYLE_INSTRUCTIONS = {
     ),
     'detailed': (
         "RESPONSE STYLE: DETAILED\n"
-        "- Give a comprehensive, thorough response.\n"
-        "- Structure with headings, bullet points, or numbered steps.\n"
-        "- Include examples, edge cases, or caveats.\n"
-        "- Add a brief summary or next-step suggestion at the end.\n"
-        "- Aim for depth over brevity."
+        "- Give a thorough, well-structured response — but SCALE THE DEPTH "
+        "TO THE QUESTION.\n"
+        "- A simple factual question (e.g., '2+2', 'what is the capital of "
+        "India') gets a SHORT answer even in detailed mode. Never bloat "
+        "trivial questions.\n"
+        "- A complex question (e.g., 'explain how decorators work', 'write "
+        "a function to do X') gets depth: code examples, edge cases, "
+        "complexity analysis, real-world context.\n"
+        "- Use headings, bullet points, or numbered steps when the answer "
+        "is genuinely long (400+ words). Do NOT force structure on short "
+        "answers.\n"
+        "- Do NOT add 'next step' suggestions or follow-up advice unless "
+        "the user explicitly asks.\n"
+        "- Do NOT add summary sections at the end unless the answer is "
+        "very long (600+ words).\n"
+        "- Aim for depth when it helps. Aim for brevity when the question "
+        "doesn't need depth."
     )
 }
 
@@ -393,7 +590,11 @@ PERSONALITY_INSTRUCTIONS = {
         "- Speak like a helpful, knowledgeable friend — not a corporate bot.\n"
         "- Light use of emojis is fine (1-2 per reply, only when natural).\n"
         "- Match the user's language (Hinglish if they use it).\n"
-        "- Show genuine interest and empathy; celebrate their wins."
+        "- Show genuine interest and empathy; celebrate their wins.\n"
+        "- Match the user's energy. If they send a short casual greeting, "
+        "reply warmly but briefly. Do not lecture or add life advice.\n"
+        "- Never be preachy, judgmental, or push unsolicited motivation.\n"
+        "- Do not turn a casual greeting into a deep conversation."
     ),
     'motivational': (
         "PERSONALITY MODE: MOTIVATIONAL\n"
@@ -514,14 +715,17 @@ STOP_REQUESTS = set()
 # ============================================================
 # GEMINI HELPERS — Multi-Model Fallback + Smart Retry
 # ============================================================
-def call_gemini_with_retry(prompt, image_part, max_retries=2):
-    """Gemini API call with fallback chain + retry."""
+def call_gemini_with_retry(contents, max_retries=2):
+    """Gemini API call with fallback chain + retry. Accepts contents list."""
     config = types.GenerateContentConfig(
-        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+        thinking_config=types.ThinkingConfig(
+            thinking_budget=-1,
+            include_thoughts=False
+        )
     )
 
     models_to_try = [
-        'gemini-2.5-flash',
         'gemini-3.5-flash-lite',
         'gemini-3.5-flash',
         'gemini-3.1-flash-lite',
@@ -535,11 +739,24 @@ def call_gemini_with_retry(prompt, image_part, max_retries=2):
                 print(f"🔄 Trying {model_name} (attempt {attempt + 1}/{max_retries})...", file=sys.stderr)
                 sys.stderr.flush()
 
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=[prompt, image_part],
-                    config=config
-                )
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=contents,
+                        config=config
+                    )
+                except Exception as think_err:
+                    if 'thinking' in str(think_err).lower() or 'unsupported' in str(think_err).lower():
+                        fallback_config = types.GenerateContentConfig(
+                            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+                        )
+                        response = client.models.generate_content(
+                            model=model_name,
+                            contents=contents,
+                            config=fallback_config
+                        )
+                    else:
+                        raise
 
                 if response and response.text:
                     print(f"✅ Success with {model_name}", file=sys.stderr)
@@ -577,17 +794,21 @@ def call_gemini_with_retry(prompt, image_part, max_retries=2):
     return "Sorry, the AI service is experiencing high demand. Please try again after some time."
 
 
-def call_gemini_streaming(prompt, image_part):
+def call_gemini_streaming(contents):
     """
     Generator — yields text chunks from Gemini streaming API.
+    Accepts a pre-built `contents` list (prompt + optional image/file parts).
     Fallback chain if model fails BEFORE first chunk.
     """
     config = types.GenerateContentConfig(
-        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+        thinking_config=types.ThinkingConfig(
+            thinking_budget=-1,   # -1 = dynamic thinking (AI decides how much)
+            include_thoughts=False
+        )
     )
 
     models_to_try = [
-        'gemini-2.5-flash',
         'gemini-3.5-flash-lite',
         'gemini-3.5-flash',
         'gemini-3.1-flash-lite',
@@ -599,11 +820,27 @@ def call_gemini_streaming(prompt, image_part):
             print(f"🌊 Streaming with {model_name}...", file=sys.stderr)
             sys.stderr.flush()
 
-            stream = client.models.generate_content_stream(
-                model=model_name,
-                contents=[prompt, image_part],
-                config=config
-            )
+            # Try with thinking; if model doesn't support it, retry without
+            try:
+                stream = client.models.generate_content_stream(
+                    model=model_name,
+                    contents=contents,
+                    config=config
+                )
+            except Exception as think_err:
+                if 'thinking' in str(think_err).lower() or 'unsupported' in str(think_err).lower():
+                    print(f"⚠️ {model_name} doesn't support thinking — retrying without", file=sys.stderr)
+                    sys.stderr.flush()
+                    fallback_config = types.GenerateContentConfig(
+                        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+                    )
+                    stream = client.models.generate_content_stream(
+                        model=model_name,
+                        contents=contents,
+                        config=fallback_config
+                    )
+                else:
+                    raise
 
             for chunk in stream:
                 # Gemini chunks mein text hamesha nahi hota — safe access
@@ -1547,16 +1784,16 @@ def handle_frame(data):
                 emit('response', {'data': 'Error: Could not create session'})
                 return
 
-        image_data = data['image']
-        user_prompt = data.get('prompt', 'Describe exactly what you see in this image in ONE short, friendly sentence.')
-
+        image_data = data.get('image')  # may be None now
+        user_prompt = data.get('prompt', 'Hello')
         # ---- Fetch last 5 chat history for context ----
+        # ---- Fetch last 20 chat history for deeper context ----
         history_res = supabase_admin.table('chat_history') \
             .select('prompt, response') \
             .eq('user_id', user_id) \
             .eq('session_id', session_id) \
             .order('created_at', desc=True) \
-            .limit(5) \
+            .limit(20) \
             .execute()
         history = history_res.data if history_res.data else []
         history.reverse()
@@ -1570,6 +1807,7 @@ def handle_frame(data):
 
         # ---- Fetch user's response style preference ----
         # ---- Fetch user's response style + personality ----
+        # ---- Fetch user's response style + personality ----
         response_style = get_user_response_style(user_id)
         style_instruction = build_style_instruction(response_style)
         personality = get_user_personality(user_id)
@@ -1578,8 +1816,14 @@ def handle_frame(data):
         sys.stderr.flush()
 
         # ---- Build full prompt ----
-        # Order: Personality (fundamental tone) → Style (length) → Memory → History → Question
-        context_parts = [personality_instruction, style_instruction]
+        # Order (ChatGPT-style): 
+        # Layer 1 (System) → Layer 2 (Personality) → Layer 3 (Style) 
+        # → Memory → History → Current question
+        context_parts = [
+            SYSTEM_PROMPT,
+            personality_instruction,
+            style_instruction,
+        ]
 
         if memory_context:
             context_parts.append(memory_context)
@@ -1592,10 +1836,67 @@ def handle_frame(data):
 
         full_prompt = "\n\n".join(context_parts) + f"\n\nCurrent question: {user_prompt}"
 
-        # ---- Decode image ----
-        header, encoded = image_data.split(',', 1)
-        image_bytes = base64.b64decode(encoded)
-        image_part = types.Part.from_bytes(data=image_bytes, mime_type='image/jpeg')
+        # ---- FILE ATTACHMENT (optional) ----
+        file_path = data.get('filePath')
+        file_mime = (data.get('fileMime') or '').lower()
+        file_name = data.get('fileName') or 'file'
+        attached_file_part = None
+        text_file_content = None
+
+        if file_path:
+            if not file_path.startswith(f"{user_id}/"):
+                print(f"⚠️ File path mismatch: {file_path} vs {user_id}", file=sys.stderr)
+                sys.stderr.flush()
+                file_path = None
+            else:
+                try:
+                    file_bytes = supabase_admin.storage.from_(UPLOAD_BUCKET).download(file_path)
+                    print(f"📎 Attached file loaded: {file_name} ({len(file_bytes)} bytes, {file_mime})", file=sys.stderr)
+                    sys.stderr.flush()
+
+                    if file_mime in GEMINI_FILE_MIMES:
+                        attached_file_part = types.Part.from_bytes(
+                            data=file_bytes,
+                            mime_type='application/pdf' if file_mime == 'application/pdf' else file_mime
+                        )
+                    elif file_mime in TEXT_FILE_MIMES:
+                        try:
+                            text_file_content = file_bytes.decode('utf-8', errors='replace')
+                        except Exception:
+                            text_file_content = file_bytes.decode('latin-1', errors='replace')
+                        if len(text_file_content) > MAX_TEXT_FILE_CHARS:
+                            text_file_content = text_file_content[:MAX_TEXT_FILE_CHARS] + "\n\n[...truncated...]"
+                    else:
+                        print(f"⚠️ Unsupported mime for attachment: {file_mime}", file=sys.stderr)
+                except Exception as e:
+                    print(f"⚠️ Failed to load attached file: {e}", file=sys.stderr)
+                    sys.stderr.flush()
+
+        # ---- Inject text file content into prompt (if CSV/TXT/MD) ----
+        if text_file_content:
+            full_prompt = (
+                f"[Attached file: {file_name}]\n"
+                f"```\n{text_file_content}\n```\n\n"
+                f"{full_prompt}"
+            )
+
+        # ---- Assemble contents (image optional) ----
+        contents = [full_prompt]
+
+        if image_data:
+            try:
+                header, encoded = image_data.split(',', 1)
+                image_bytes = base64.b64decode(encoded)
+                image_part = types.Part.from_bytes(data=image_bytes, mime_type='image/jpeg')
+                contents.append(image_part)
+                print("📸 Image attached to request", file=sys.stderr)
+                sys.stderr.flush()
+            except Exception as e:
+                print(f"⚠️ Image decode failed, sending text-only: {e}", file=sys.stderr)
+                sys.stderr.flush()
+
+        if attached_file_part is not None:
+            contents.append(attached_file_part)
 
         # ---- STREAMING: Signal start ----
         emit('response_start', {'sessionId': session_id})
@@ -1604,7 +1905,7 @@ def handle_frame(data):
         ai_text_parts = []
         stopped_by_user = False
         try:
-            for chunk in call_gemini_streaming(full_prompt, image_part):
+            for chunk in call_gemini_streaming(contents):
                 # Check if user requested stop
                 if user_id in STOP_REQUESTS:
                     STOP_REQUESTS.discard(user_id)
