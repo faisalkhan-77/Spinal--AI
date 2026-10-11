@@ -5102,6 +5102,29 @@
                 return;
             }
 
+            // ✅ Mobile fix: fallback mime based on extension
+            if (!file.type || file.type === 'application/octet-stream') {
+                const ext = file.name.split('.').pop().toLowerCase();
+                const mimeMap = {
+                    'csv': 'text/csv',
+                    'txt': 'text/plain',
+                    'md': 'text/markdown',
+                    'pdf': 'application/pdf',
+                    'jpg': 'image/jpeg',
+                    'jpeg': 'image/jpeg',
+                    'png': 'image/png',
+                    'webp': 'image/webp',
+                    'gif': 'image/gif',
+                    'heic': 'image/heic',
+                    'heif': 'image/heif',
+                };
+                const mime = mimeMap[ext];
+                if (mime) {
+                    // Create a new File with the corrected mime type
+                    file = new File([file], file.name, { type: mime });
+                }
+            }
+
             isUploadingFile = true;
             if (attachBtn) attachBtn.disabled = true;
             renderFileChip('uploading');

@@ -63,15 +63,19 @@ MAX_UPLOAD_SIZE = 15 * 1024 * 1024  # 15 MB
 ALLOWED_MIME_TYPES = {
     # Images
     'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+    'image/heic', 'image/heif',        # iOS photos
     # Documents
     'application/pdf',
     # Text-based
     'text/csv', 'text/plain', 'text/markdown', 'application/csv',
+    # Fallback (some Android uploads)
+    'application/octet-stream',
 }
 
-# Gemini-supported mimes for direct part attachment
+# Gemini-supported mimes for direct part attachment 
 GEMINI_FILE_MIMES = {
     'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+    'image/heic', 'image/heif',
     'application/pdf',
 }
 
