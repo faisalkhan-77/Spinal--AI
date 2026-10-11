@@ -9,6 +9,7 @@ import os
 import time
 import re
 import io
+import uuid
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -122,7 +123,7 @@ Return ONLY valid JSON. No markdown fences, no explanation."""
 # CORE SYSTEM PROMPT — Spinal's foundational behavior
 # This is Layer 1. Personality + Style are Layers 2 & 3.
 # ============================================================
-SYSTEM_PROMPT = """You are Spinal, a vision-native AI assistant built to think clearly, answer precisely, and behave like a senior expert across every domain — coding, math, science, business, writing, and personal advice.
+SYSTEM_PROMPT = r"""You are Spinal, a vision-native AI assistant built to think clearly, answer precisely, and behave like a senior expert across every domain — coding, math, science, business, writing, and personal advice.
 
 You are not a chatbot. You are a thinking partner. Your goal is to give the user the same quality of answer a world-class expert would give, in the fewest words necessary.
 
@@ -1097,6 +1098,80 @@ def update_session_title(session_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    """Upload a file to Supabase Storage. Returns metadata for later use."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    f = request.files['file']
+    if not f.filename:
+        return jsonify({'error': 'Empty filename'}), 400
+
+    # Mime validation
+    mime = (f.mimetype or '').lower()
+    if mime not in ALLOWED_MIME_TYPES:
+        return jsonify({
+            'error': f'Unsupported file type: {mime or "unknown"}. '
+                     f'Supported: images, PDF, CSV, TXT, MD.'
+        }), 400
+
+    # Read + size check
+    file_bytes = f.read()
+    size = len(file_bytes)
+    if size == 0:
+        return jsonify({'error': 'Empty file'}), 400
+    if size > MAX_UPLOAD_SIZE:
+        return jsonify({
+            'error': f'File too large ({size / 1024 / 1024:.1f} MB). Max 15 MB.'
+        }), 400
+
+    # Build safe storage path: user_id/uuid_safename
+    file_id = str(uuid.uuid4())
+    safe_name = re.sub(r'[^\w\.\-]', '_', f.filename)[:80]
+    storage_path = f"{user_id}/{file_id}_{safe_name}"
+
+    try:
+        supabase_admin.storage.from_(UPLOAD_BUCKET).upload(
+            path=storage_path,
+            file=file_bytes,
+            file_options={
+                'content-type': mime,
+                'upsert': 'false',
+                'cache-control': '3600',
+            }
+        )
+    except Exception as e:
+        err_str = str(e)
+        print(f"⚠️ Storage upload error: {err_str}", file=sys.stderr)
+        sys.stderr.flush()
+
+        # Friendly error for missing bucket
+        if 'Bucket not found' in err_str or 'bucket' in err_str.lower():
+            return jsonify({
+                'error': f'Storage bucket "{UPLOAD_BUCKET}" not found. '
+                         f'Create it in Supabase Dashboard → Storage.'
+            }), 500
+
+        return jsonify({'error': f'Storage error: {err_str}'}), 500
+
+    print(f"📎 File uploaded: {f.filename} ({size} bytes, {mime})", file=sys.stderr)
+    sys.stderr.flush()
+
+    return jsonify({
+        'success': True,
+        'file_id': file_id,
+        'storage_path': storage_path,
+        'filename': f.filename,
+        'mime_type': mime,
+        'size': size,
+    })
+
 
 # ========================================
 # CHAT SEARCH

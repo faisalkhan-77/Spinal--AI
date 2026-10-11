@@ -224,6 +224,164 @@
            SIDEBAR SEARCH
            ============================================================ */
 
+        /* ============================================================
+           FILE UPLOAD
+           ============================================================ */
+        .attach-btn {
+            padding: 0 14px;
+            min-height: 48px;
+            min-width: 48px;
+            background: transparent;
+            border: 1px solid var(--gunmetal-dim);
+            color: var(--bone-dim);
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.25s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .attach-btn:hover:not(:disabled) {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: rgba(255, 122, 26, 0.06);
+        }
+
+        .attach-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .file-chip-row {
+            display: none;
+            width: 100%;
+            max-width: 1000px;
+            margin: 8px auto 0 auto;
+            padding: 0 24px;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .file-chip-row.show {
+            display: flex;
+        }
+
+        .file-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 122, 26, 0.08);
+            border: 1px solid rgba(255, 122, 26, 0.3);
+            border-radius: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--bone);
+            max-width: 340px;
+            position: relative;
+        }
+
+        .file-chip .file-icon {
+            font-size: 0.95rem;
+            color: var(--amber);
+            flex-shrink: 0;
+        }
+
+        .file-chip .file-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+        }
+
+        .file-chip .file-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--chrome-hi);
+            font-weight: 500;
+            max-width: 220px;
+        }
+
+        .file-chip .file-size {
+            font-size: 0.58rem;
+            color: var(--bone-dim);
+            letter-spacing: 0.05em;
+        }
+
+        .file-chip .file-remove {
+            background: transparent;
+            border: none;
+            color: var(--bone-dim);
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        .file-chip .file-remove:hover {
+            color: var(--red);
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .drag-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            background: rgba(11, 12, 14, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            pointer-events: none;
+        }
+
+        .drag-overlay.active {
+            display: flex;
+        }
+
+        .drag-overlay .drag-box {
+            width: 100%;
+            max-width: 560px;
+            border: 2px dashed var(--amber);
+            border-radius: 16px;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 122, 26, 0.04);
+            box-shadow: 0 0 60px var(--amber-glow);
+        }
+
+        .drag-overlay .drag-box i {
+            font-size: 2.6rem;
+            color: var(--amber);
+        }
+
+        .drag-overlay .drag-title {
+            font-family: 'Big Shoulders Display', sans-serif;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            color: var(--chrome-hi);
+            letter-spacing: 0.02em;
+        }
+
+        .drag-overlay .drag-sub {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--bone-dim);
+            letter-spacing: 0.06em;
+            text-align: center;
+        }
 
         /* ============================================================
            LOADING SKELETON
@@ -3837,7 +3995,15 @@
             </button>
         </div>
 
+        <!-- 📎 Attached file chip -->
+        <div class="file-chip-row" id="fileChipRow"></div>
+
         <div class="input-row">
+            <button class="attach-btn" id="attachBtn" type="button" title="Attach file (image, PDF, CSV, TXT)">
+                <i class="fas fa-paperclip"></i>
+            </button>
+            <input type="file" id="fileInput" hidden
+                accept="image/*,application/pdf,text/csv,text/plain,text/markdown,.csv,.txt,.md">
             <input type="text" id="questionInput" placeholder="Type your question...">
             <button id="shareScreenBtn" class="share-btn">
                 <i class="fas fa-desktop"></i> <span>Share Screen</span>
@@ -3870,7 +4036,16 @@
         <div class="share-note mono">💡 For better experience, share your <strong>entire screen</strong> (monitor).
         </div>
     </div>
-
+    <!-- DRAG-DROP OVERLAY -->
+    <div class="drag-overlay" id="dragOverlay">
+        <div class="drag-box">
+            <i class="fas fa-cloud-arrow-up"></i>
+            <div class="drag-title">Drop your file here</div>
+            <div class="drag-sub">
+                Images · PDF · CSV · TXT · MD &nbsp;·&nbsp; Max 15 MB
+            </div>
+        </div>
+    </div>
     <div id="toast-container"></div>
 
     <div id="onboarding-overlay">
@@ -4846,7 +5021,166 @@
         });
 
         searchClearBtn?.addEventListener('click', clearSearch);
+        // ============================================================
+        // 📎 FILE UPLOAD — drag-drop + attach button
+        // ============================================================
+        let attachedFile = null;
+        let isUploadingFile = false;
 
+        const fileInput = document.getElementById('fileInput');
+        const attachBtn = document.getElementById('attachBtn');
+        const fileChipRow = document.getElementById('fileChipRow');
+        const dragOverlay = document.getElementById('dragOverlay');
+
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+
+        function getFileIcon(mime) {
+            if (mime.startsWith('image/')) return 'fa-file-image';
+            if (mime === 'application/pdf') return 'fa-file-pdf';
+            if (mime.includes('csv')) return 'fa-file-csv';
+            if (mime.startsWith('text/')) return 'fa-file-lines';
+            return 'fa-file';
+        }
+
+        function renderFileChip(status = 'ready') {
+            if (!fileChipRow) return;
+
+            if (!attachedFile && status !== 'uploading') {
+                fileChipRow.classList.remove('show');
+                fileChipRow.innerHTML = '';
+                return;
+            }
+
+            fileChipRow.classList.add('show');
+
+            if (status === 'uploading') {
+                fileChipRow.innerHTML = `
+                    <div class="file-chip">
+                        <i class="fas fa-spinner fa-spin file-icon"></i>
+                        <div class="file-info">
+                            <div class="file-name">Uploading…</div>
+                            <div class="file-size">Please wait</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const icon = getFileIcon(attachedFile.mime_type);
+            fileChipRow.innerHTML = `
+                <div class="file-chip">
+                    <i class="fas ${icon} file-icon"></i>
+                    <div class="file-info">
+                        <div class="file-name" title="${attachedFile.filename}">${attachedFile.filename}</div>
+                        <div class="file-size">${formatBytes(attachedFile.size)} · ${attachedFile.mime_type}</div>
+                    </div>
+                    <button class="file-remove" id="fileRemoveBtn" title="Remove attachment">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('fileRemoveBtn')?.addEventListener('click', clearAttachedFile);
+        }
+
+        function clearAttachedFile() {
+            attachedFile = null;
+            isUploadingFile = false;
+            renderFileChip();
+            if (fileInput) fileInput.value = '';
+        }
+
+        async function uploadFile(file) {
+            if (!file) return;
+
+            if (file.size > 15 * 1024 * 1024) {
+                showToast('❌ File too large (max 15 MB)', 'error');
+                return;
+            }
+
+            isUploadingFile = true;
+            if (attachBtn) attachBtn.disabled = true;
+            renderFileChip('uploading');
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData,
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || `HTTP ${res.status}`);
+                }
+
+                attachedFile = data;
+                isUploadingFile = false;
+                renderFileChip();
+                showToast(`📎 ${data.filename} attached`, 'success');
+            } catch (e) {
+                console.error('Upload error:', e);
+                isUploadingFile = false;
+                attachedFile = null;
+                renderFileChip();
+                showToast(`❌ Upload failed: ${e.message}`, 'error');
+            } finally {
+                if (attachBtn) attachBtn.disabled = false;
+            }
+        }
+
+        attachBtn?.addEventListener('click', () => {
+            if (isUploadingFile) return;
+            fileInput?.click();
+        });
+
+        fileInput?.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) uploadFile(file);
+        });
+
+        let dragCounter = 0;
+
+        window.addEventListener('dragenter', (e) => {
+            if (!e.dataTransfer?.types?.includes('Files')) return;
+            e.preventDefault();
+            dragCounter++;
+            dragOverlay?.classList.add('active');
+        });
+
+        window.addEventListener('dragover', (e) => {
+            if (!e.dataTransfer?.types?.includes('Files')) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+        window.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dragCounter = Math.max(0, dragCounter - 1);
+            if (dragCounter === 0) {
+                dragOverlay?.classList.remove('active');
+            }
+        });
+
+        window.addEventListener('drop', (e) => {
+            if (!e.dataTransfer?.files?.length) return;
+            e.preventDefault();
+            dragCounter = 0;
+            dragOverlay?.classList.remove('active');
+
+            const file = e.dataTransfer.files[0];
+            if (file) uploadFile(file);
+        });
+
+        
         function toggleProfileMenu() {
             const dropdown = document.getElementById('profileDropdownMenu');
             dropdown.classList.toggle('open');
@@ -5497,16 +5831,33 @@
         }
         document.getElementById('cameraToggleBtn').addEventListener('click', toggleCamera);
 
-        askBtn.addEventListener('click', function () {
+                askBtn.addEventListener('click', function () {
             primeSpeechSynthesis();
             if (isProcessing) return;
+            if (isUploadingFile) {
+                showToast('⏳ Please wait for the file upload to finish', 'info');
+                return;
+            }
 
+            const hasFile = !!attachedFile;
             const typed = questionInput.value.trim();
 
-            // ✅ If empty, show toast and DON'T send to AI
-            if (!typed) {
+            // ✅ If no typed text AND no file, show toast
+            if (!typed && !hasFile) {
                 showToast('💡 Please type something to ask.', 'info');
                 questionInput.focus();
+                return;
+            }
+
+            // If file attached but no text, send a default prompt
+            if (!typed && hasFile) {
+                currentPrompt = "Please analyze the attached file and give me a helpful overview.";
+                isVoiceQuery = false;
+                addMessage("📎 [File attached: " + attachedFile.filename + "]", 'user');
+                showTyping(true);
+                updateStatus('Thinking...', 'thinking');
+                captureAndSendFrame(currentPrompt);
+                questionInput.value = '';
                 return;
             }
 
@@ -5701,13 +6052,21 @@
             updateStatus('Processing...', 'thinking');
 
             socket.emit('frame', {
-                image: dataUrl,        // null if no camera — backend handles this
+                image: dataUrl,
                 prompt: promptText,
                 userId: currentUser.id,
-                sessionId: sessionToSend
+                sessionId: sessionToSend,
+                filePath: attachedFile?.storage_path || null,
+                fileMime: attachedFile?.mime_type || null,
+                fileName: attachedFile?.filename || null,
             });
             console.log("📤 Frame sent with session:", sessionToSend,
-                dataUrl ? '📸 with image' : '📝 text-only');
+                attachedFile ? `+ file: ${attachedFile.filename}` : '');
+
+            // Clear attachment after send
+            if (attachedFile) {
+                setTimeout(() => clearAttachedFile(), 100);
+            }
         }
 
         questionInput.addEventListener('keydown', (e) => {
