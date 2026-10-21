@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spinal · Dashboard</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect x='9' y='1' width='8' height='5' fill='%23C9CBCF'/%3E%3Crect x='6' y='8' width='14' height='5' fill='%23C9CBCF'/%3E%3Crect x='3' y='15' width='20' height='5' fill='%23C9CBCF'/%3E%3Ccircle cx='13' cy='3.5' r='1.4' fill='%23FF7A1A'/%3E%3Cline x1='13' y1='6' x2='13' y2='20' stroke='%23FF7A1A'/%3E%3C/svg%3E">
-    <link rel="preconnect" href="https://fonts.googleapis.com">    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect x='9' y='1' width='8' height='5' fill='%23C9CBCF'/%3E%3Crect x='6' y='8' width='14' height='5' fill='%23C9CBCF'/%3E%3Crect x='3' y='15' width='20' height='5' fill='%23C9CBCF'/%3E%3Ccircle cx='13' cy='3.5' r='1.4' fill='%23FF7A1A'/%3E%3Cline x1='13' y1='6' x2='13' y2='20' stroke='%23FF7A1A'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
@@ -23,538 +25,901 @@
             --bone: #F2F1ED;
             --bone-dim: #9A9B98;
             --amber: #FF7A1A;
-            --amber-glow: rgba(255, 122, 26, 0.25);
-            --line: rgba(199, 201, 205, 0.14);
+            --amber-glow: rgba(255, 122, 26, .25);
+            --line: rgba(199, 201, 205, .14);
             --red: #FF6B6B;
+            --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+            --sans: 'IBM Plex Sans', system-ui, sans-serif;
+            --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+            --ease: cubic-bezier(.16, 1, .3, 1);
         }
 
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            box-sizing: border-box
         }
+
         html {
-            height: 100%;
+            height: 100%
         }
+
         body {
             background: var(--void);
             color: var(--bone);
-            font-family: 'IBM Plex Sans', sans-serif;
+            font-family: var(--sans);
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
             position: relative;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1.05fr .95fr
         }
+
         ::selection {
             background: var(--amber);
-            color: var(--void);
+            color: var(--void)
         }
+
         body::before {
             content: '';
             position: fixed;
-            inset: 0;
+            inset: -88px 0 0 0;
             z-index: 0;
             pointer-events: none;
-            background-image:
-                linear-gradient(var(--line) 1px, transparent 1px),
-                linear-gradient(90deg, var(--line) 1px, transparent 1px);
+            background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
             background-size: 88px 88px;
-            opacity: 0.4;
+            opacity: .35;
+            animation: grid 14s linear infinite;
+            mask-image: radial-gradient(ellipse 100% 80% at 30% 40%, #000 30%, transparent 95%);
+            -webkit-mask-image: radial-gradient(ellipse 100% 80% at 30% 40%, #000 30%, transparent 95%)
         }
+
+        @keyframes grid {
+            to {
+                transform: translateY(88px)
+            }
+        }
+
         .mono {
-            font-family: 'IBM Plex Mono', monospace;
-            letter-spacing: 0.08em;
+            font-family: var(--mono);
+            letter-spacing: .08em
         }
+
         a {
-            color: inherit;
+            color: inherit
         }
+
         input,
         button {
-            font-family: inherit;
+            font-family: inherit
         }
+
         :focus-visible {
             outline: 2px solid var(--amber);
-            outline-offset: 2px;
+            outline-offset: 3px
         }
+
+        /* ---------- brand panel ---------- */
         .brand-panel {
             position: relative;
             z-index: 2;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 48px 5% 40px;
+            padding: 40px 5% 36px;
             border-right: 1px solid var(--line);
             overflow: hidden;
+            min-height: 100vh
         }
+
         .brand-panel::after {
             content: '';
             position: absolute;
             inset: 0;
             z-index: -1;
-            background: radial-gradient(ellipse 60% 50% at 30% 25%, rgba(255, 122, 26, 0.07), transparent 65%);
+            background: radial-gradient(ellipse 60% 55% at 50% 38%, rgba(255, 122, 26, .11), transparent 68%)
         }
-        .bp-top .brand {
-            display: flex;
+
+        #dust {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none
+        }
+
+        .brand {
+            display: inline-flex;
             align-items: center;
             gap: 12px;
-            font-family: 'Big Shoulders Display', sans-serif;
+            font-family: var(--display);
             font-weight: 800;
             font-size: 1.3rem;
-            letter-spacing: 0.02em;
+            letter-spacing: .02em;
             text-transform: uppercase;
             color: var(--chrome-hi);
             text-decoration: none;
+            line-height: 1
         }
-        .bp-top .brand svg {
+
+        .brand svg {
             width: 24px;
-            height: 24px;
+            height: 24px
         }
-        .bp-top .brand small {
+
+        .brand small {
             display: block;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: var(--mono);
             font-weight: 400;
-            font-size: 0.52rem;
-            letter-spacing: 0.2em;
+            font-size: .52rem;
+            letter-spacing: .2em;
             color: var(--bone-dim);
-            text-transform: uppercase;
-            margin-top: 2px;
+            margin-top: 3px
         }
+
         .bp-mid {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 28px;
-            margin: 20px 0;
+            gap: 22px;
+            margin: 12px 0
         }
-        .bp-mid svg {
+
+        .model {
+            position: relative;
             width: 100%;
-            max-width: 220px;
+            max-width: 250px
+        }
+
+        .model svg {
+            width: 100%;
             height: auto;
-            filter: drop-shadow(0 24px 50px rgba(0, 0, 0, 0.6));
-            animation: drift 7s ease-in-out infinite;
+            display: block;
+            overflow: visible;
+            filter: drop-shadow(0 24px 50px rgba(0, 0, 0, .6));
+            animation: drift 7s ease-in-out infinite
         }
+
         @keyframes drift {
-            0%,
-            100% {
-                transform: translateY(0);
-            }
             50% {
-                transform: translateY(-10px);
+                transform: translateY(-10px)
             }
         }
+
+        .vert {
+            fill: url(#vertGrad);
+            stroke: var(--gunmetal-dim);
+            stroke-width: 1;
+            transition: filter .4s, stroke .4s
+        }
+
+        .vert.hot {
+            filter: drop-shadow(0 0 9px rgba(255, 122, 26, .85));
+            stroke: var(--amber)
+        }
+
+        .cord {
+            fill: none;
+            stroke: var(--amber);
+            stroke-width: 2;
+            opacity: .9;
+            filter: drop-shadow(0 0 6px rgba(255, 122, 26, .8));
+            stroke-dasharray: 6 5;
+            animation: flow 1.4s linear infinite
+        }
+
+        @keyframes flow {
+            to {
+                stroke-dashoffset: -22
+            }
+        }
+
+        .ring {
+            fill: none;
+            stroke: var(--chrome);
+            stroke-width: 1.4
+        }
+
+        .ring.spin {
+            stroke: var(--amber);
+            stroke-width: 1;
+            stroke-dasharray: 3 9;
+            transform-origin: 200px 96px;
+            animation: rot 18s linear infinite;
+            opacity: .7
+        }
+
+        @keyframes rot {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .blade {
+            fill: var(--gunmetal);
+            opacity: .9;
+            transform-origin: 200px 96px;
+            animation: blink 6s ease-in-out infinite
+        }
+
+        @keyframes blink {
+
+            0%,
+            92%,
+            100% {
+                transform: scale(1)
+            }
+
+            96% {
+                transform: scale(.72)
+            }
+        }
+
+        #eye {
+            transition: transform .2s ease-out
+        }
+
+        .lens {
+            fill: url(#lensGrad);
+            animation: breathe 3s ease-in-out infinite;
+            transform-origin: 200px 96px
+        }
+
+        @keyframes breathe {
+            50% {
+                transform: scale(1.07)
+            }
+        }
+
+        .scan {
+            animation: scan 4.2s ease-in-out infinite
+        }
+
+        @keyframes scan {
+            0% {
+                transform: translateY(120px);
+                opacity: 0
+            }
+
+            15%,
+            85% {
+                opacity: 1
+            }
+
+            100% {
+                transform: translateY(470px);
+                opacity: 0
+            }
+        }
+
         .bp-copy {
             text-align: center;
-            max-width: 340px;
-            margin: 0 auto;
+            max-width: 360px;
+            margin: 0 auto
         }
+
         .bp-eyebrow {
-            font-size: 0.68rem;
+            font-size: .68rem;
             color: var(--amber);
             text-transform: uppercase;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 9px;
-            margin-bottom: 16px;
+            margin-bottom: 16px
         }
+
         .bp-eyebrow .dot {
             width: 6px;
             height: 6px;
             background: var(--amber);
             box-shadow: 0 0 8px var(--amber);
-            animation: pulse 2.2s ease-in-out infinite;
+            animation: pulse 2.2s ease-in-out infinite
         }
+
         @keyframes pulse {
-            0%,
-            100% {
-                opacity: 1;
-            }
             50% {
-                opacity: 0.25;
+                opacity: .25
             }
         }
+
         .bp-copy h1 {
-            font-family: 'Big Shoulders Display', sans-serif;
+            font-family: var(--display);
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 1.9rem;
-            line-height: 1.02;
+            font-size: clamp(2rem, 3.2vw, 2.7rem);
+            line-height: 1;
             color: var(--chrome-hi);
-            margin-bottom: 14px;
+            margin-bottom: 14px
         }
+
         .bp-copy p {
             color: var(--bone-dim);
-            font-size: 0.9rem;
-            line-height: 1.6;
+            font-size: .92rem;
+            line-height: 1.65
         }
+
         .bp-specs {
             display: flex;
             justify-content: center;
             gap: 30px;
             padding-top: 22px;
-            border-top: 1px solid var(--line);
+            border-top: 1px solid var(--line)
         }
+
         .bp-specs .spec {
-            text-align: center;
+            text-align: center
         }
+
         .bp-specs .val {
-            font-size: 0.82rem;
+            font-size: .82rem;
             color: var(--chrome-hi);
-            font-weight: 500;
+            font-weight: 500
         }
+
         .bp-specs .lab {
-            font-size: 0.58rem;
+            font-size: .6rem;
             color: var(--bone-dim);
-            letter-spacing: 0.12em;
+            letter-spacing: .12em;
             text-transform: uppercase;
-            margin-top: 3px;
+            margin-top: 3px
         }
+
+        /* cinematic entrance */
+        .in {
+            opacity: 0;
+            animation: enter 1s var(--ease) forwards;
+            animation-delay: calc(var(--d, 0) * 1ms)
+        }
+
+        @keyframes enter {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+                filter: blur(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+                filter: none
+            }
+        }
+
+        .bp-copy h1 .l {
+            display: block;
+            overflow: hidden;
+            padding-bottom: 4px
+        }
+
+        .bp-copy h1 .l>span {
+            display: inline-block;
+            transform: translateY(112%);
+            animation: rise 1s var(--ease) forwards;
+            animation-delay: calc(var(--d, 0) * 1ms)
+        }
+
+        @keyframes rise {
+            to {
+                transform: none
+            }
+        }
+
+        /* ---------- form panel ---------- */
         .form-panel {
             position: relative;
             z-index: 2;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 8%;
+            padding: 40px 8%
         }
+
         .auth-container {
             width: 100%;
             max-width: 400px;
+            background: rgba(24, 25, 28, .55);
+            border: 1px solid var(--line);
+            padding: 32px 30px 28px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))
         }
+
         .auth-sub {
-            font-size: 0.7rem;
+            font-size: .7rem;
             color: var(--bone-dim);
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             padding-bottom: 16px;
-            border-bottom: 1px solid var(--line);
+            border-bottom: 1px solid var(--line)
         }
+
         .auth-sub strong {
             color: var(--chrome-hi);
-            font-weight: 500;
+            font-weight: 500
         }
+
         .tabs {
+            position: relative;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4px;
             background: var(--void);
             padding: 4px;
             margin-bottom: 26px;
-            border: 1px solid var(--gunmetal-dim);
+            border: 1px solid var(--gunmetal-dim)
         }
+
+        .tab-ind {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            background: var(--amber);
+            box-shadow: 0 0 24px var(--amber-glow);
+            transition: transform .45s var(--ease)
+        }
+
+        .tabs[data-tab="signup"] .tab-ind {
+            transform: translateX(100%)
+        }
+
         .tab {
+            position: relative;
+            z-index: 1;
             background: transparent;
             border: none;
             color: var(--bone-dim);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.72rem;
-            letter-spacing: 0.12em;
+            font: .72rem var(--mono);
+            letter-spacing: .12em;
             text-transform: uppercase;
-            padding: 10px 8px;
+            padding: 12px 8px;
             cursor: pointer;
-            transition: all .25s;
+            transition: color .3s
         }
-        .tab.active {
-            background: var(--amber);
-            color: var(--void);
-            box-shadow: 0 0 24px var(--amber-glow);
-            font-weight: 600;
-        }
+
         .tab:hover:not(.active) {
-            color: var(--bone);
-            background: rgba(255, 255, 255, 0.03);
+            color: var(--bone)
         }
+
+        .tab.active {
+            color: var(--void);
+            font-weight: 600
+        }
+
         .form-group {
-            margin-bottom: 18px;
-            text-align: left;
+            margin-bottom: 20px;
+            text-align: left
         }
-        .form-group-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 6px;
-        }
-        .form-group label {
-            font-size: 0.63rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--gunmetal);
-        }
-        .forgot-link {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.6rem;
-            letter-spacing: 0.06em;
-            color: var(--bone-dim);
-            text-decoration: none;
-            border-bottom: 1px solid transparent;
-            transition: color .2s, border-color .2s;
-        }
-        .forgot-link:hover {
-            color: var(--amber);
-            border-color: var(--amber);
-        }
+
         .input-wrap {
-            position: relative;
+            position: relative
         }
+
         .form-group input {
             width: 100%;
-            padding: 14px 16px;
+            height: 56px;
+            padding: 22px 16px 6px;
             background: var(--void);
             border: 1px solid var(--gunmetal-dim);
             color: var(--bone);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.9rem;
+            font: .92rem var(--mono);
             outline: none;
-            transition: all .3s;
+            transition: border-color .3s, box-shadow .3s, background .3s
         }
+
         .form-group input.has-toggle {
-            padding-right: 44px;
+            padding-right: 46px
         }
+
+        .form-group input::placeholder {
+            color: transparent
+        }
+
+        .form-group input:hover {
+            border-color: var(--gunmetal)
+        }
+
         .form-group input:focus {
             border-color: var(--amber);
-            box-shadow: 0 0 0 3px var(--amber-glow), inset 0 0 12px rgba(255, 122, 26, 0.04);
-            background: #0F1012;
+            box-shadow: 0 0 0 3px var(--amber-glow), inset 0 0 12px rgba(255, 122, 26, .05);
+            background: #0F1012
         }
-        .form-group input::placeholder {
+
+        .form-group label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font: .78rem var(--mono);
+            letter-spacing: .06em;
             color: var(--gunmetal);
-            font-size: 0.75rem;
-            opacity: 0.6;
+            pointer-events: none;
+            transform-origin: 0 50%;
+            transition: transform .3s var(--ease), color .3s, top .3s var(--ease)
         }
+
+        .form-group input:focus+label,
+        .form-group input:not(:placeholder-shown)+label {
+            top: 15px;
+            transform: translateY(-50%) scale(.78);
+            color: var(--bone-dim);
+            text-transform: uppercase;
+            letter-spacing: .12em
+        }
+
+        .form-group input:focus+label {
+            color: var(--amber)
+        }
+
         .pw-toggle {
             position: absolute;
             right: 0;
             top: 0;
             height: 100%;
-            width: 42px;
+            width: 46px;
             background: transparent;
             border: none;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: var(--gunmetal);
-            transition: color .2s;
+            transition: color .2s
         }
+
         .pw-toggle:hover {
-            color: var(--chrome-hi);
+            color: var(--chrome-hi)
         }
+
         .pw-toggle svg {
-            width: 17px;
-            height: 17px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 18px;
+            height: 18px;
+            margin: -9px 0 0 -9px;
+            transition: opacity .25s, transform .35s var(--ease)
         }
+
+        .pw-toggle .off {
+            opacity: 0;
+            transform: scale(.6) rotate(-20deg)
+        }
+
+        .pw-toggle.on .off {
+            opacity: 1;
+            transform: none
+        }
+
+        .pw-toggle.on .eye {
+            opacity: 0;
+            transform: scale(.6) rotate(20deg)
+        }
+
         .pw-hint {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.62rem;
-            color: var(--gunmetal);
-            margin-top: 7px;
-            letter-spacing: 0.02em;
+            font: .64rem var(--mono);
+            color: var(--bone-dim);
+            margin-top: 8px;
+            letter-spacing: .02em
         }
+
+        .row-end {
+            display: flex;
+            justify-content: flex-end;
+            margin: -8px 0 18px
+        }
+
+        .forgot-link {
+            font: .64rem var(--mono);
+            letter-spacing: .06em;
+            color: var(--bone-dim);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: color .2s, border-color .2s;
+            padding: 4px 0
+        }
+
+        .forgot-link:hover {
+            color: var(--amber);
+            border-color: var(--amber)
+        }
+
         .form-hidden {
-            display: none;
+            display: none
         }
+
+        form:not(.form-hidden) {
+            animation: enter .6s var(--ease)
+        }
+
         .btn-submit {
             width: 100%;
             background: linear-gradient(160deg, var(--chrome-hi), var(--chrome) 55%, var(--gunmetal) 130%);
             color: var(--void);
             border: none;
-            font-family: 'IBM Plex Mono', monospace;
-            font-weight: 600;
-            font-size: 0.8rem;
-            letter-spacing: 0.12em;
+            font: 600 .8rem var(--mono);
+            letter-spacing: .12em;
             text-transform: uppercase;
-            padding: 16px 20px;
+            padding: 18px 20px;
             cursor: pointer;
-            transition: transform .2s, box-shadow .2s, opacity .2s;
+            transition: transform .25s var(--ease), box-shadow .3s, opacity .2s;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             margin-top: 6px;
-            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, .7);
             position: relative;
             overflow: hidden;
+            clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))
         }
+
         .btn-submit::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%);
+            background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .65) 50%, transparent 70%);
             background-size: 220% 100%;
-            animation: shimmer 3.2s linear infinite;
+            animation: shimmer 3.2s linear infinite
         }
+
         @keyframes shimmer {
-            0% {
-                background-position: -220% 0;
+            from {
+                background-position: -220% 0
             }
-            100% {
-                background-position: 220% 0;
+
+            to {
+                background-position: 220% 0
             }
         }
+
         .btn-submit:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.9), 0 0 40px var(--amber-glow);
+            filter: drop-shadow(0 0 18px var(--amber-glow))
         }
+
         .btn-submit:active:not(:disabled) {
-            transform: translateY(1px);
+            transform: scale(.97)
         }
+
         .btn-submit:disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
+            opacity: .6;
+            cursor: not-allowed
         }
+
         .btn-submit:disabled::before {
-            animation: none;
+            animation: none
         }
+
         .btn-submit svg {
             width: 18px;
             height: 18px;
             position: relative;
-            z-index: 1;
+            z-index: 1
         }
+
         .btn-submit span {
             position: relative;
-            z-index: 1;
+            z-index: 1
         }
+
         .spinner {
             width: 15px;
             height: 15px;
             border-radius: 50%;
-            border: 2px solid rgba(11, 12, 14, 0.25);
+            border: 2px solid rgba(11, 12, 14, .25);
             border-top-color: var(--void);
             animation: spin .7s linear infinite;
             position: relative;
-            z-index: 1;
+            z-index: 1
         }
+
         @keyframes spin {
             to {
-                transform: rotate(360deg);
+                transform: rotate(360deg)
             }
         }
+
         .divider {
             display: flex;
             align-items: center;
             gap: 14px;
             margin: 22px 0 18px;
             color: var(--gunmetal);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.6rem;
+            font: .62rem var(--mono);
+            text-transform: uppercase;
+            letter-spacing: .14em
         }
+
         .divider-line {
             flex: 1;
             height: 1px;
-            background: var(--line);
+            background: var(--line)
         }
+
         .btn-google {
             width: 100%;
             border: 1px solid var(--gunmetal-dim);
             color: var(--bone);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.72rem;
-            letter-spacing: 0.08em;
-            padding: 14px 20px;
+            font: .74rem var(--mono);
+            letter-spacing: .08em;
+            padding: 16px 20px;
             cursor: pointer;
-            transition: all .25s;
+            transition: border-color .25s, background .25s, color .25s, transform .25s var(--ease);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, .02)
         }
+
         .btn-google:hover {
             border-color: var(--chrome);
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--chrome-hi);
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, .05);
+            color: var(--chrome-hi)
         }
+
+        .btn-google:active {
+            transform: scale(.98)
+        }
+
         .btn-google svg {
             width: 18px;
-            height: 18px;
+            height: 18px
         }
-        .error-msg {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--red);
-            min-height: 0;
-            margin-top: 0;
-            text-align: center;
-            letter-spacing: 0.02em;
-            border: 1px solid transparent;
-            padding: 0;
-            transition: all .2s;
-            overflow: hidden;
-        }
-        .error-msg.show {
-            min-height: 22px;
-            margin-top: 14px;
-            border-color: rgba(255, 107, 107, 0.15);
-            padding: 8px 6px;
-            background: rgba(255, 107, 107, 0.04);
-        }
+
+        .error-msg,
         .success-msg {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.7rem;
-            color: #7CD98B;
+            font: .72rem/1.5 var(--mono);
             text-align: center;
-            letter-spacing: 0.02em;
-            border: 1px solid rgba(124, 217, 139, 0.2);
-            padding: 8px 6px;
-            margin-top: 14px;
-            background: rgba(124, 217, 139, 0.05);
-            display: none;
+            letter-spacing: .02em;
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            margin-top: 0;
+            border: 1px solid transparent;
+            transition: grid-template-rows .4s var(--ease), opacity .3s, margin .4s var(--ease)
         }
+
+        .error-msg {
+            color: var(--red)
+        }
+
+        .success-msg {
+            color: #7CD98B
+        }
+
+        .error-msg.show,
         .success-msg.show {
-            display: block;
+            grid-template-rows: 1fr;
+            opacity: 1;
+            margin-top: 16px;
+            padding: 10px 8px
         }
+
+        .error-msg.show {
+            border-color: rgba(255, 107, 107, .25);
+            background: rgba(255, 107, 107, .05)
+        }
+
+        .success-msg.show {
+            border-color: rgba(124, 217, 139, .25);
+            background: rgba(124, 217, 139, .05)
+        }
+
+        .error-msg.shake {
+            animation: shake .45s cubic-bezier(.36, .07, .19, .97)
+        }
+
+        @keyframes shake {
+
+            20%,
+            60% {
+                transform: translateX(-6px)
+            }
+
+            40%,
+            80% {
+                transform: translateX(6px)
+            }
+        }
+
         .back-link {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            margin-top: 26px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.65rem;
-            color: var(--gunmetal);
+            margin-top: 24px;
+            font: .66rem var(--mono);
+            color: var(--bone-dim);
             text-decoration: none;
-            letter-spacing: 0.1em;
-            transition: color .2s;
+            letter-spacing: .1em;
+            transition: color .2s
         }
+
         .back-link:hover {
-            color: var(--bone);
+            color: var(--bone)
         }
+
         .back-link svg {
             width: 12px;
             height: 12px;
+            transition: transform .3s var(--ease)
         }
-        @media (max-width: 900px) {
+
+        .back-link:hover svg {
+            transform: translateX(-4px)
+        }
+
+        @media(max-width:900px) {
             body {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr
             }
+
             .brand-panel {
                 border-right: none;
                 border-bottom: 1px solid var(--line);
-                padding: 32px 6% 28px;
+                padding: 24px 6% 22px;
+                min-height: 0
             }
-            .bp-mid svg {
-                max-width: 130px;
+
+            .model {
+                max-width: 130px
             }
-            .bp-copy h1 {
-                font-size: 1.4rem;
+
+            .bp-mid {
+                gap: 14px
             }
+
+            .bp-copy p,
             .bp-specs {
-                gap: 20px;
+                display: none
             }
+
+            .bp-copy h1 {
+                font-size: 1.6rem
+            }
+
             .form-panel {
-                padding: 36px 6% 50px;
+                padding: 28px 5% 44px
             }
-        }
-        @media (max-width: 420px) {
+
             .auth-container {
-                max-width: 100%;
+                padding: 26px 20px 24px
+            }
+
+            .form-group input {
+                height: 58px;
+                font-size: 16px
+            }
+
+            .tab,
+            .btn-submit,
+            .btn-google {
+                min-height: 48px
             }
         }
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.001ms !important;
+
+        @media(prefers-reduced-motion:reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: .001ms !important;
                 animation-iteration-count: 1 !important;
+                animation-delay: 0s !important;
+                transition-duration: .001ms !important
+            }
+
+            .in,
+            .bp-copy h1 .l>span {
+                opacity: 1;
+                transform: none
+            }
+
+            .scan {
+                display: none
             }
         }
     </style>
@@ -562,10 +927,11 @@
 
 <body>
 
-    <div class="brand-panel">
-        <div class="bp-top">
-            <a href="/" class="brand">
-                <svg viewBox="0 0 26 26" fill="none">
+    <div class="brand-panel" id="panel">
+        <canvas id="dust" aria-hidden="true"></canvas>
+        <div class="bp-top in" style="--d:50">
+            <a href="/" class="brand" aria-label="Spinal home">
+                <svg viewBox="0 0 26 26" fill="none" aria-hidden="true">
                     <rect x="9" y="1" width="8" height="5" fill="var(--chrome)" />
                     <rect x="6" y="8" width="14" height="5" fill="var(--chrome)" />
                     <rect x="3" y="15" width="20" height="5" fill="var(--chrome)" />
@@ -577,105 +943,135 @@
         </div>
 
         <div class="bp-mid">
-            <svg viewBox="0 0 400 460" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <defs>
-                    <linearGradient id="vertGrad" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color="#F1F1F2" />
-                        <stop offset="45%" stop-color="#B7B9BD" />
-                        <stop offset="100%" stop-color="#4B4D52" />
-                    </linearGradient>
-                    <radialGradient id="lensGrad" cx="35%" cy="30%" r="75%">
-                        <stop offset="0%" stop-color="#FFE3C7" />
-                        <stop offset="35%" stop-color="#FF9A45" />
-                        <stop offset="100%" stop-color="#7A2E00" />
-                    </radialGradient>
-                </defs>
-                <path class="cord" d="M200,120 L198,220 L204,320 L200,410" fill="none" />
-                <g class="vert">
-                    <polygon points="152,150 248,150 264,182 236,196 164,196 136,182" />
-                    <polygon points="118,168 92,182 96,196" opacity="0.9" />
-                    <polygon points="282,168 308,182 304,196" opacity="0.9" />
-                </g>
-                <g class="vert">
-                    <polygon points="140,222 260,222 278,256 246,272 154,272 122,256" />
-                    <polygon points="104,240 76,256 80,272" opacity="0.9" />
-                    <polygon points="296,240 324,256 320,272" opacity="0.9" />
-                </g>
-                <g class="vert">
-                    <polygon points="132,300 268,300 288,336 252,354 148,354 112,336" />
-                    <polygon points="94,320 64,336 68,354" opacity="0.9" />
-                    <polygon points="306,320 336,336 332,354" opacity="0.9" />
-                </g>
-                <g class="vert">
-                    <polygon points="140,382 260,382 280,418 244,438 156,438 120,418" />
-                </g>
-                <circle class="iris-ring" cx="200" cy="96" r="72" />
-                <circle class="iris-ring" cx="200" cy="96" r="58" stroke-opacity="0.5" />
-                <circle class="iris-core" cx="200" cy="96" r="26" />
-                <circle cx="192" cy="88" r="6" fill="#FFF6EC" opacity="0.85" />
-            </svg>
+            <div class="model in" style="--d:200" id="model">
+                <svg viewBox="0 0 400 470" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="vertGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#F1F1F2" />
+                            <stop offset="45%" stop-color="#B7B9BD" />
+                            <stop offset="100%" stop-color="#4B4D52" />
+                        </linearGradient>
+                        <radialGradient id="lensGrad" cx="35%" cy="30%" r="75%">
+                            <stop offset="0%" stop-color="#FFE3C7" />
+                            <stop offset="35%" stop-color="#FF9A45" />
+                            <stop offset="100%" stop-color="#7A2E00" />
+                        </radialGradient>
+                        <linearGradient id="laser" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#FF7A1A" stop-opacity="0" />
+                            <stop offset="100%" stop-color="#FF7A1A" stop-opacity=".55" />
+                        </linearGradient>
+                        <clipPath id="clipBody">
+                            <rect x="40" y="110" width="320" height="350" />
+                        </clipPath>
+                    </defs>
+                    <path class="cord" d="M200,120 L198,220 L204,320 L200,410" />
+                    <g class="vert">
+                        <polygon points="152,150 248,150 264,182 236,196 164,196 136,182" />
+                        <polygon points="118,168 92,182 96,196" opacity=".9" />
+                        <polygon points="282,168 308,182 304,196" opacity=".9" />
+                    </g>
+                    <g class="vert">
+                        <polygon points="140,222 260,222 278,256 246,272 154,272 122,256" />
+                        <polygon points="104,240 76,256 80,272" opacity=".9" />
+                        <polygon points="296,240 324,256 320,272" opacity=".9" />
+                    </g>
+                    <g class="vert">
+                        <polygon points="132,300 268,300 288,336 252,354 148,354 112,336" />
+                        <polygon points="94,320 64,336 68,354" opacity=".9" />
+                        <polygon points="306,320 336,336 332,354" opacity=".9" />
+                    </g>
+                    <g class="vert">
+                        <polygon points="140,382 260,382 280,418 244,438 156,438 120,418" />
+                    </g>
+                    <g clip-path="url(#clipBody)">
+                        <g class="scan">
+                            <rect x="40" y="-34" width="320" height="34" fill="url(#laser)" />
+                            <rect x="40" y="-1.5" width="320" height="2" fill="#FF7A1A"
+                                style="filter:drop-shadow(0 0 8px #FF7A1A)" />
+                        </g>
+                    </g>
+                    <circle class="ring" cx="200" cy="96" r="72" />
+                    <circle class="ring spin" cx="200" cy="96" r="80" />
+                    <circle class="ring" cx="200" cy="96" r="58" stroke-opacity=".5" />
+                    <g>
+                        <polygon class="blade" points="200,96 246,66 254,84" />
+                        <polygon class="blade" points="200,96 246,66 254,84" transform="rotate(51.4 200 96)" />
+                        <polygon class="blade" points="200,96 246,66 254,84" transform="rotate(102.8 200 96)" />
+                        <polygon class="blade" points="200,96 246,66 254,84" transform="rotate(154.2 200 96)" />
+                        <polygon class="blade" points="200,96 246,66 254,84" transform="rotate(205.6 200 96)" />
+                        <polygon class="blade" points="200,96 246,66 254,84" transform="rotate(257 200 96)" />
+                        <polygon class="blade" points="200,96 246,66 254,84" transform="rotate(308.4 200 96)" />
+                    </g>
+                    <g id="eye">
+                        <circle class="lens" cx="200" cy="96" r="26" />
+                        <circle cx="192" cy="88" r="6" fill="#FFF6EC" opacity=".85" />
+                    </g>
+                </svg>
+            </div>
 
             <div class="bp-copy">
-                <div class="bp-eyebrow mono"><span class="dot"></span>Secure column access</div>
-                <h1>Every session starts at C1.</h1>
-                <p>Sign in and Spinal picks up exactly where it left off — same voice, same memory, same eye on the
-                    world.</p>
+                <div class="bp-eyebrow mono in" style="--d:450"><span class="dot"></span>Secure column access</div>
+                <h1><span class="l"><span style="--d:550">Every session</span></span><span class="l"><span
+                            style="--d:680">starts at C1.</span></span></h1>
+                <p class="in" style="--d:850">Sign in and Spinal picks up exactly where it left off — same voice, same
+                    memory, same eye on the world.</p>
             </div>
         </div>
 
         <div class="bp-specs">
-            <div class="spec">
+            <div class="spec in" style="--d:1000">
                 <div class="val mono">AES-256</div>
                 <div class="lab">Encryption</div>
             </div>
-            <div class="spec">
+            <div class="spec in" style="--d:1100">
                 <div class="val mono">OAuth 2.0</div>
                 <div class="lab">Sign-in</div>
             </div>
-            <div class="spec">
+            <div class="spec in" style="--d:1200">
                 <div class="val mono">SOC 2</div>
                 <div class="lab">In progress</div>
             </div>
         </div>
     </div>
 
-    <div class="form-panel">
-        <div class="auth-container">
+    <main class="form-panel">
+        <div class="auth-container in" style="--d:250">
 
             <div class="auth-sub mono">// <strong>ACCESS THE COLUMN</strong> — log in or create an account</div>
 
-            <div class="tabs">
-                <button class="tab active" id="loginTab" type="button">Login</button>
-                <button class="tab" id="signupTab" type="button">Sign Up</button>
+            <div class="tabs" id="tabs" data-tab="login" role="tablist">
+                <span class="tab-ind" aria-hidden="true"></span>
+                <button class="tab active" id="loginTab" type="button" role="tab" aria-selected="true">Login</button>
+                <button class="tab" id="signupTab" type="button" role="tab" aria-selected="false">Sign Up</button>
             </div>
 
-            <form id="loginForm" novalidate>
+            <form id="loginForm" novalidate aria-label="Log in">
                 <div class="form-group">
-                    <div class="form-group-head">
-                        <label for="loginEmail">Email</label>
-                    </div>
                     <div class="input-wrap">
-                        <input type="email" id="loginEmail" placeholder="you@domain.com" autocomplete="email" required>
+                        <input type="email" id="loginEmail" placeholder=" " autocomplete="email" required>
+                        <label for="loginEmail">Email</label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <div class="form-group-head">
-                        <label for="loginPass">Password</label>
-                        <a href="#" class="forgot-link mono" id="forgotLink">Forgot?</a>
-                    </div>
                     <div class="input-wrap">
-                        <input type="password" id="loginPass" class="has-toggle" placeholder="••••••••"
+                        <input type="password" id="loginPass" class="has-toggle" placeholder=" "
                             autocomplete="current-password" required>
+                        <label for="loginPass">Password</label>
                         <button type="button" class="pw-toggle" data-target="loginPass" aria-label="Show password">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
                                 <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path
+                                    d="M17.9 17.9A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18 18 0 0 1 5.1-5.9M9.9 4.2A10 10 0 0 1 12 4c7 0 11 8 11 8a18 18 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2M1 1l22 22" />
                             </svg>
                         </button>
                     </div>
                 </div>
+                <div class="row-end"><a href="#" class="forgot-link mono" id="forgotLink">Forgot password?</a></div>
                 <button class="btn-submit" id="loginBtn" type="submit">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                         <path d="M10 17l5-5-5-5" />
                         <path d="M15 12H3" />
@@ -684,29 +1080,33 @@
                 </button>
             </form>
 
-            <form id="signupForm" class="form-hidden" novalidate>
+            <form id="signupForm" class="form-hidden" novalidate aria-label="Create account">
                 <div class="form-group">
-                    <label for="signupEmail">Email</label>
                     <div class="input-wrap">
-                        <input type="email" id="signupEmail" placeholder="you@domain.com" autocomplete="email" required>
+                        <input type="email" id="signupEmail" placeholder=" " autocomplete="email" required>
+                        <label for="signupEmail">Email</label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="signupPass">Password</label>
                     <div class="input-wrap">
-                        <input type="password" id="signupPass" class="has-toggle" placeholder="••••••••"
-                            autocomplete="new-password" minlength="8" required>
+                        <input type="password" id="signupPass" class="has-toggle" placeholder=" "
+                            autocomplete="new-password" minlength="8" required aria-describedby="pwHint">
+                        <label for="signupPass">Password</label>
                         <button type="button" class="pw-toggle" data-target="signupPass" aria-label="Show password">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
+                            <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path
+                                    d="M17.9 17.9A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18 18 0 0 1 5.1-5.9M9.9 4.2A10 10 0 0 1 12 4c7 0 11 8 11 8a18 18 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2M1 1l22 22" />
+                            </svg>
                         </button>
                     </div>
-                    <div class="pw-hint">Minimum 8 characters.</div>
+                    <div class="pw-hint" id="pwHint">Minimum 8 characters.</div>
                 </div>
                 <button class="btn-submit" id="signupBtn" type="submit">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                         <circle cx="8.5" cy="7" r="4" />
                         <path d="M20 8v6M23 11h-6" />
@@ -715,12 +1115,11 @@
                 </button>
             </form>
 
-            <div class="divider">
-                <span class="divider-line"></span><span>or</span><span class="divider-line"></span>
+            <div class="divider"><span class="divider-line"></span><span>or</span><span class="divider-line"></span>
             </div>
 
             <button class="btn-google" id="googleBtn" type="button">
-                <svg viewBox="0 0 24 24" fill="currentColor">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path
                         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                     <path
@@ -733,17 +1132,17 @@
                 <span>Continue with Google</span>
             </button>
 
-            <div id="errorMsg" class="error-msg"></div>
-            <div id="successMsg" class="success-msg"></div>
+            <div id="errorMsg" class="error-msg" role="alert"></div>
+            <div id="successMsg" class="success-msg" role="status"></div>
 
             <a href="/" class="back-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
                 Back to landing
             </a>
         </div>
-    </div>
+    </main>
 
     <script>
         const SUPABASE_URL = "https://thxvwyylwwhdahclzpge.supabase.co";
@@ -912,6 +1311,65 @@
         });
     </script>
 
+    <!-- Visual layer only: reads state, never touches auth logic -->
+    <script>
+        (function () {
+            var d = document, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            /* tab indicator + aria */
+            var tabs = d.getElementById('tabs'), lt = d.getElementById('loginTab'), st = d.getElementById('signupTab');
+            function sync(which) { tabs.dataset.tab = which; lt.setAttribute('aria-selected', which === 'login'); st.setAttribute('aria-selected', which === 'signup') }
+            lt.addEventListener('click', function () { sync('login') });
+            st.addEventListener('click', function () { sync('signup') });
+
+            /* password icon swap */
+            d.querySelectorAll('.pw-toggle').forEach(function (b) { b.addEventListener('click', function () { b.classList.toggle('on') }) });
+
+            /* error shake whenever a new error appears */
+            var em = d.getElementById('errorMsg');
+            new MutationObserver(function () {
+                if (em.classList.contains('show') && em.innerText) { em.classList.remove('shake'); void em.offsetWidth; em.classList.add('shake') }
+            }).observe(em, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
+            /* spine reacts to focus: vertebrae light up as fields are completed */
+            var verts = [].slice.call(d.querySelectorAll('.vert'));
+            function hot() {
+                var n = 0; d.querySelectorAll('form:not(.form-hidden) input').forEach(function (i) { if (i.value) n++ });
+                var lit = Math.min(verts.length, 1 + n * 2);
+                verts.forEach(function (v, i) { v.classList.toggle('hot', i < lit && n > 0) });
+            }
+            d.addEventListener('input', hot);
+            d.querySelectorAll('.tab').forEach(function (t) { t.addEventListener('click', function () { setTimeout(hot, 0) }) });
+
+            if (rm) return;
+
+            /* iris tracks the cursor across the whole page, model tilts slightly */
+            var eye = d.getElementById('eye'), model = d.getElementById('model');
+            addEventListener('pointermove', function (e) {
+                var r = eye.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2),
+                    m = Math.hypot(dx, dy) || 1, k = Math.min(m, 500) / 500 * 13;
+                eye.style.transform = 'translate(' + (dx / m * k).toFixed(2) + 'px,' + (dy / m * k).toFixed(2) + 'px)';
+                var px = (e.clientX / innerWidth - .5), py = (e.clientY / innerHeight - .5);
+                model.style.transform = 'perspective(800px) rotateY(' + (px * 10).toFixed(2) + 'deg) rotateX(' + (-py * 8).toFixed(2) + 'deg)';
+            }, { passive: true });
+
+            /* floating amber dust */
+            var c = d.getElementById('dust'), x = c.getContext('2d'), P = [], W, H, dpr = Math.min(devicePixelRatio || 1, 2), raf;
+            function size() { var b = c.parentNode.getBoundingClientRect(); W = b.width; H = b.height; c.width = W * dpr; c.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0) }
+            function seed() { P = []; var n = Math.round(Math.min(46, W * H / 16000)); for (var i = 0; i < n; i++)P.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.4 + .4, v: Math.random() * .25 + .08, a: Math.random() * .5 + .15, s: Math.random() * 6 }) }
+            function tick(t) {
+                x.clearRect(0, 0, W, H);
+                for (var i = 0; i < P.length; i++) {
+                    var p = P[i]; p.y -= p.v; p.x += Math.sin(t / 1800 + p.s) * .15; if (p.y < -4) { p.y = H + 4; p.x = Math.random() * W }
+                    x.globalAlpha = p.a * (.6 + .4 * Math.sin(t / 900 + p.s)); x.fillStyle = '#FF7A1A'; x.beginPath(); x.arc(p.x, p.y, p.r, 0, 6.283); x.fill()
+                }
+                raf = requestAnimationFrame(tick);
+            }
+            size(); seed(); raf = requestAnimationFrame(tick);
+            addEventListener('resize', function () { size(); seed() });
+            d.addEventListener('visibilitychange', function () { if (d.hidden) cancelAnimationFrame(raf); else raf = requestAnimationFrame(tick) });
+        })();
+    </script>
 </body>
 
 </html>

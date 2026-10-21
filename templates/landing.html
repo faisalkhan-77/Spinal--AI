@@ -5,18 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spinal — An AI companion with a spine.</title>
+  <meta name="description"
+    content="Spinal sees through your camera, hears through your mic, and answers in a voice from a chrome companion standing in front of you. Free to start.">
+  <meta name="theme-color" content="#0B0C0E">
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect x='9' y='1' width='8' height='5' fill='%23C9CBCF'/%3E%3Crect x='6' y='8' width='14' height='5' fill='%23C9CBCF'/%3E%3Crect x='3' y='15' width='20' height='5' fill='%23C9CBCF'/%3E%3Ccircle cx='13' cy='3.5' r='1.4' fill='%23FF7A1A'/%3E%3Cline x1='13' y1='6' x2='13' y2='20' stroke='%23FF7A1A'/%3E%3C/svg%3E">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Added Syne for a bolder, modern heading -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <style>
-    /* ============================================================
-     TOKENS
-     ============================================================ */
     :root {
       --void: #0B0C0E;
       --panel: #18191C;
@@ -28,137 +27,175 @@
       --bone: #F2F1ED;
       --bone-dim: #9A9B98;
       --amber: #FF7A1A;
-      --line: rgba(199, 201, 205, 0.14);
+      --line: rgba(199, 201, 205, .14);
       --green: #4ADE80;
+      --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+      --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+      --ease: cubic-bezier(.16, 1, .3, 1);
+      --pad: clamp(20px, 5.5vw, 80px);
     }
 
     * {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
+      box-sizing: border-box
     }
 
     html {
       scroll-behavior: smooth;
+      scroll-padding-top: 84px
     }
 
     body {
       background: var(--void);
       color: var(--bone);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: var(--sans);
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+      overflow-x: hidden
     }
 
     ::selection {
       background: var(--amber);
-      color: var(--void);
+      color: var(--void)
     }
 
     a {
-      color: inherit;
+      color: inherit
     }
 
     .mono {
-      font-family: 'IBM Plex Mono', monospace;
-      letter-spacing: 0.08em;
+      font-family: var(--mono);
+      letter-spacing: .08em
     }
 
-    /* faint machined backdrop + moving gradient */
+    :focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 4px
+    }
+
+    .skip {
+      position: absolute;
+      left: -999px;
+      top: 8px;
+      z-index: 100;
+      background: var(--amber);
+      color: var(--void);
+      padding: 10px 16px;
+      font: 600 .75rem var(--mono)
+    }
+
+    .skip:focus {
+      left: 8px
+    }
+
+    /* backdrop */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      background-image:
-        linear-gradient(var(--line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
       background-size: 88px 88px;
-      opacity: 0.35;
-      mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 40%, transparent 90%);
+      opacity: .3;
+      mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, #000 40%, transparent 90%);
+      -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, #000 40%, transparent 90%)
     }
 
-    body::after {
-      content: '';
+    .glow {
       position: fixed;
-      inset: -50%;
-      z-index: -1;
+      width: 640px;
+      height: 640px;
+      left: 0;
+      top: 0;
+      z-index: 0;
       pointer-events: none;
-      background: radial-gradient(circle at 50% 50%, rgba(255, 122, 26, 0.05) 0%, transparent 60%);
-      animation: bgRotate 20s linear infinite;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 122, 26, .09), transparent 65%);
+      transform: translate3d(var(--mx, 60vw), var(--my, 20vh), 0) translate(-50%, -50%);
+      will-change: transform
     }
 
-    @keyframes bgRotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: 100%;
+      z-index: 60;
+      background: var(--amber);
+      transform: scaleX(0);
+      transform-origin: 0 50%;
+      box-shadow: 0 0 12px var(--amber)
     }
 
-    /* ============================================================
-     NAVBAR
-     ============================================================ */
+    /* nav */
     header.nav {
-      position: relative;
-      z-index: 20;
+      position: sticky;
+      top: 0;
+      z-index: 50;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 5.5%;
+      padding: 16px var(--pad);
       border-bottom: 1px solid var(--line);
-      background: rgba(11, 12, 14, 0.82);
+      background: rgba(11, 12, 14, .78);
       backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px)
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-family: 'Big Shoulders Display', sans-serif;
+      font-family: var(--display);
       font-weight: 800;
       font-size: 1.5rem;
-      letter-spacing: 0.02em;
+      letter-spacing: .02em;
       text-transform: uppercase;
       color: var(--chrome-hi);
+      text-decoration: none;
+      line-height: 1
     }
 
     .brand-mark {
       width: 26px;
       height: 26px;
-      flex-shrink: 0;
+      flex-shrink: 0
     }
 
     .brand small {
       display: block;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--mono);
       font-weight: 400;
-      font-size: 0.55rem;
-      letter-spacing: 0.22em;
+      font-size: .55rem;
+      letter-spacing: .22em;
       color: var(--bone-dim);
-      text-transform: uppercase;
-      margin-top: 2px;
+      margin-top: 3px
     }
 
     .nav-right {
       display: flex;
       align-items: center;
-      gap: 28px;
+      gap: 28px
     }
 
     .nav-links {
       display: flex;
-      gap: 26px;
+      gap: 26px
     }
 
     .nav-links a {
       text-decoration: none;
       color: var(--bone-dim);
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.12em;
+      font: .72rem var(--mono);
+      letter-spacing: .12em;
       text-transform: uppercase;
       position: relative;
-      padding-bottom: 4px;
-      transition: color .25s;
+      padding: 6px 0;
+      transition: color .25s
     }
 
     .nav-links a::after {
@@ -167,290 +204,106 @@
       left: 0;
       bottom: 0;
       height: 1px;
-      width: 0;
-      background: var(--amber);
-      transition: width .25s;
-    }
-
-    .nav-links a:hover {
-      color: var(--bone);
-    }
-
-    .nav-links a:hover::after {
       width: 100%;
+      background: var(--amber);
+      transform: scaleX(0);
+      transform-origin: 0 50%;
+      transition: transform .35s var(--ease)
     }
 
-    /* --- NAVBAR LOGIN BUTTON --- */
-    .btn-login {
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(160deg, var(--chrome-hi), var(--gunmetal) 140%);
-      color: var(--void);
-      font-family: 'IBM Plex Mono', monospace;
-      font-weight: 600;
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 10px 20px;
+    .nav-links a:hover,
+    .nav-links a.on {
+      color: var(--bone)
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.on::after {
+      transform: scaleX(1)
+    }
+
+    /* buttons */
+    .btn {
       position: relative;
-      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 1;
-    }
-
-    /* Glow effect behind the button on hover */
-    .btn-login::before {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      background: linear-gradient(90deg, var(--amber), var(--chrome));
-      z-index: -1;
-      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
-      opacity: 0;
-      transition: opacity 0.4s ease;
-    }
-
-    .btn-login:hover {
-      transform: translateY(-2px) scale(1.05);
-      color: var(--void);
-      box-shadow: 0 0 20px rgba(255, 122, 26, 0.4);
-    }
-
-    .btn-login:hover::before {
-      opacity: 1;
-    }
-
-    .btn-login svg {
-      transition: transform 0.3s ease;
-    }
-
-    .btn-login:hover svg {
-      transform: translateX(3px);
-    }
-
-    /* ============================================================
-     HERO
-     ============================================================ */
-    .hero {
-      position: relative;
-      z-index: 5;
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      align-items: center;
-      gap: 40px;
-      padding: 90px 5.5% 70px;
-      max-width: 1440px;
-      margin: 0 auto;
-    }
-
-    .eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--amber);
-      margin-bottom: 22px;
-    }
-
-    .eyebrow .dot {
-      width: 7px;
-      height: 7px;
-      background: var(--amber);
-      box-shadow: 0 0 10px var(--amber);
-      animation: pulse 2.2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.25; }
-    }
-
-    /* --- NEW H1 ANIMATION & FONT --- */
-    /* --- H1 ORIGINAL FONT WITH ANIMATION --- */
-    .hero h1 {
-      font-family: 'Big Shoulders Display', sans-serif;
-      font-weight: 800;
-      text-transform: uppercase;
-      font-size: clamp(2.6rem, 5.2vw, 4.6rem); /* Original Size */
-      line-height: 1.02;
-      letter-spacing: 0.005em;
-      color: var(--chrome-hi);
-      max-width: 640px;
-    }
-
-    .hero h1 .line {
-      display: block;
-      overflow: hidden;
-      padding-bottom: 5px;
-    }
-
-    .hero h1 .line span {
-      display: inline-block;
-      transform: translateY(110%);
-      animation: slideUpReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .hero h1 .line:nth-child(2) span {
-      animation-delay: 0.15s;
-    }
-
-    @keyframes slideUpReveal {
-      to { transform: translateY(0); }
-    }
-
-    .hero h1 em {
-      font-style: normal;
-      color: transparent;
-      -webkit-text-stroke: 1.5px var(--chrome);
-      position: relative;
-      display: inline-block;
-    }
-
-    /* Glowing pulse behind the word 'spine' */
-    .hero h1 em::before {
-      content: 'spine.';
-      position: absolute;
-      left: 0;
-      top: 0;
-      color: var(--amber);
-      -webkit-text-stroke: 0;
-      z-index: -1;
-      opacity: 0;
-      animation: glowPulse 3s ease-in-out infinite alternate 0.8s;
-    }
-
-    @keyframes glowPulse {
-      0% { opacity: 0; filter: blur(4px); transform: scale(0.95); }
-      100% { opacity: 0.5; filter: blur(10px); transform: scale(1.05); }
-    }
-    /* ------------------------------- */
-
-    .hero p.lede {
-      margin-top: 26px;
-      font-size: 1.06rem;
-      line-height: 1.65;
-      color: var(--bone-dim);
-      max-width: 480px;
-    }
-
-    .hero-ctas {
-      margin-top: 38px;
-      display: flex;
-      align-items: center;
-      gap: 22px;
-      flex-wrap: wrap;
-    }
-
-    /* --- HERO PRIMARY CTA BUTTON --- */
-    .cta-btn {
-      position: relative;
-      background: linear-gradient(160deg, var(--chrome-hi), var(--chrome) 55%, var(--gunmetal) 130%);
+      text-decoration: none;
       color: var(--void);
-      text-decoration: none;
-      font-family: 'IBM Plex Mono', monospace;
-      font-weight: 600;
-      font-size: 0.86rem;
-      letter-spacing: 0.08em;
+      font: 600 .74rem var(--mono);
+      letter-spacing: .1em;
       text-transform: uppercase;
-      padding: 16px 30px;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 100%, 16px 100%);
+      background: linear-gradient(160deg, var(--chrome-hi), var(--chrome) 55%, var(--gunmetal) 130%);
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 100%, 12px 100%);
+      padding: 11px 24px;
       overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.7);
-      z-index: 1;
-      /* Halka sa floating animation button ko de rahe hain */
-      animation: floatBtn 4s ease-in-out infinite;
+      isolation: isolate;
+      border: 0;
+      cursor: pointer;
+      transition: transform .35s var(--ease), filter .3s
     }
 
-    @keyframes floatBtn {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-
-    /* Shimmer / Scanline Effect */
-    .cta-btn::before {
+    .btn::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.8) 50%, transparent 80%);
-      background-size: 250% 100%;
-      animation: scanShimmer 2.5s linear infinite;
       z-index: -1;
+      background: linear-gradient(160deg, var(--chrome-hi), var(--amber) 140%);
+      opacity: 0;
+      transition: opacity .3s
     }
 
-    @keyframes scanShimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -100% 0; }
-    }
-
-    /* Glow Background on Hover */
-    .cta-btn::after {
+    .btn::after {
       content: '';
       position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at center, rgba(255, 122, 26, 0.4) 0%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      z-index: -2;
+      top: 0;
+      bottom: 0;
+      left: -60%;
+      width: 40%;
+      background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .75), transparent);
+      transform: skewX(-20deg);
+      transition: left .7s var(--ease)
     }
 
-    .cta-btn:hover {
-      transform: translateY(-6px) scale(1.03);
-      box-shadow: 0 15px 40px -8px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 122, 26, 0.3);
-      color: #000;
+    .btn:hover {
+      transform: translateY(-2px)
     }
 
-    .cta-btn:hover::after {
-      opacity: 1;
+    .btn:hover::before {
+      opacity: 1
     }
 
-    .cta-btn svg {
-      width: 16px;
-      height: 16px;
-      position: relative;
-      z-index: 2;
-      transition: transform 0.3s ease;
+    .btn:hover::after {
+      left: 130%
     }
 
-    .cta-btn:hover svg {
-      transform: scale(1.2) rotate(10deg);
+    .btn:active {
+      transform: translateY(0) scale(.97)
     }
 
-    .cta-btn span {
-      position: relative;
-      z-index: 2;
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      transition: transform .3s var(--ease)
     }
 
-    .cta-btn:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 122, 26, 0.3);
+    .btn:hover svg {
+      transform: translateX(3px)
     }
 
-    .cta-btn svg {
-      width: 16px;
-      height: 16px;
-      position: relative;
-      z-index: 1;
+    .btn.lg {
+      font-size: .86rem;
+      padding: 17px 34px;
+      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 100%, 16px 100%)
     }
 
-    .cta-btn span {
-      position: relative;
-      z-index: 1;
+    .btn.lg:hover {
+      filter: drop-shadow(0 0 22px rgba(255, 122, 26, .45))
     }
 
-    .cta-secondary {
+    .link {
       text-decoration: none;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.78rem;
-      letter-spacing: 0.1em;
+      font: .78rem var(--mono);
+      letter-spacing: .1em;
       text-transform: uppercase;
       color: var(--bone-dim);
       display: inline-flex;
@@ -458,411 +311,843 @@
       gap: 8px;
       border-bottom: 1px solid var(--gunmetal-dim);
       padding-bottom: 3px;
-      transition: color .2s, border-color .2s;
+      transition: color .2s, border-color .2s
     }
 
-    .cta-secondary:hover {
+    .link:hover {
       color: var(--bone);
-      border-color: var(--amber);
+      border-color: var(--amber)
     }
 
-    /* ---- spec strip ---- */
+    .link svg {
+      transition: transform .3s var(--ease)
+    }
+
+    .link:hover svg {
+      transform: translateY(3px)
+    }
+
+    /* hero */
+    main {
+      position: relative;
+      z-index: 5
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      align-items: center;
+      gap: 40px;
+      padding: clamp(48px, 8vw, 100px) var(--pad) 70px;
+      max-width: 1440px;
+      margin: 0 auto;
+      min-height: calc(100vh - 70px)
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font: .72rem var(--mono);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 22px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255, 122, 26, .3);
+      background: rgba(255, 122, 26, .06)
+    }
+
+    .eyebrow .dot {
+      width: 7px;
+      height: 7px;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+      animation: pulse 2.2s ease-in-out infinite
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: .25
+      }
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: clamp(2.8rem, 6vw, 5.4rem);
+      line-height: .98;
+      letter-spacing: .005em;
+      color: var(--chrome-hi);
+      max-width: 660px
+    }
+
+    h1 .line {
+      display: block;
+      overflow: hidden;
+      padding-bottom: 6px
+    }
+
+    h1 .line>span {
+      display: inline-block;
+      transform: translateY(112%);
+      animation: rise 1s var(--ease) forwards
+    }
+
+    h1 .line:nth-child(2)>span {
+      animation-delay: .14s
+    }
+
+    @keyframes rise {
+      to {
+        transform: none
+      }
+    }
+
+    h1 em {
+      font-style: normal;
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--chrome);
+      position: relative;
+      display: inline-block;
+      animation: fill 1.2s 1s var(--ease) forwards
+    }
+
+    @keyframes fill {
+      to {
+        color: var(--amber);
+        -webkit-text-stroke-color: var(--amber);
+        text-shadow: 0 0 40px rgba(255, 122, 26, .45)
+      }
+    }
+
+    .lede {
+      margin-top: 26px;
+      font-size: 1.08rem;
+      line-height: 1.65;
+      color: var(--bone-dim);
+      max-width: 480px;
+      opacity: 0;
+      animation: fade .9s .5s var(--ease) forwards
+    }
+
+    .hero-ctas {
+      margin-top: 38px;
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fade .9s .65s var(--ease) forwards
+    }
+
+    .fine {
+      margin-top: 16px;
+      font: .68rem var(--mono);
+      letter-spacing: .1em;
+      color: var(--gunmetal);
+      opacity: 0;
+      animation: fade .9s .8s var(--ease) forwards
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0;
+        transform: translateY(14px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
     .spec-strip {
-      margin-top: 56px;
+      margin-top: 52px;
       display: flex;
       gap: 38px;
       flex-wrap: wrap;
       padding-top: 26px;
-      border-top: 1px solid var(--line);
+      border-top: 1px solid var(--line)
     }
 
     .spec {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--mono)
     }
 
     .spec .val {
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       color: var(--chrome-hi);
       font-weight: 500;
+      font-variant-numeric: tabular-nums
     }
 
     .spec .lab {
-      font-size: 0.66rem;
+      font-size: .66rem;
       color: var(--bone-dim);
-      letter-spacing: 0.14em;
+      letter-spacing: .14em;
       text-transform: uppercase;
-      margin-top: 3px;
+      margin-top: 3px
     }
 
-    /* ============================================================
-     SIGNATURE GRAPHIC
-     ============================================================ */
+    /* the spine */
     .rig {
       position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100%;
-      perspective: 1000px;
+      height: 100%
     }
 
     .rig svg {
       width: 100%;
       max-width: 400px;
       height: auto;
-      filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.65));
+      filter: drop-shadow(0 30px 60px rgba(0, 0, 0, .65));
       animation: drift 7s ease-in-out infinite;
-      transition: filter 0.5s ease, transform 0.5s ease;
-    }
-
-    .rig:hover svg {
-      filter: drop-shadow(0 30px 80px rgba(255, 122, 26, 0.3));
-      transform: scale(1.05);
+      overflow: visible
     }
 
     @keyframes drift {
-      0%, 100% { transform: translateY(0) rotateY(0deg); }
-      50% { transform: translateY(-14px) rotateY(2deg); }
+      50% {
+        transform: translateY(-14px)
+      }
     }
 
     .vert {
       fill: url(#vertGrad);
       stroke: var(--gunmetal-dim);
       stroke-width: 1;
+      transition: filter .5s, opacity .5s
+    }
+
+    .vert.lit {
+      filter: drop-shadow(0 0 10px rgba(255, 122, 26, .75));
+      stroke: var(--amber)
     }
 
     .cord {
       stroke: var(--amber);
       stroke-width: 2;
-      opacity: 0.85;
-      filter: drop-shadow(0 0 6px rgba(255, 122, 26, 0.7));
+      fill: none;
+      opacity: .9;
+      filter: drop-shadow(0 0 6px rgba(255, 122, 26, .7));
+      stroke-dasharray: var(--len, 520);
+      stroke-dashoffset: calc(var(--len, 520) * (1 - var(--p, .15)))
     }
 
     .iris-ring {
       fill: none;
       stroke: var(--chrome);
-      stroke-width: 1.4;
-    }
-
-    .iris-core {
-      fill: url(#lensGrad);
+      stroke-width: 1.4
     }
 
     .iris-blade {
       fill: var(--gunmetal);
-      opacity: 0.9;
+      opacity: .9;
       transform-origin: 200px 96px;
-      animation: blink 6s ease-in-out infinite;
+      animation: blink 6s ease-in-out infinite
     }
 
     @keyframes blink {
-      0%, 92%, 100% { transform: scale(1); }
-      96% { transform: scale(0.72); }
+
+      0%,
+      92%,
+      100% {
+        transform: scale(1)
+      }
+
+      96% {
+        transform: scale(.72)
+      }
     }
 
-    /* ============================================================
-     FEATURE ROW
-     ============================================================ */
-    .levels {
-      position: relative;
-      z-index: 5;
+    .iris-core {
+      fill: url(#lensGrad)
+    }
+
+    #eye {
+      transition: transform .25s ease-out
+    }
+
+    .readout {
+      position: absolute;
+      right: 0;
+      bottom: 6%;
+      font: .64rem var(--mono);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--bone-dim);
+      border-left: 1px solid var(--amber);
+      padding-left: 10px;
+      line-height: 1.8
+    }
+
+    .readout b {
+      color: var(--amber);
+      font-weight: 500
+    }
+
+    /* sections */
+    .sec {
       max-width: 1440px;
-      margin: 10px auto 0;
-      padding: 40px 5.5% 100px;
+      margin: 0 auto;
+      padding: clamp(60px, 9vw, 120px) var(--pad)
     }
 
-    .levels-head {
+    .head {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
       gap: 24px;
-      margin-bottom: 36px;
+      margin-bottom: 40px;
       flex-wrap: wrap;
       border-bottom: 1px solid var(--line);
-      padding-bottom: 22px;
+      padding-bottom: 22px
     }
 
-    .levels-head h2 {
-      font-family: 'Big Shoulders Display', sans-serif;
+    .head h2 {
+      font-family: var(--display);
       font-weight: 700;
       text-transform: uppercase;
-      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      font-size: clamp(2rem, 3.6vw, 3rem);
       color: var(--chrome-hi);
-      letter-spacing: 0.02em;
+      letter-spacing: .02em;
+      line-height: 1.05
     }
 
-    .levels-head p {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.75rem;
+    .head p {
+      font: .75rem var(--mono);
       color: var(--bone-dim);
-      max-width: 280px;
-      line-height: 1.6;
+      max-width: 300px;
+      line-height: 1.7
     }
 
+    /* levels */
     .level-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1px;
       background: var(--line);
-      border: 1px solid var(--line);
+      border: 1px solid var(--line)
     }
 
     .level {
       background: var(--panel);
-      padding: 34px 30px 38px;
+      padding: 36px 30px 40px;
       position: relative;
-      transition: all .3s ease;
       overflow: hidden;
+      transition: background .35s;
+      --x: 50%;
+      --y: 0%
+    }
+
+    .level::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .4s;
+      background: radial-gradient(320px circle at var(--x) var(--y), rgba(255, 122, 26, .13), transparent 70%)
     }
 
     .level:hover {
-      background: var(--panel-2);
-      box-shadow: inset 0 0 0 1px rgba(255, 122, 26, 0.4), 0 10px 30px rgba(0,0,0,0.5);
-      z-index: 2;
+      background: var(--panel-2)
+    }
+
+    .level:hover::after {
+      opacity: 1
+    }
+
+    .level::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: 100%;
+      background: var(--amber);
+      transform: scaleX(0);
+      transform-origin: 0 50%;
+      transition: transform .6s var(--ease)
+    }
+
+    .level:hover::before {
+      transform: scaleX(1)
     }
 
     .level-id {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.7rem;
+      font: .7rem var(--mono);
       color: var(--amber);
-      letter-spacing: 0.14em;
+      letter-spacing: .14em;
       display: block;
-      margin-bottom: 22px;
+      margin-bottom: 24px
     }
 
     .level-icon {
       width: 42px;
       height: 42px;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       color: var(--chrome-hi);
-      transition: transform 0.3s ease, color 0.3s ease;
+      transition: transform .5s var(--ease), color .3s
     }
 
     .level:hover .level-icon {
-      transform: scale(1.1) translateY(-3px);
-      color: var(--amber);
+      transform: translateY(-4px) scale(1.08);
+      color: var(--amber)
     }
 
     .level-icon svg {
       width: 100%;
-      height: 100%;
+      height: 100%
     }
 
     .level h3 {
-      font-family: 'Big Shoulders Display', sans-serif;
+      font-family: var(--display);
       font-weight: 700;
       text-transform: uppercase;
-      font-size: 1.4rem;
-      letter-spacing: 0.01em;
+      font-size: 1.5rem;
       margin-bottom: 10px;
-      color: var(--bone);
-      transition: color 0.3s ease;
-    }
-
-    .level:hover h3 {
-      color: var(--chrome-hi);
+      color: var(--bone)
     }
 
     .level p {
       color: var(--bone-dim);
-      font-size: 0.92rem;
-      line-height: 1.6;
+      font-size: .94rem;
+      line-height: 1.65;
+      max-width: 34ch
     }
 
-    /* Updated Tags with Green Dot */
-    .level .tag {
+    .tag {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      margin-top: 22px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
+      gap: 7px;
+      margin-top: 24px;
+      font: .62rem var(--mono);
+      letter-spacing: .1em;
       text-transform: uppercase;
-      color: #4ADE80; /* Green color */
-      border: 1px solid rgba(74, 222, 128, 0.3);
-      background: rgba(74, 222, 128, 0.05);
+      color: var(--green);
+      border: 1px solid rgba(74, 222, 128, .3);
+      background: rgba(74, 222, 128, .05);
       padding: 5px 10px;
-      border-radius: 2px;
+      border-radius: 2px
     }
 
-    .level .tag .dot {
+    .tag .dot {
       width: 6px;
       height: 6px;
-      background: #4ADE80;
+      background: var(--green);
       border-radius: 50%;
-      box-shadow: 0 0 6px #4ADE80;
-      animation: pulseGreen 2s infinite;
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s infinite
     }
 
-    @keyframes pulseGreen {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    /* how it works */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      counter-reset: s;
+      position: relative
     }
 
-    /* corner notch */
-    .level::before {
+    .step {
+      padding: 0 32px 0 0;
+      position: relative;
+      counter-increment: s
+    }
+
+    .step::before {
       content: '';
       position: absolute;
-      top: 0;
+      top: 19px;
+      left: 46px;
+      right: 14px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--amber), var(--gunmetal-dim))
+    }
+
+    .step:last-child::before {
+      display: none
+    }
+
+    .step .n {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--amber);
+      font: 500 .85rem var(--mono);
+      color: var(--amber);
+      background: var(--void);
+      position: relative;
+      margin-bottom: 26px;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%)
+    }
+
+    .step .n::before {
+      content: counter(s)
+    }
+
+    .step h3 {
+      font-family: var(--display);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 1.4rem;
+      color: var(--chrome-hi);
+      margin-bottom: 8px
+    }
+
+    .step p {
+      color: var(--bone-dim);
+      font-size: .94rem;
+      line-height: 1.65;
+      max-width: 32ch
+    }
+
+    /* faq */
+    .faq {
+      display: grid;
+      grid-template-columns: .8fr 1.2fr;
+      gap: clamp(30px, 6vw, 90px);
+      align-items: start
+    }
+
+    .faq .head {
+      display: block;
+      border: 0;
+      margin: 0;
+      padding: 0
+    }
+
+    .faq .head p {
+      margin-top: 18px
+    }
+
+    details {
+      border-top: 1px solid var(--line)
+    }
+
+    details:last-child {
+      border-bottom: 1px solid var(--line)
+    }
+
+    summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 24px 0;
+      font-family: var(--display);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 1.3rem;
+      color: var(--bone);
+      transition: color .25s
+    }
+
+    summary::-webkit-details-marker {
+      display: none
+    }
+
+    summary:hover {
+      color: var(--chrome-hi)
+    }
+
+    summary i {
+      position: relative;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0
+    }
+
+    summary i::before,
+    summary i::after {
+      content: '';
+      position: absolute;
+      background: var(--amber);
+      transition: transform .4s var(--ease)
+    }
+
+    summary i::before {
+      left: 0;
       right: 0;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 0 16px 16px 0;
-      border-color: transparent var(--void) transparent transparent;
-      transition: border-color 0.3s;
+      top: 6px;
+      height: 2px
     }
 
-    .level:hover::before {
-      border-color: transparent var(--panel-2) transparent transparent;
+    summary i::after {
+      top: 0;
+      bottom: 0;
+      left: 6px;
+      width: 2px
     }
 
-    /* ============================================================
-     FOOTER
-     ============================================================ */
+    details[open] summary i::after {
+      transform: scaleY(0)
+    }
+
+    details[open] summary {
+      color: var(--amber)
+    }
+
+    details p {
+      color: var(--bone-dim);
+      line-height: 1.7;
+      padding: 0 40px 26px 0;
+      max-width: 60ch;
+      animation: fade .5s var(--ease)
+    }
+
+    /* final cta */
+    .final {
+      position: relative;
+      margin: 0 var(--pad) 90px;
+      max-width: 1280px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--panel), var(--void));
+      padding: clamp(48px, 8vw, 100px) clamp(24px, 5vw, 70px);
+      text-align: center;
+      overflow: hidden;
+      clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px))
+    }
+
+    .final::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: -40%;
+      width: 70%;
+      height: 80%;
+      transform: translateX(-50%);
+      background: radial-gradient(ellipse, rgba(255, 122, 26, .18), transparent 65%);
+      pointer-events: none
+    }
+
+    .final h2 {
+      position: relative;
+      font-family: var(--display);
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 1;
+      color: var(--chrome-hi)
+    }
+
+    .final p {
+      position: relative;
+      margin: 18px auto 34px;
+      color: var(--bone-dim);
+      max-width: 46ch
+    }
+
+    .final .btn {
+      position: relative
+    }
+
+    @media(min-width:1440px) {
+      .final {
+        margin-left: auto;
+        margin-right: auto
+      }
+    }
+
+    /* footer */
     footer {
       position: relative;
       z-index: 5;
       border-top: 1px solid var(--line);
-      padding: 30px 5.5%;
+      padding: 30px var(--pad);
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 14px;
-      background: var(--void);
+      background: var(--void)
     }
 
     footer .fmono {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.7rem;
+      font: .7rem var(--mono);
       color: var(--gunmetal);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      letter-spacing: .1em;
+      text-transform: uppercase
     }
 
     .foot-icons {
       display: flex;
-      gap: 18px;
+      gap: 6px
     }
 
     .foot-icons a {
       color: var(--gunmetal);
-      transition: color .2s, transform .2s;
+      padding: 8px;
+      transition: color .2s, transform .3s var(--ease)
     }
 
     .foot-icons a:hover {
       color: var(--amber);
-      transform: translateY(-2px);
+      transform: translateY(-2px)
     }
 
     .foot-icons svg {
       width: 18px;
       height: 18px;
+      display: block
     }
 
-    /* ============================================================
-     RESPONSIVE
-     ============================================================ */
-    @media (max-width: 980px) {
+    /* scroll reveal (single, restrained) */
+    .js .rv {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity .9s var(--ease), transform .9s var(--ease);
+      transition-delay: calc(var(--i, 0) * 90ms)
+    }
+
+    .js .rv.in {
+      opacity: 1;
+      transform: none
+    }
+
+    @media(max-width:980px) {
       .hero {
         grid-template-columns: 1fr;
-        padding-top: 60px;
         text-align: center;
+        min-height: 0
       }
 
-      .hero h1 {
-        margin: 0 auto;
+      h1,
+      .lede {
+        margin-left: auto;
+        margin-right: auto
       }
 
-      .hero p.lede {
-        margin: 26px auto 0;
-      }
-
-      .hero-ctas {
-        justify-content: center;
-      }
-
+      .hero-ctas,
       .spec-strip {
-        justify-content: center;
+        justify-content: center
       }
 
       .rig {
-        order: -1;
-        margin-bottom: 10px;
+        order: -1
       }
 
       .rig svg {
-        max-width: 260px;
+        max-width: 250px
       }
 
-      .level-grid {
-        grid-template-columns: 1fr;
+      .readout {
+        display: none
+      }
+
+      .level-grid,
+      .steps {
+        grid-template-columns: 1fr
+      }
+
+      .step {
+        padding: 0 0 40px
+      }
+
+      .step::before {
+        top: 40px;
+        bottom: 0;
+        left: 19px;
+        right: auto;
+        width: 1px;
+        height: auto;
+        background: linear-gradient(var(--amber), var(--gunmetal-dim))
+      }
+
+      .step .n {
+        margin-bottom: 16px
+      }
+
+      .step h3,
+      .step p {
+        margin-left: 0
+      }
+
+      .faq {
+        grid-template-columns: 1fr
       }
 
       .nav-links {
-        display: none;
-      }
-
-      .spec-strip {
-        gap: 26px;
+        display: none
       }
     }
 
-    @media (max-width: 480px) {
-      header.nav {
-        padding: 16px 6%;
+    @media(max-width:480px) {
+      .nav-right {
+        gap: 0
       }
 
-      .hero {
-        padding: 44px 6% 40px;
-      }
-
-      .levels {
-        padding: 20px 6% 70px;
-      }
-
-      .hero h1 {
-        font-size: 2.6rem;
+      .brand {
+        font-size: 1.3rem
       }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation-duration: 0.001ms !important;
-        animation-iteration-count: 1 !important;
+    @media(prefers-reduced-motion:reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-delay: 0s !important;
+        transition-duration: .001ms !important
       }
+
+      h1 .line>span,
+      .lede,
+      .hero-ctas,
+      .fine {
+        transform: none;
+        opacity: 1
+      }
+
+      h1 em {
+        color: var(--amber);
+        -webkit-text-stroke-color: var(--amber)
+      }
+
       html {
-        scroll-behavior: auto;
+        scroll-behavior: auto
+      }
+
+      .glow {
+        display: none
       }
     }
   </style>
 </head>
 
 <body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="progress" aria-hidden="true"></div>
+  <div class="glow" aria-hidden="true"></div>
 
   <header class="nav">
-    <div class="brand">
-      <svg class="brand-mark" viewBox="0 0 26 26" fill="none">
+    <a class="brand" href="#top" aria-label="Spinal home">
+      <svg class="brand-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true">
         <rect x="9" y="1" width="8" height="5" fill="var(--chrome)" />
         <rect x="6" y="8" width="14" height="5" fill="var(--chrome)" />
         <rect x="3" y="15" width="20" height="5" fill="var(--chrome)" />
         <circle cx="13" cy="3.5" r="1.4" fill="var(--amber)" />
         <line x1="13" y1="6" x2="13" y2="20" stroke="var(--amber)" stroke-width="1" />
       </svg>
-      <div>
-        Spinal
-        <small>Vision-native AI</small>
-      </div>
-    </div>
+      <div>Spinal<small>Vision-native AI</small></div>
+    </a>
     <div class="nav-right">
-      <nav class="nav-links">
+      <nav class="nav-links" aria-label="Primary">
         <a href="#levels">Capabilities</a>
+        <a href="#how">How it works</a>
         <a href="#specs">Specs</a>
+        <a href="#faq">FAQ</a>
       </nav>
-      <a href="/auth" class="btn-login">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <a href="/auth" class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
           <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
           <path d="M10 17l5-5-5-5" />
           <path d="M15 12H3" />
@@ -872,175 +1157,230 @@
     </div>
   </header>
 
-  <section class="hero">
-    <div>
-      <div class="eyebrow"><span class="dot"></span> Live camera + voice model</div>
-      
-      <!-- UPDATED H1 WITH ANIMATION -->
-      <h1>
-        <span class="line"><span>An AI companion</span></span>
-        <span class="line"><span>with a <em>spine.</em></span></span>
-      </h1>
-
-      <p class="lede">
-        Spinal watches through your camera and listens through your mic, then answers in a voice
-        that comes from a chrome companion standing right in front of you — not a chat bubble.
-      </p>
-
-      <div class="hero-ctas">
-        <a href="/auth" class="cta-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-            <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
-          </svg>
-          <span>Get started — it's free</span>
-        </a>
-        <a href="#levels" class="cta-secondary">
-          See what it does
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-            <path d="M12 5v14M5 12l7 7 7-7" />
-          </svg>
-        </a>
-      </div>
-
-      <div class="spec-strip" id="specs">
-        <div class="spec">
-          <div class="val">24fps</div>
-          <div class="lab">Vision refresh</div>
+  <main id="main">
+    <section class="hero" id="top">
+      <div>
+        <div class="eyebrow"><span class="dot"></span> Live camera + voice model</div>
+        <h1>
+          <span class="line"><span>An AI companion</span></span>
+          <span class="line"><span>with a <em>spine.</em></span></span>
+        </h1>
+        <p class="lede">Spinal watches through your camera and listens through your mic, then answers in a voice that
+          comes from a chrome companion standing right in front of you — not a chat bubble.</p>
+        <div class="hero-ctas">
+          <a href="/auth" class="btn lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+              <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+            </svg>
+            Get started — it’s free
+          </a>
+          <a href="#levels" class="link">See what it does
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+              aria-hidden="true">
+              <path d="M12 5v14M5 12l7 7 7-7" />
+            </svg>
+          </a>
         </div>
-        <div class="spec">
-          <div class="val">&lt;300ms</div>
-          <div class="lab">Voice latency</div>
-        </div>
-        <div class="spec">
-          <div class="val">C1–C7</div>
-          <div class="lab">Reasoning levels</div>
+        <p class="fine">No card. Camera and mic stay off until you allow them.</p>
+        <div class="spec-strip" id="specs">
+          <div class="spec">
+            <div class="val" data-n="24" data-s="fps">24fps</div>
+            <div class="lab">Vision refresh</div>
+          </div>
+          <div class="spec">
+            <div class="val" data-n="300" data-p="&lt;" data-s="ms">&lt;300ms</div>
+            <div class="lab">Voice latency</div>
+          </div>
+          <div class="spec">
+            <div class="val">C1–C7</div>
+            <div class="lab">Reasoning levels</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="rig" aria-hidden="true">
-      <svg viewBox="0 0 400 640" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="vertGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#F1F1F2" />
-            <stop offset="45%" stop-color="#B7B9BD" />
-            <stop offset="100%" stop-color="#4B4D52" />
-          </linearGradient>
-          <radialGradient id="lensGrad" cx="35%" cy="30%" r="75%">
-            <stop offset="0%" stop-color="#FFE3C7" />
-            <stop offset="35%" stop-color="#FF9A45" />
-            <stop offset="100%" stop-color="#7A2E00" />
-          </radialGradient>
-        </defs>
-
-        <path class="cord" d="M200,120 L198,220 L204,320 L197,420 L202,520 L199,600" fill="none" />
-
-        <g class="vert">
-          <polygon points="152,150 248,150 264,182 236,196 164,196 136,182" />
-          <polygon points="118,168 92,182 96,196" opacity="0.9" />
-          <polygon points="282,168 308,182 304,196" opacity="0.9" />
-        </g>
-        <g class="vert">
-          <polygon points="140,222 260,222 278,256 246,272 154,272 122,256" />
-          <polygon points="104,240 76,256 80,272" opacity="0.9" />
-          <polygon points="296,240 324,256 320,272" opacity="0.9" />
-        </g>
-        <g class="vert">
-          <polygon points="132,300 268,300 288,336 252,354 148,354 112,336" />
-          <polygon points="94,320 64,336 68,354" opacity="0.9" />
-          <polygon points="306,320 336,336 332,354" opacity="0.9" />
-        </g>
-        <g class="vert">
-          <polygon points="128,380 272,380 294,418 254,438 146,438 106,418" />
-          <polygon points="88,400 56,418 60,438" opacity="0.9" />
-          <polygon points="312,400 344,418 340,438" opacity="0.9" />
-        </g>
-        <g class="vert">
-          <polygon points="130,464 270,464 292,502 252,522 148,522 108,502" />
-          <polygon points="90,484 58,502 62,522" opacity="0.9" />
-          <polygon points="310,484 342,502 338,522" opacity="0.9" />
-        </g>
-        <g class="vert">
-          <polygon points="140,546 260,546 280,582 244,600 156,600 120,582" />
-        </g>
-
-        <circle class="iris-ring" cx="200" cy="96" r="72" />
-        <circle class="iris-ring" cx="200" cy="96" r="58" stroke-opacity="0.5" />
-        <g>
-          <polygon class="iris-blade" points="200,96 246,66 254,84" />
-          <polygon class="iris-blade" points="200,96 254,84 240,126" transform="rotate(51.4 200 96)" />
-          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(102.8 200 96)" />
-          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(154.2 200 96)" />
-          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(205.6 200 96)" />
-          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(257 200 96)" />
-          <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(308.4 200 96)" />
-        </g>
-        <circle class="iris-core" cx="200" cy="96" r="26" />
-        <circle cx="192" cy="88" r="6" fill="#FFF6EC" opacity="0.85" />
-      </svg>
-    </div>
-  </section>
-
-  <section class="levels" id="levels">
-    <div class="levels-head">
-      <h2>Three levels, built to hold weight</h2>
-      <p class="mono">Each level of the column takes on one job — named the way a spine is, from the neck down.</p>
-    </div>
-
-    <div class="level-grid">
-
-      <div class="level">
-        <span class="level-id mono">LEVEL C1 — VISION</span>
-        <div class="level-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <circle cx="12" cy="12" r="9" />
-            <circle cx="12" cy="12" r="3.4" />
-            <path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-width="1.2" />
-          </svg>
-        </div>
-        <h3>Real-time vision</h3>
-        <p>Points the camera at anything and Spinal reads the room — objects, expressions, text on a page — and answers before you finish the sentence.</p>
-        <!-- UPDATED TAG -->
-        <span class="tag"><span class="dot"></span> Live</span>
+      <div class="rig" aria-hidden="true">
+        <svg viewBox="0 0 400 640" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="vertGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#F1F1F2" />
+              <stop offset="45%" stop-color="#B7B9BD" />
+              <stop offset="100%" stop-color="#4B4D52" />
+            </linearGradient>
+            <radialGradient id="lensGrad" cx="35%" cy="30%" r="75%">
+              <stop offset="0%" stop-color="#FFE3C7" />
+              <stop offset="35%" stop-color="#FF9A45" />
+              <stop offset="100%" stop-color="#7A2E00" />
+            </radialGradient>
+          </defs>
+          <path class="cord" d="M200,120 L198,220 L204,320 L197,420 L202,520 L199,600" />
+          <g class="vert">
+            <polygon points="152,150 248,150 264,182 236,196 164,196 136,182" />
+            <polygon points="118,168 92,182 96,196" opacity=".9" />
+            <polygon points="282,168 308,182 304,196" opacity=".9" />
+          </g>
+          <g class="vert">
+            <polygon points="140,222 260,222 278,256 246,272 154,272 122,256" />
+            <polygon points="104,240 76,256 80,272" opacity=".9" />
+            <polygon points="296,240 324,256 320,272" opacity=".9" />
+          </g>
+          <g class="vert">
+            <polygon points="132,300 268,300 288,336 252,354 148,354 112,336" />
+            <polygon points="94,320 64,336 68,354" opacity=".9" />
+            <polygon points="306,320 336,336 332,354" opacity=".9" />
+          </g>
+          <g class="vert">
+            <polygon points="128,380 272,380 294,418 254,438 146,438 106,418" />
+            <polygon points="88,400 56,418 60,438" opacity=".9" />
+            <polygon points="312,400 344,418 340,438" opacity=".9" />
+          </g>
+          <g class="vert">
+            <polygon points="130,464 270,464 292,502 252,522 148,522 108,502" />
+            <polygon points="90,484 58,502 62,522" opacity=".9" />
+            <polygon points="310,484 342,502 338,522" opacity=".9" />
+          </g>
+          <g class="vert">
+            <polygon points="140,546 260,546 280,582 244,600 156,600 120,582" />
+          </g>
+          <circle class="iris-ring" cx="200" cy="96" r="72" />
+          <circle class="iris-ring" cx="200" cy="96" r="58" stroke-opacity=".5" />
+          <g>
+            <polygon class="iris-blade" points="200,96 246,66 254,84" />
+            <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(51.4 200 96)" />
+            <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(102.8 200 96)" />
+            <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(154.2 200 96)" />
+            <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(205.6 200 96)" />
+            <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(257 200 96)" />
+            <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(308.4 200 96)" />
+          </g>
+          <g id="eye">
+            <circle class="iris-core" cx="200" cy="96" r="26" />
+            <circle cx="192" cy="88" r="6" fill="#FFF6EC" opacity=".85" />
+          </g>
+        </svg>
+        <div class="readout">Tracking <b>1 subject</b><br>Signal <b id="sig">0%</b></div>
       </div>
+    </section>
 
-      <div class="level">
-        <span class="level-id mono">LEVEL C4 — PRESENCE</span>
-        <div class="level-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M4 15c0-4 3.6-7 8-7s8 3 8 7" />
-            <path d="M2 12v2M22 12v2M6 9v-1M18 9v-1" />
-            <circle cx="12" cy="6" r="2.4" />
-          </svg>
-        </div>
-        <h3>A voice, not a chatbox</h3>
-        <p>The chrome companion speaks in a natural voice and holds a conversation like it's standing in the room with you, not typing from behind a screen.</p>
-        <!-- UPDATED TAG -->
-        <span class="tag"><span class="dot"></span> Live</span>
+    <section class="sec" id="levels">
+      <div class="head rv">
+        <h2>Three levels, built to hold weight</h2>
+        <p class="mono">Each level of the column takes on one job — named the way a spine is, from the neck down.</p>
       </div>
-
-      <div class="level">
-        <span class="level-id mono">LEVEL C7 — MEMORY</span>
-        <div class="level-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <rect x="4" y="4" width="16" height="16" rx="0" />
-            <path d="M4 9h16M9 4v16" />
-          </svg>
-        </div>
-        <h3>Memory & screen share</h3>
-        <p>Spinal starts remembering what matters between sessions, and can watch your screen to follow along with your actual work.</p>
-        <!-- UPDATED TAG -->
-        <span class="tag"><span class="dot"></span> Live</span>
+      <div class="level-grid">
+        <article class="level rv" style="--i:0">
+          <span class="level-id mono">LEVEL C1 — VISION</span>
+          <div class="level-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+              aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <circle cx="12" cy="12" r="3.4" />
+              <path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-width="1.2" />
+            </svg></div>
+          <h3>Real-time vision</h3>
+          <p>Point the camera at anything and Spinal reads the room — objects, expressions, text on a page — and answers
+            before you finish the sentence.</p>
+          <span class="tag"><span class="dot"></span> Live</span>
+        </article>
+        <article class="level rv" style="--i:1">
+          <span class="level-id mono">LEVEL C4 — PRESENCE</span>
+          <div class="level-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+              aria-hidden="true">
+              <path d="M4 15c0-4 3.6-7 8-7s8 3 8 7" />
+              <path d="M2 12v2M22 12v2M6 9v-1M18 9v-1" />
+              <circle cx="12" cy="6" r="2.4" />
+            </svg></div>
+          <h3>A voice, not a chatbox</h3>
+          <p>The chrome companion speaks in a natural voice and holds a conversation like it’s standing in the room with
+            you, not typing from behind a screen.</p>
+          <span class="tag"><span class="dot"></span> Live</span>
+        </article>
+        <article class="level rv" style="--i:2">
+          <span class="level-id mono">LEVEL C7 — MEMORY</span>
+          <div class="level-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+              aria-hidden="true">
+              <rect x="4" y="4" width="16" height="16" />
+              <path d="M4 9h16M9 4v16" />
+            </svg></div>
+          <h3>Memory &amp; screen share</h3>
+          <p>Spinal starts remembering what matters between sessions, and can watch your screen to follow along with
+            your actual work.</p>
+          <span class="tag"><span class="dot"></span> Live</span>
+        </article>
       </div>
+    </section>
 
-    </div>
-  </section>
+    <section class="sec" id="how">
+      <div class="head rv">
+        <h2>From signal to voice</h2>
+        <p class="mono">Three steps, in order, in under a second.</p>
+      </div>
+      <div class="steps">
+        <div class="step rv" style="--i:0">
+          <div class="n"></div>
+          <h3>It sees</h3>
+          <p>Your camera feed is read frame by frame — faces, objects, handwriting, whatever is in front of the lens.
+          </p>
+        </div>
+        <div class="step rv" style="--i:1">
+          <div class="n"></div>
+          <h3>It listens</h3>
+          <p>Your voice is heard in real time, so you can interrupt, point, and say “this one” instead of describing it.
+          </p>
+        </div>
+        <div class="step rv" style="--i:2">
+          <div class="n"></div>
+          <h3>It answers</h3>
+          <p>The reply is spoken aloud, grounded in what it saw and what it remembers from your earlier sessions.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="faq">
+      <div class="faq">
+        <div class="head rv">
+          <h2>Straight answers</h2>
+          <p class="mono">Short, specific, no fine print hiding behind them.</p>
+        </div>
+        <div class="rv" style="--i:1">
+          <details open>
+            <summary>Is Spinal really free to start?<i></i></summary>
+            <p>Yes. Create an account and start talking. You don’t need a card to begin.</p>
+          </details>
+          <details>
+            <summary>When is my camera on?<i></i></summary>
+            <p>Only during a session you start, and only after your browser permission prompt. Close the session and the
+              camera stops.</p>
+          </details>
+          <details>
+            <summary>What does Spinal remember?<i></i></summary>
+            <p>It keeps the things that matter between sessions, like your preferences and ongoing projects, so you
+              don’t repeat yourself.</p>
+          </details>
+          <details>
+            <summary>What do I need to run it?<i></i></summary>
+            <p>A device with a camera and microphone and a modern browser. Screen share is optional.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="final rv" aria-labelledby="fh">
+      <h2 id="fh">Meet the one standing in front of you.</h2>
+      <p>Allow the camera, say hello, and see what it notices first.</p>
+      <a href="/auth" class="btn lg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+          <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+        </svg>
+        Get started — it’s free
+      </a>
+    </section>
+  </main>
 
   <footer>
     <div class="fmono">© 2026 Spinal AI — Built with a backbone</div>
     <div class="foot-icons">
       <a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.13-4.56-5.02 0-1.11.39-2.02 1.03-2.73-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.04a9.3 9.3 0 0 1 5 0c1.91-1.31 2.75-1.04 2.75-1.04.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.73 0 3.9-2.34 4.76-4.57 5.01.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z" />
+          <path
+            d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.13-4.56-5.02 0-1.11.39-2.02 1.03-2.73-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.04a9.3 9.3 0 0 1 5 0c1.91-1.31 2.75-1.04 2.75-1.04.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.73 0 3.9-2.34 4.76-4.57 5.01.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z" />
         </svg></a>
       <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M3 3l7.5 9.6L3.2 21h2.3l6.3-7.2 5 7.2H21l-7.8-10 6.9-8H18l-5.7 6.5L7.4 3H3z" />
@@ -1052,6 +1392,74 @@
     </div>
   </footer>
 
+  <script>
+    (function () {
+      var d = document, root = d.documentElement, rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      root.classList.add('js');
+
+      /* reveal on scroll */
+      var rv = [].slice.call(d.querySelectorAll('.rv'));
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { threshold: .12, rootMargin: '0px 0px -6% 0px' });
+        rv.forEach(function (el) { io.observe(el) });
+      } else rv.forEach(function (el) { el.classList.add('in') });
+
+      /* scroll: progress bar, spine cord + vertebrae, nav state */
+      var bar = d.querySelector('.progress'), cord = d.querySelector('.cord'), verts = [].slice.call(d.querySelectorAll('.vert')),
+        sig = d.getElementById('sig'), links = [].slice.call(d.querySelectorAll('.nav-links a')),
+        secs = ['levels', 'how', 'specs', 'faq'].map(function (id) { return d.getElementById(id) }), ticking = false;
+      if (cord && cord.getTotalLength) cord.style.setProperty('--len', Math.ceil(cord.getTotalLength()));
+      function update() {
+        ticking = false;
+        var max = root.scrollHeight - innerHeight, p = max > 0 ? Math.min(1, scrollY / max) : 0;
+        bar.style.transform = 'scaleX(' + p + ')';
+        var cp = .15 + p * .85;
+        cord && cord.style.setProperty('--p', cp.toFixed(3));
+        verts.forEach(function (v, i) { v.classList.toggle('lit', cp >= (i + 1) / verts.length - .04) });
+        if (sig) sig.textContent = Math.round(cp * 100) + '%';
+        var cur = null, y = scrollY + innerHeight * .35;
+        secs.forEach(function (s) { if (s && s.offsetTop <= y) cur = s.id });
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + cur) });
+      }
+      addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update) } }, { passive: true });
+      addEventListener('resize', update); update();
+
+      if (rm) return;
+
+      /* pointer: iris follows, ambient glow trails */
+      var eye = d.getElementById('eye'), glow = d.querySelector('.glow'), gx = innerWidth * .6, gy = innerHeight * .2, tx = gx, ty = gy, run = false;
+      function loop() {
+        gx += (tx - gx) * .08; gy += (ty - gy) * .08;
+        glow.style.setProperty('--mx', gx + 'px'); glow.style.setProperty('--my', gy + 'px');
+        if (Math.abs(tx - gx) > .5 || Math.abs(ty - gy) > .5) requestAnimationFrame(loop); else run = false;
+      }
+      addEventListener('pointermove', function (e) {
+        tx = e.clientX; ty = e.clientY; if (!run) { run = true; requestAnimationFrame(loop) }
+        if (eye) {
+          var r = eye.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2), m = Math.hypot(dx, dy) || 1, k = Math.min(m, 400) / 400 * 9;
+          eye.style.transform = 'translate(' + (dx / m * k).toFixed(2) + 'px,' + (dy / m * k).toFixed(2) + 'px)';
+        }
+      }, { passive: true });
+
+      /* cursor spotlight on cards */
+      d.querySelectorAll('.level').forEach(function (c) {
+        c.addEventListener('pointermove', function (e) { var r = c.getBoundingClientRect(); c.style.setProperty('--x', (e.clientX - r.left) + 'px'); c.style.setProperty('--y', (e.clientY - r.top) + 'px') });
+      });
+
+      /* spec count-up on first view */
+      var sp = d.querySelectorAll('.spec .val[data-n]');
+      if ('IntersectionObserver' in window) {
+        var so = new IntersectionObserver(function (es) {
+          es.forEach(function (e) {
+            if (!e.isIntersecting) return; so.unobserve(e.target);
+            var el = e.target, n = +el.dataset.n, pre = el.dataset.p || '', suf = el.dataset.s || '', t0 = performance.now();
+            (function f(t) { var k = Math.min(1, (t - t0) / 1100), v = Math.round(n * (1 - Math.pow(1 - k, 4))); el.textContent = pre + v + suf; if (k < 1) requestAnimationFrame(f) })(t0);
+          })
+        }, { threshold: .6 });
+        sp.forEach(function (el) { so.observe(el) });
+      }
+    })();
+  </script>
 </body>
 
 </html>

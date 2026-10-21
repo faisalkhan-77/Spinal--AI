@@ -4308,187 +4308,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
-    <script type="module">
-        import * as THREE from 'three';
-        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-        const container = document.getElementById('avatar-container');
-        if (container) {
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-            camera.position.set(0, 0, 8);
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth || 400, container.clientHeight || 400);
-            container.appendChild(renderer.domElement);
-            renderer.setClearColor(0x000000, 0);
-            let composer = null;
-
-            function resizeRenderer() {
-                const w = container.clientWidth || 400;
-                const h = container.clientHeight || 400;
-                renderer.setSize(w, h);
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-                if (composer) composer.setSize(w, h);
-            }
-            window.addEventListener('resize', resizeRenderer);
-            setTimeout(resizeRenderer, 50);
-
-            const ambientLight = new THREE.AmbientLight(0x404060);
-            scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xE8E8E8, 1.2);
-            dirLight.position.set(2, 3, 5);
-            scene.add(dirLight);
-            const backLight = new THREE.PointLight(0x808080, 0.5);
-            backLight.position.set(-2, 0, -3);
-            scene.add(backLight);
-            const rimLight = new THREE.DirectionalLight(0x00F0FF, 0.6);
-            rimLight.position.set(-2, 1, -5);
-            scene.add(rimLight);
-
-            const vertexShader = `
-                varying vec2 vUv;
-                varying vec3 vNormal;
-                varying vec3 vViewDir;
-                void main() {
-                    vUv = uv;
-                    vNormal = normalize(normalMatrix * normal);
-                    vec4 worldPos = modelMatrix * vec4(position, 1.0);
-                    vViewDir = normalize(cameraPosition - worldPos.xyz);
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `;
-            const fragmentShader = `
-                uniform vec3 color1;
-                uniform vec3 color2;
-                uniform vec3 color3;
-                uniform float time;
-                uniform float brightness;
-                varying vec2 vUv;
-                varying vec3 vNormal;
-                varying vec3 vViewDir;
-                void main() {
-                    float wave1 = sin(vUv.x * 8.0 + time * 0.8) * cos(vUv.y * 6.0 + time * 0.6);
-                    float wave2 = sin(vUv.y * 7.0 - time * 0.9) * cos(vUv.x * 5.0 - time * 0.7);
-                    float mixVal = wave1 * 0.6 + wave2 * 0.4;
-                    mixVal = mixVal * 0.5 + 0.5;
-                    vec3 color;
-                    if (mixVal < 0.5) color = mix(color1, color2, mixVal * 2.0);
-                    else color = mix(color2, color3, (mixVal - 0.5) * 2.0);
-                    vec3 normal = normalize(vNormal);
-                    vec3 viewDir = normalize(vViewDir);
-                    vec3 halfVec = normalize(viewDir + vec3(0.5, 1.0, 0.3));
-                    float spec = pow(max(dot(normal, halfVec), 0.0), 32.0);
-                    vec3 specColor = vec3(1.0, 1.0, 1.0) * spec * 0.25;
-                    float rim = 1.0 - max(dot(normal, viewDir), 0.0);
-                    rim = pow(rim, 2.0) * 0.2;
-                    vec3 rimColor = vec3(0.8, 0.9, 1.0) * rim;
-                    vec3 finalColor = color * brightness + specColor + rimColor;
-                    gl_FragColor = vec4(finalColor, 1.0);
-                }
-            `;
-
-            const uniforms = {
-                color1: { value: new THREE.Color(0x00BFFF) },
-                color2: { value: new THREE.Color(0x66AACC) },
-                color3: { value: new THREE.Color(0x32CD32) },
-                time: { value: 0.0 },
-                brightness: { value: 1.0 }
-            };
-
-            const orbGeo = new THREE.SphereGeometry(1.6, 64, 64);
-            const orbMat = new THREE.ShaderMaterial({
-                vertexShader,
-                fragmentShader,
-                uniforms,
-                side: THREE.DoubleSide,
-                transparent: true,
-            });
-            const orb = new THREE.Mesh(orbGeo, orbMat);
-            orb.position.y = 0.2;
-            scene.add(orb);
-
-            const particleCount = 800;
-            const particleGeo = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            const colors = new Float32Array(particleCount * 3);
-            for (let i = 0; i < particleCount; i++) {
-                const radius = 4 + Math.random() * 20;
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos((Math.random() * 2) - 1);
-                positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-                positions[i * 3 + 1] = radius * Math.cos(phi) * 0.8 + 0.5;
-                positions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta) - 2;
-                colors[i * 3] = 0.2 + Math.random() * 0.3;
-                colors[i * 3 + 1] = 0.6 + Math.random() * 0.4;
-                colors[i * 3 + 2] = 0.9 + Math.random() * 0.1;
-            }
-            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-            const particleMat = new THREE.PointsMaterial({
-                size: 0.12,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.7,
-                blending: THREE.AdditiveBlending,
-            });
-            const particles = new THREE.Points(particleGeo, particleMat);
-            particles.position.y = 0.2;
-            scene.add(particles);
-
-            const initialPositions = positions.slice();
-            let time = 0;
-            let targetScale = 1.0;
-            let currentScale = 1.0;
-
-            composer = new EffectComposer(renderer);
-            composer.addPass(new RenderPass(scene, camera));
-            const bloomPass = new UnrealBloomPass(
-                new THREE.Vector2(container.clientWidth || 400, container.clientHeight || 400),
-                0.35, 0.5, 0.1
-            );
-            composer.addPass(bloomPass);
-
-            function animate() {
-                requestAnimationFrame(animate);
-                time += 0.01;
-                uniforms.time.value = time;
-                const isSpeakingNow = window.speechSynthesis.speaking || (window.isSpeaking || false);
-                targetScale = isSpeakingNow ? 1.25 : 1.0;
-                currentScale += (targetScale - currentScale) * 0.06;
-                const pulse = 1 + (isSpeakingNow ? 0.06 : 0.025) * Math.sin(time * (isSpeakingNow ? 3.0 : 1.2));
-                orb.scale.set(currentScale * pulse, currentScale * pulse, currentScale * pulse);
-                const targetBright = isSpeakingNow ? 1.8 : 1.3;
-                uniforms.brightness.value += (targetBright - uniforms.brightness.value) * 0.05;
-
-                const posAttr = particles.geometry.attributes.position;
-                const posArr = posAttr.array;
-                for (let i = 0; i < particleCount; i++) {
-                    const idx = i * 3;
-                    const x = initialPositions[idx],
-                        y = initialPositions[idx + 1],
-                        z = initialPositions[idx + 2];
-                    const speed = isSpeakingNow ? 0.3 : 0.1;
-                    const angle = time * speed + i * 0.02;
-                    const radius = Math.sqrt(x * x + z * z);
-                    const currentAngle = Math.atan2(z, x) + angle * 0.005;
-                    const radiusOffset = isSpeakingNow ? 0.01 * Math.sin(time * 1.5 + i) : 0;
-                    posArr[idx] = (radius + radiusOffset) * Math.cos(currentAngle);
-                    posArr[idx + 1] = y + (isSpeakingNow ? 0.02 : 0.01) * Math.sin(time * 0.5 + i * 0.3);
-                    posArr[idx + 2] = (radius + radiusOffset) * Math.sin(currentAngle);
-                }
-                posAttr.needsUpdate = true;
-                particleMat.opacity = isSpeakingNow ? 0.8 : 0.6;
-
-                composer.render();
-            }
-            animate();
-            console.log('✅ Orb + full background particles initialized');
-        }
-    </script>
 
     <script>
         const SUPABASE_URL = "https://thxvwyylwwhdahclzpge.supabase.co";
@@ -5203,7 +5023,7 @@
             if (file) uploadFile(file);
         });
 
-        
+
         function toggleProfileMenu() {
             const dropdown = document.getElementById('profileDropdownMenu');
             dropdown.classList.toggle('open');
@@ -5854,7 +5674,7 @@
         }
         document.getElementById('cameraToggleBtn').addEventListener('click', toggleCamera);
 
-                askBtn.addEventListener('click', function () {
+        askBtn.addEventListener('click', function () {
             primeSpeechSynthesis();
             if (isProcessing) return;
             if (isUploadingFile) {
@@ -6907,7 +6727,1842 @@
 
         console.log("✅ Dashboard v20 — Personality + Chat Export");
     </script>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SPINAL SPINE MODEL v2 — landing page model, exact match -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <style id="spinal-spine-css">
+        /* ── Container ── */
+        #avatar-container {
+            width: 180px !important;
+            height: 288px !important;
+            max-width: 180px !important;
+            max-height: 288px !important;
+            aspect-ratio: auto !important;
+            border-radius: 18px !important;
+            margin: 6px auto 8px !important;
+            position: relative;
+            z-index: 6;
+            overflow: visible !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
 
+        #avatar-container>canvas:not(#spinal-fx) {
+            display: none !important;
+        }
+
+        #avatar-container #spinal-fx {
+            z-index: 3;
+        }
+
+        /* ── Aura glow (state-reactive) ── */
+        .spinal-aura-glow {
+            position: absolute;
+            inset: -8%;
+            z-index: 1;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 122, 26, 0.14) 0%, transparent 62%);
+            filter: blur(24px);
+            pointer-events: none;
+            opacity: 0.85;
+            transition: background 0.8s ease, transform 0.8s ease, opacity 0.8s ease;
+        }
+
+        body[data-ai="listening"] .spinal-aura-glow {
+            background: radial-gradient(circle, rgba(255, 154, 69, 0.32) 0%, transparent 58%);
+            animation: auraBreathe 1.4s ease-in-out infinite;
+        }
+
+        body[data-ai="thinking"] .spinal-aura-glow {
+            background: radial-gradient(circle, rgba(255, 122, 26, 0.38) 0%, transparent 58%);
+            animation: auraBreathe 0.85s ease-in-out infinite;
+        }
+
+        body[data-ai="speaking"] .spinal-aura-glow {
+            background: radial-gradient(circle, rgba(243, 243, 244, 0.34) 0%, transparent 58%);
+            animation: auraBreathe 0.5s ease-in-out infinite;
+        }
+
+        body[data-ai="error"] .spinal-aura-glow {
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.4) 0%, transparent 58%);
+            animation: auraBreathe 0.55s ease-in-out infinite;
+        }
+
+        @keyframes auraBreathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 1;
+            }
+        }
+
+        /* ── SVG wrapper ── */
+        .spinal-spine-svg {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            position: relative;
+            z-index: 2;
+            overflow: visible;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 20px rgba(255, 122, 26, 0.15));
+            animation: spineBreathe 5s ease-in-out infinite;
+            transition: filter 0.5s ease;
+        }
+
+        @keyframes spineBreathe {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-4px) scale(1.012);
+            }
+        }
+
+        body[data-ai="listening"] .spinal-spine-svg {
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 30px rgba(255, 154, 69, 0.35));
+        }
+
+        body[data-ai="thinking"] .spinal-spine-svg {
+            filter: drop-shadow(0 20px 50px rgba(255, 122, 26, 0.4)) drop-shadow(0 0 40px rgba(255, 122, 26, 0.32));
+        }
+
+        body[data-ai="speaking"] .spinal-spine-svg {
+            filter: drop-shadow(0 20px 50px rgba(243, 243, 244, 0.45)) drop-shadow(0 0 50px rgba(243, 243, 244, 0.35));
+            animation: spineSpeak 0.5s ease-in-out infinite;
+        }
+
+        @keyframes spineSpeak {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.04);
+            }
+        }
+
+        body[data-ai="error"] .spinal-spine-svg {
+            animation: spineShake 0.4s ease-in-out;
+        }
+
+        @keyframes spineShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-6px);
+            }
+
+            75% {
+                transform: translateX(6px);
+            }
+        }
+
+        /* ── Vertebrae (chrome) ── */
+        .spinal-spine-svg .vert {
+            fill: url(#vertGrad-dash);
+            stroke: #35373B;
+            stroke-width: 1;
+            transition: fill 0.4s ease, stroke 0.4s ease, filter 0.4s ease;
+        }
+
+        body[data-ai="listening"] .spinal-spine-svg .vert,
+        body[data-ai="thinking"] .spinal-spine-svg .vert {
+            stroke: #FF7A1A;
+            filter: drop-shadow(0 0 8px rgba(255, 122, 26, 0.7));
+        }
+
+        body[data-ai="speaking"] .spinal-spine-svg .vert {
+            stroke: #F3F3F4;
+            filter: drop-shadow(0 0 12px rgba(243, 243, 244, 0.85));
+        }
+
+        body[data-ai="error"] .spinal-spine-svg .vert {
+            stroke: #FF6B6B;
+            filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.8));
+        }
+
+        /* ── Spinal cord (amber flowing) ── */
+        .spinal-spine-svg .cord {
+            fill: none;
+            stroke: #FF7A1A;
+            stroke-width: 2.4;
+            stroke-linecap: round;
+            opacity: 0.95;
+            filter: drop-shadow(0 0 10px rgba(255, 122, 26, 0.75));
+            transition: stroke 0.4s ease, filter 0.4s ease;
+            stroke-dasharray: 8 5;
+            animation: cordFlow 3.2s linear infinite;
+        }
+
+        body[data-ai="listening"] .spinal-spine-svg .cord {
+            stroke-dasharray: 10 4;
+            animation: cordFlow 1.4s linear infinite;
+        }
+
+        body[data-ai="thinking"] .spinal-spine-svg .cord {
+            stroke-dasharray: 12 3;
+            animation: cordFlow 0.65s linear infinite;
+            filter: drop-shadow(0 0 14px rgba(255, 122, 26, 0.95));
+        }
+
+        body[data-ai="speaking"] .spinal-spine-svg .cord {
+            stroke: #F3F3F4;
+            filter: drop-shadow(0 0 16px rgba(243, 243, 244, 0.95));
+            stroke-dasharray: 14 3;
+            animation: cordFlow 0.4s linear infinite;
+        }
+
+        body[data-ai="error"] .spinal-spine-svg .cord {
+            stroke: #FF6B6B;
+            filter: drop-shadow(0 0 12px rgba(255, 107, 107, 0.9));
+            animation: cordFlow 0.8s linear infinite;
+        }
+
+        @keyframes cordFlow {
+            to {
+                stroke-dashoffset: -52;
+            }
+        }
+
+        /* ── Iris rings ── */
+        .spinal-spine-svg .iris-ring {
+            fill: none;
+            stroke: #C9CBCF;
+            stroke-width: 1.4;
+            transition: stroke 0.4s ease, filter 0.4s ease;
+        }
+
+        body[data-ai="listening"] .spinal-spine-svg .iris-ring,
+        body[data-ai="thinking"] .spinal-spine-svg .iris-ring {
+            stroke: #FF9A45;
+            filter: drop-shadow(0 0 8px rgba(255, 122, 26, 0.6));
+        }
+
+        body[data-ai="speaking"] .spinal-spine-svg .iris-ring {
+            stroke: #F3F3F4;
+            filter: drop-shadow(0 0 10px rgba(243, 243, 244, 0.8));
+        }
+
+        body[data-ai="error"] .spinal-spine-svg .iris-ring {
+            stroke: #FF6B6B;
+        }
+
+        /* ── Iris blade group (wrapped for blink) ── */
+        .spinal-spine-svg .iris-blades-group {
+            transform-origin: 200px 96px;
+            animation: irisBlink 8s ease-in-out infinite;
+        }
+
+        @keyframes irisBlink {
+
+            0%,
+            93%,
+            100% {
+                transform: scale(1);
+            }
+
+            96% {
+                transform: scale(0.78);
+            }
+        }
+
+        .spinal-spine-svg .iris-blade {
+            fill: #54575D;
+            opacity: 0.9;
+            transition: fill 0.4s ease, opacity 0.4s ease;
+        }
+
+        body[data-ai="listening"] .spinal-spine-svg .iris-blade,
+        body[data-ai="thinking"] .spinal-spine-svg .iris-blade {
+            fill: #7B502E;
+            opacity: 1;
+        }
+
+        body[data-ai="speaking"] .spinal-spine-svg .iris-blade {
+            fill: #7B7D82;
+            opacity: 1;
+        }
+
+        /* ── Iris core (colored center — the soul of the eye) ── */
+        .spinal-spine-svg .iris-core {
+            fill: url(#lensGrad-dash);
+            transition: filter 0.4s ease;
+        }
+
+        body[data-ai="listening"] .spinal-spine-svg .iris-core,
+        body[data-ai="thinking"] .spinal-spine-svg .iris-core {
+            filter: drop-shadow(0 0 14px rgba(255, 122, 26, 0.9));
+        }
+
+        body[data-ai="speaking"] .spinal-spine-svg .iris-core {
+            filter: drop-shadow(0 0 18px rgba(243, 243, 244, 0.95));
+        }
+
+        body[data-ai="error"] .spinal-spine-svg .iris-core {
+            filter: drop-shadow(0 0 14px rgba(255, 107, 107, 0.9));
+        }
+
+        /* ── Eye group mouse tracking ── */
+        .spinal-spine-svg #eye-dash {
+            transition: transform 0.18s ease-out;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 820px) {
+            #avatar-container {
+                width: 130px !important;
+                height: 208px !important;
+                max-width: 130px !important;
+                max-height: 208px !important;
+                margin: 4px auto 4px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #avatar-container {
+                width: 100px !important;
+                height: 160px !important;
+                max-width: 100px !important;
+                max-height: 160px !important;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .spinal-spine-svg,
+            .spinal-aura-glow,
+            .spinal-spine-svg * {
+                animation: none !important;
+            }
+        }
+    </style>
+
+    <script>
+        (function () {
+            const host = document.getElementById('avatar-container');
+            if (!host) return;
+
+            // Remove old orb canvas (keep enhancement FX canvas)
+            host.querySelectorAll('canvas').forEach(c => { if (c.id !== 'spinal-fx') c.remove(); });
+
+            // Guard against double injection
+            if (host.querySelector('.spinal-spine-svg')) return;
+
+            // Inject aura + spine SVG (EXACT LANDING PAGE MODEL)
+            host.insertAdjacentHTML('beforeend', `
+    <div class="spinal-aura-glow"></div>
+    <svg class="spinal-spine-svg" viewBox="0 0 400 640" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="vertGrad-dash" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#F1F1F2"/>
+          <stop offset="45%" stop-color="#B7B9BD"/>
+          <stop offset="100%" stop-color="#4B4D52"/>
+        </linearGradient>
+        <radialGradient id="lensGrad-dash" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#FFE3C7"/>
+          <stop offset="35%" stop-color="#FF9A45"/>
+          <stop offset="100%" stop-color="#7A2E00"/>
+        </radialGradient>
+      </defs>
+
+      <!-- Spinal cord -->
+      <path class="cord" d="M200,120 L198,220 L204,320 L197,420 L202,520 L199,600"/>
+
+      <!-- C1 -->
+      <g class="vert">
+        <polygon points="152,150 248,150 264,182 236,196 164,196 136,182"/>
+        <polygon points="118,168 92,182 96,196" opacity=".9"/>
+        <polygon points="282,168 308,182 304,196" opacity=".9"/>
+      </g>
+
+      <!-- C2 -->
+      <g class="vert">
+        <polygon points="140,222 260,222 278,256 246,272 154,272 122,256"/>
+        <polygon points="104,240 76,256 80,272" opacity=".9"/>
+        <polygon points="296,240 324,256 320,272" opacity=".9"/>
+      </g>
+
+      <!-- C3 -->
+      <g class="vert">
+        <polygon points="132,300 268,300 288,336 252,354 148,354 112,336"/>
+        <polygon points="94,320 64,336 68,354" opacity=".9"/>
+        <polygon points="306,320 336,336 332,354" opacity=".9"/>
+      </g>
+
+      <!-- C4 -->
+      <g class="vert">
+        <polygon points="128,380 272,380 294,418 254,438 146,438 106,418"/>
+        <polygon points="88,400 56,418 60,438" opacity=".9"/>
+        <polygon points="312,400 344,418 340,438" opacity=".9"/>
+      </g>
+
+      <!-- C5 -->
+      <g class="vert">
+        <polygon points="130,464 270,464 292,502 252,522 148,522 108,502"/>
+        <polygon points="90,484 58,502 62,522" opacity=".9"/>
+        <polygon points="310,484 342,502 338,522" opacity=".9"/>
+      </g>
+
+      <!-- C6 -->
+      <g class="vert">
+        <polygon points="140,546 260,546 280,582 244,600 156,600 120,582"/>
+      </g>
+
+      <!-- Iris rings -->
+      <circle class="iris-ring" cx="200" cy="96" r="72"/>
+      <circle class="iris-ring" cx="200" cy="96" r="58" stroke-opacity=".5"/>
+
+      <!-- Iris blades -->
+      <g class="iris-blades-group">
+        <polygon class="iris-blade" points="200,96 246,66 254,84"/>
+        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(51.4 200 96)"/>
+        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(102.8 200 96)"/>
+        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(154.2 200 96)"/>
+        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(205.6 200 96)"/>
+        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(257 200 96)"/>
+        <polygon class="iris-blade" points="200,96 246,66 254,84" transform="rotate(308.4 200 96)"/>
+      </g>
+
+      <!-- Eye (mouse-tracking core + highlight) -->
+      <g id="eye-dash">
+        <circle class="iris-core" cx="200" cy="96" r="26"/>
+        <circle cx="192" cy="88" r="6" fill="#FFF6EC" opacity=".85"/>
+      </g>
+    </svg>
+  `);
+
+            // Iris tracks the mouse (properly centered on new viewBox)
+            const svg = host.querySelector('.spinal-spine-svg');
+            const eye = svg.querySelector('#eye-dash');
+            if (eye && svg) {
+                host.addEventListener('pointermove', (e) => {
+                    const r = svg.getBoundingClientRect();
+                    const cx = r.left + r.width * 0.5;      // x = 200/400
+                    const cy = r.top + r.height * 0.15;     // y = 96/640
+                    const dx = e.clientX - cx;
+                    const dy = e.clientY - cy;
+                    const m = Math.hypot(dx, dy) || 1;
+                    const k = Math.min(m, 400) / 400 * 9;
+                    eye.style.transform = `translate(${(dx / m * k).toFixed(2)}px, ${(dy / m * k).toFixed(2)}px)`;
+                }, { passive: true });
+                host.addEventListener('pointerleave', () => { eye.style.transform = 'translate(0, 0)'; });
+            }
+        })();
+    </script>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- END SPINAL SPINE MODEL v2 -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SIDEBAR POLISH — ChatGPT-level refinement -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <style id="spinal-sidebar-polish">
+        /* ── Sidebar shell ── */
+        .sidebar {
+            background: linear-gradient(180deg, #1a1b1f 0%, #141519 55%, #101114 100%) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.04) !important;
+            padding: 14px 12px 12px !important;
+            gap: 10px !important;
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02), 2px 0 24px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .sidebar-header {
+            padding: 2px 2px 12px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+        }
+
+        .sidebar-brand {
+            gap: 11px !important;
+            font-size: 1.25rem !important;
+            letter-spacing: -0.005em !important;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar-brand:hover {
+            opacity: 0.85;
+        }
+
+        .sidebar-brand small {
+            color: #7a7d84 !important;
+            letter-spacing: 0.24em !important;
+            font-size: 0.48rem !important;
+        }
+
+        .sidebar-collapse-btn {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 6px !important;
+            background: rgba(255, 255, 255, 0.025) !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        }
+
+        .sidebar-collapse-btn:hover {
+            background: rgba(255, 122, 26, 0.1) !important;
+            border-color: rgba(255, 122, 26, 0.4) !important;
+            color: #FF7A1A !important;
+            transform: scale(1.05);
+        }
+
+        /* ── New Chat button ── */
+        .new-chat-btn {
+            padding: 11px 14px !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.02em !important;
+            border-radius: 8px !important;
+            border: 1px solid rgba(255, 255, 255, 0.07) !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        }
+
+        .new-chat-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 0%, rgba(255, 122, 26, 0.18), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .new-chat-btn:hover {
+            border-color: rgba(255, 122, 26, 0.4) !important;
+            color: #FFE8D0 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 24px rgba(255, 122, 26, 0.1);
+        }
+
+        .new-chat-btn:hover::before {
+            opacity: 1;
+        }
+
+        .new-chat-btn i {
+            font-size: 0.75rem !important;
+            color: #FF7A1A;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .new-chat-btn:hover i {
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        /* ── Search ── */
+        .sidebar-search input {
+            padding: 10px 32px 10px 34px !important;
+            font-size: 0.78rem !important;
+            border-radius: 8px !important;
+            background: rgba(0, 0, 0, 0.35) !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .sidebar-search input::placeholder {
+            color: #555962 !important;
+            font-size: 0.72rem !important;
+        }
+
+        .sidebar-search input:focus {
+            border-color: rgba(255, 122, 26, 0.5) !important;
+            background: rgba(255, 122, 26, 0.04) !important;
+            box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+        }
+
+        .sidebar-search .search-icon {
+            left: 12px !important;
+            font-size: 0.72rem !important;
+        }
+
+        .sidebar-search:focus-within .search-icon {
+            color: #FF7A1A !important;
+        }
+
+        /* ── History list ── */
+        .history-list {
+            gap: 16px !important;
+        }
+
+        .history-group {
+            gap: 1px !important;
+        }
+
+        .history-group-label {
+            font-family: 'IBM Plex Mono', monospace !important;
+            font-size: 0.6rem !important;
+            font-weight: 500 !important;
+            color: #6a6d75 !important;
+            letter-spacing: 0.15em !important;
+            text-transform: uppercase !important;
+            padding: 8px 10px 6px !important;
+            border-bottom: none !important;
+        }
+
+        .history-group-label::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: #FF7A1A;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+            box-shadow: 0 0 6px #FF7A1A;
+            transform: translateY(-1px);
+        }
+
+        /* ── Session item ── */
+        .session-item {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.8rem !important;
+            font-weight: 500 !important;
+            letter-spacing: 0 !important;
+            padding: 9px 10px 9px 12px !important;
+            border-radius: 6px !important;
+            color: #b8bac0 !important;
+            border-color: transparent !important;
+            background: transparent !important;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            position: relative;
+        }
+
+        .session-item:hover {
+            background: rgba(255, 255, 255, 0.035) !important;
+            color: #EDEDEF !important;
+            border-color: transparent !important;
+            transform: none !important;
+        }
+
+        .session-item.active {
+            background: linear-gradient(90deg, rgba(255, 122, 26, 0.09) 0%, rgba(255, 122, 26, 0.015) 100%) !important;
+            color: #FFFFFF !important;
+            border-color: transparent !important;
+            box-shadow: inset 2px 0 0 #FF7A1A, 0 0 18px rgba(255, 122, 26, 0.08) !important;
+        }
+
+        .session-item .title {
+            font-weight: 500 !important;
+            letter-spacing: -0.005em !important;
+            line-height: 1.45 !important;
+        }
+
+        /* ── Session actions (three-dot) ── */
+        .session-item .session-actions {
+            opacity: 0;
+            transition: opacity 0.18s ease;
+        }
+
+        .session-item:hover .session-actions,
+        .session-item.active .session-actions {
+            opacity: 1;
+        }
+
+        .session-item .menu-btn {
+            width: 22px !important;
+            height: 22px !important;
+            padding: 0 !important;
+            border-radius: 4px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem !important;
+            color: #6a6d75 !important;
+            background: transparent !important;
+            transition: all 0.2s ease;
+        }
+
+        .session-item .menu-btn:hover {
+            background: rgba(255, 122, 26, 0.15) !important;
+            color: #FF7A1A !important;
+        }
+
+        /* ── Dropdown ── */
+        .session-item .dropdown-menu {
+            border-radius: 8px !important;
+            padding: 4px !important;
+            background: rgba(16, 17, 20, 0.96) !important;
+            backdrop-filter: blur(16px) saturate(140%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 24px rgba(255, 122, 26, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            min-width: 145px !important;
+            margin-top: 6px !important;
+            animation: sxDropdownIn 0.16s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        @keyframes sxDropdownIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .session-item .dropdown-menu button {
+            padding: 8px 11px !important;
+            border-radius: 5px !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.78rem !important;
+            font-weight: 500 !important;
+            letter-spacing: 0 !important;
+            color: #b8bac0 !important;
+            transition: all 0.15s ease !important;
+        }
+
+        .session-item .dropdown-menu button i {
+            font-size: 0.72rem !important;
+            width: 16px !important;
+        }
+
+        .session-item .dropdown-menu button.rename-action:hover {
+            background: rgba(201, 203, 207, 0.1) !important;
+            color: #F3F3F4 !important;
+        }
+
+        .session-item .dropdown-menu button.export-action:hover {
+            background: rgba(255, 122, 26, 0.12) !important;
+            color: #FF7A1A !important;
+        }
+
+        .session-item .dropdown-menu button.delete-action:hover {
+            background: rgba(255, 107, 107, 0.12) !important;
+            color: #FF6B6B !important;
+        }
+
+        /* ── Empty state ── */
+        .history-empty {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.75rem !important;
+            color: #5a5d65 !important;
+            padding: 48px 16px !important;
+            letter-spacing: 0 !important;
+            line-height: 1.75 !important;
+        }
+
+        /* ── Footer / user card ── */
+        .sidebar-footer {
+            padding-top: 14px !important;
+            border-top-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .sidebar-user {
+            padding: 8px 10px 8px 8px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.008) 100%) !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-user:hover {
+            border-color: rgba(255, 122, 26, 0.3) !important;
+            background: linear-gradient(135deg, rgba(255, 122, 26, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+        }
+
+        .user-avatar-wrapper {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 0.85rem !important;
+            box-shadow: 0 0 0 2px rgba(24, 25, 28, 1), 0 0 0 3px rgba(255, 122, 26, 0.3);
+            transition: box-shadow 0.25s ease;
+        }
+
+        .sidebar-user:hover .user-avatar-wrapper {
+            box-shadow: 0 0 0 2px rgba(24, 25, 28, 1), 0 0 0 3px rgba(255, 122, 26, 0.6), 0 0 14px rgba(255, 122, 26, 0.35);
+        }
+
+        .user-name {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.8rem !important;
+            font-weight: 600 !important;
+            letter-spacing: -0.005em !important;
+        }
+
+        .profile-menu-btn {
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 6px !important;
+            background: transparent !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .profile-menu-btn:hover {
+            background: rgba(255, 122, 26, 0.15) !important;
+            border-color: rgba(255, 122, 26, 0.4) !important;
+            color: #FF7A1A !important;
+            transform: none !important;
+        }
+
+        /* ── Scrollbar ── */
+        .sidebar::-webkit-scrollbar {
+            width: 4px !important;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-radius: 2px !important;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 122, 26, 0.35) !important;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+        }
+    </style>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- END SIDEBAR POLISH -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SETTINGS MODAL POLISH — ChatGPT-level refinement -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <style id="spinal-settings-polish">
+        /* ── Backdrop ── */
+        #settings-overlay {
+            background: radial-gradient(ellipse at center, rgba(10, 11, 14, 0.82) 0%, rgba(5, 6, 8, 0.94) 100%) !important;
+            backdrop-filter: blur(16px) saturate(120%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+            animation: sxOverlayIn 0.22s ease !important;
+        }
+
+        @keyframes sxOverlayIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ── Modal shell ── */
+        .settings-modal {
+            max-width: 480px !important;
+            padding: 22px 24px 20px !important;
+            border-radius: 14px !important;
+            background: linear-gradient(180deg, rgba(24, 25, 30, 0.98) 0%, rgba(13, 14, 17, 0.99) 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.07) !important;
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.9),
+                0 0 60px rgba(255, 122, 26, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            animation: sxModalIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            max-height: 90vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        @keyframes sxModalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.94) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .settings-modal::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .settings-modal::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+        }
+
+        /* ── Amber top accent (existing ::before) refined ── */
+        .settings-modal::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 15% !important;
+            right: 15% !important;
+            height: 1px !important;
+            background: linear-gradient(90deg, transparent, #FF7A1A, transparent) !important;
+        }
+
+        /* ── Header — clean "Settings" (hide emoji) ── */
+        .settings-modal h2 {
+            font-family: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif !important;
+            font-size: 0 !important;
+            color: transparent !important;
+            margin-bottom: 4px !important;
+            letter-spacing: 0.02em !important;
+            text-transform: uppercase !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            display: block !important;
+            padding: 2px 0 0 0 !important;
+        }
+
+        .settings-modal h2::before {
+            content: 'Settings';
+            font-size: 1.55rem;
+            color: #F3F3F4;
+            letter-spacing: 0.02em;
+            font-weight: 700;
+        }
+
+        /* ── Subtitle ── */
+        .settings-modal .sub {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.72rem !important;
+            color: #7a7d84 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            margin-bottom: 18px !important;
+            padding-bottom: 16px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            font-weight: 400 !important;
+        }
+
+        /* ── Setting items — card style ── */
+        .settings-modal .setting-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 12px 14px !important;
+            margin-top: 6px !important;
+            margin-bottom: 0 !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, 0.015) !important;
+            border: 1px solid rgba(255, 255, 255, 0.045) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.045) !important;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            gap: 12px !important;
+        }
+
+        .settings-modal .setting-item:first-of-type {
+            margin-top: 0 !important;
+        }
+
+        .settings-modal .setting-item:hover {
+            background: rgba(255, 255, 255, 0.032) !important;
+            border-color: rgba(255, 255, 255, 0.09) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+        }
+
+        .settings-modal .setting-item:has(.btn-danger):hover {
+            border-color: rgba(255, 107, 107, 0.2) !important;
+            background: rgba(255, 107, 107, 0.03) !important;
+        }
+
+        /* ── Info wrapper ── */
+        .settings-modal .setting-item .info {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-width: 0;
+            flex: 1;
+        }
+
+        /* ── Icons — amber rounded square ── */
+        .settings-modal .setting-item .info i {
+            width: 34px !important;
+            height: 34px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 8px !important;
+            background: rgba(255, 122, 26, 0.09) !important;
+            color: #FF7A1A !important;
+            font-size: 0.82rem !important;
+            border: 1px solid rgba(255, 122, 26, 0.18) !important;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .settings-modal .setting-item:hover .info i {
+            background: rgba(255, 122, 26, 0.15) !important;
+            border-color: rgba(255, 122, 26, 0.35) !important;
+            box-shadow: 0 0 12px rgba(255, 122, 26, 0.15);
+        }
+
+        /* Danger icons → red */
+        .settings-modal .setting-item:has(.btn-danger) .info i {
+            background: rgba(255, 107, 107, 0.09) !important;
+            color: #FF6B6B !important;
+            border-color: rgba(255, 107, 107, 0.18) !important;
+        }
+
+        .settings-modal .setting-item:has(.btn-danger):hover .info i {
+            background: rgba(255, 107, 107, 0.15) !important;
+            border-color: rgba(255, 107, 107, 0.35) !important;
+            box-shadow: 0 0 12px rgba(255, 107, 107, 0.15);
+        }
+
+        /* ── Labels & descriptions ── */
+        .settings-modal .setting-item .info .label {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.82rem !important;
+            font-weight: 600 !important;
+            color: #EDEDEF !important;
+            letter-spacing: -0.005em !important;
+            line-height: 1.3 !important;
+        }
+
+        .settings-modal .setting-item .info .desc {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.7rem !important;
+            font-weight: 400 !important;
+            color: #7a7d84 !important;
+            letter-spacing: 0 !important;
+            margin-top: 2px !important;
+            line-height: 1.4 !important;
+            display: block !important;
+        }
+
+        .settings-modal .setting-item .info .desc#memoryCount {
+            color: #FF9A45 !important;
+            font-weight: 600 !important;
+        }
+
+        /* ── Secondary button (Memory "View") ── */
+        .settings-modal .btn-secondary {
+            padding: 7px 14px !important;
+            border-radius: 6px !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.72rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            background: rgba(255, 122, 26, 0.1) !important;
+            border: 1px solid rgba(255, 122, 26, 0.28) !important;
+            color: #FF9A45 !important;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            flex-shrink: 0;
+        }
+
+        .settings-modal .btn-secondary:hover {
+            background: rgba(255, 122, 26, 0.22) !important;
+            border-color: rgba(255, 122, 26, 0.55) !important;
+            color: #FFB570 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255, 122, 26, 0.18), 0 0 20px rgba(255, 122, 26, 0.1);
+        }
+
+        .settings-modal .btn-secondary:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        /* ── Danger buttons ── */
+        .settings-modal .btn-danger {
+            padding: 7px 14px !important;
+            border-radius: 6px !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.72rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            background: transparent !important;
+            border: 1px solid rgba(255, 107, 107, 0.32) !important;
+            color: #FF6B6B !important;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            flex-shrink: 0;
+        }
+
+        .settings-modal .btn-danger:hover {
+            background: rgba(255, 107, 107, 0.15) !important;
+            border-color: rgba(255, 107, 107, 0.6) !important;
+            color: #FF8888 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255, 107, 107, 0.18), 0 0 20px rgba(255, 107, 107, 0.1);
+        }
+
+        .settings-modal .btn-danger:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        /* ── Personality section label ── */
+        .personality-section-label {
+            font-family: 'IBM Plex Mono', monospace !important;
+            font-size: 0 !important;
+            color: transparent !important;
+            letter-spacing: 0 !important;
+            text-transform: uppercase !important;
+            margin-top: 20px !important;
+            margin-bottom: 10px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            font-weight: 500 !important;
+            padding-left: 12px;
+            position: relative;
+            line-height: 1 !important;
+        }
+
+        .personality-section-label::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            background: #FF7A1A;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #FF7A1A;
+        }
+
+        .personality-section-label::after {
+            content: 'AI PERSONALITY';
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            color: #6a6d75;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        /* ── Personality cards ── */
+        .personality-selector {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 14px !important;
+        }
+
+        .personality-card {
+            padding: 14px 10px 12px !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, 0.015) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            gap: 8px !important;
+            transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            box-shadow: none !important;
+            position: relative;
+            overflow: visible;
+        }
+
+        .personality-card:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.032) !important;
+            border-color: rgba(255, 255, 255, 0.14) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .personality-card:active:not(.active) {
+            transform: translateY(0) scale(0.98) !important;
+        }
+
+        .personality-card i {
+            font-size: 1.1rem !important;
+            color: #6a6d75 !important;
+            transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        .personality-card:hover:not(.active) i {
+            color: #b8bac0 !important;
+            transform: scale(1.12) !important;
+        }
+
+        .personality-card .personality-name {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.72rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            color: #EDEDEF !important;
+            line-height: 1.2 !important;
+        }
+
+        .personality-card .personality-desc {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.62rem !important;
+            font-weight: 400 !important;
+            color: #6a6d75 !important;
+            line-height: 1.35 !important;
+            transition: color 0.22s ease !important;
+        }
+
+        /* Active personality card */
+        .personality-card.active {
+            background: linear-gradient(180deg, rgba(255, 122, 26, 0.14) 0%, rgba(255, 122, 26, 0.04) 100%) !important;
+            border-color: rgba(255, 122, 26, 0.55) !important;
+            box-shadow:
+                0 0 0 3px rgba(255, 122, 26, 0.08),
+                0 8px 24px rgba(255, 122, 26, 0.14),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            transform: none !important;
+        }
+
+        .personality-card.active i {
+            color: #FF7A1A !important;
+            transform: scale(1.12) !important;
+            filter: drop-shadow(0 0 8px rgba(255, 122, 26, 0.5));
+        }
+
+        .personality-card.active .personality-name {
+            color: #FF9A45 !important;
+        }
+
+        .personality-card.active .personality-desc {
+            color: #b8bac0 !important;
+        }
+
+        /* Checkmark badge on active */
+        .personality-card.active::after {
+            content: '✓';
+            position: absolute;
+            top: 6px;
+            right: 7px;
+            width: 15px;
+            height: 15px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #FF7A1A;
+            background: rgba(255, 122, 26, 0.18);
+            border: 1px solid rgba(255, 122, 26, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            z-index: 2;
+            pointer-events: none;
+            animation: sxCheckPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes sxCheckPop {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Remove old top-accent line from old active state */
+        .personality-card.active::before {
+            display: none !important;
+        }
+
+        /* ── Close button ── */
+        .settings-modal .btn-close {
+            margin-top: 18px !important;
+            padding: 11px !important;
+            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.028) !important;
+            border: 1px solid rgba(255, 255, 255, 0.07) !important;
+            color: #b8bac0 !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        }
+
+        .settings-modal .btn-close:hover {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.14) !important;
+            color: #EDEDEF !important;
+            transform: translateY(-1px);
+        }
+
+        .settings-modal .btn-close:active {
+            transform: translateY(0) scale(0.99);
+        }
+
+        /* ── Danger section divider ── */
+        .settings-modal .setting-item:has(#settingsDeleteBtn) {
+            margin-top: 14px !important;
+            position: relative;
+        }
+
+        .settings-modal .setting-item:has(#settingsDeleteBtn)::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 8px;
+            right: 8px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 107, 0.15), transparent);
+            pointer-events: none;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 480px) {
+            .settings-modal {
+                max-height: 92vh !important;
+                padding: 20px 18px 18px !important;
+                border-radius: 12px !important;
+            }
+
+            .settings-modal h2::before {
+                font-size: 1.35rem !important;
+            }
+
+            .settings-modal .setting-item {
+                padding: 11px 12px !important;
+            }
+
+            .personality-selector {
+                gap: 6px !important;
+            }
+
+            .personality-card {
+                padding: 12px 6px 10px !important;
+            }
+
+            .personality-card .personality-desc {
+                font-size: 0.58rem !important;
+            }
+
+            .personality-card .personality-name {
+                font-size: 0.68rem !important;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .settings-modal,
+            .settings-modal * {
+                animation-duration: 0.001ms !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+    </style>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- END SETTINGS MODAL POLISH -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- INPUT BAR + ACTION BUTTONS + STYLE PILLS POLISH -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <style id="spinal-buttons-polish">
+        /* ══════════════════════════════════════════
+     TEXT INPUT — premium feel
+     ══════════════════════════════════════════ */
+        .input-row {
+            gap: 8px !important;
+            padding: 0 24px 10px !important;
+        }
+
+        .input-row input[type="text"] {
+            padding: 13px 18px !important;
+            border-radius: 10px !important;
+            background: rgba(8, 9, 11, 0.85) !important;
+            border: 1px solid rgba(255, 255, 255, 0.07) !important;
+            color: #EDEDEF !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.9rem !important;
+            font-weight: 400 !important;
+            letter-spacing: 0 !important;
+            min-height: 48px;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        }
+
+        .input-row input[type="text"]::placeholder {
+            color: #555962 !important;
+            font-size: 0.86rem !important;
+        }
+
+        .input-row input[type="text"]:focus {
+            border-color: rgba(255, 122, 26, 0.55) !important;
+            background: rgba(255, 122, 26, 0.03) !important;
+            box-shadow:
+                0 0 0 3px rgba(255, 122, 26, 0.1),
+                0 0 24px rgba(255, 122, 26, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+            outline: none !important;
+        }
+
+        /* ══════════════════════════════════════════
+     ATTACH (paperclip) button
+     ══════════════════════════════════════════ */
+        .attach-btn {
+            min-width: 48px !important;
+            min-height: 48px !important;
+            border-radius: 10px !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #b8bac0 !important;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .attach-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, rgba(255, 122, 26, 0.14), rgba(255, 122, 26, 0.04)) !important;
+            border-color: rgba(255, 122, 26, 0.5) !important;
+            color: #FF9A45 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 122, 26, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .attach-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.96);
+        }
+
+        .attach-btn i {
+            font-size: 1rem !important;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        .attach-btn:hover:not(:disabled) i {
+            transform: rotate(-20deg) scale(1.12);
+        }
+
+        /* ══════════════════════════════════════════
+     SHARE SCREEN button
+     ══════════════════════════════════════════ */
+        .input-row .share-btn {
+            padding: 0 18px !important;
+            min-height: 48px;
+            border-radius: 10px !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #b8bac0 !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            gap: 8px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .input-row .share-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, rgba(255, 122, 26, 0.1), rgba(255, 122, 26, 0.03)) !important;
+            border-color: rgba(255, 122, 26, 0.45) !important;
+            color: #FF9A45 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 122, 26, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .input-row .share-btn.active {
+            background: linear-gradient(180deg, rgba(255, 122, 26, 0.2), rgba(255, 122, 26, 0.08)) !important;
+            border-color: rgba(255, 122, 26, 0.65) !important;
+            color: #FFB570 !important;
+            box-shadow: 0 0 24px rgba(255, 122, 26, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .input-row .share-btn.active i {
+            animation: sxScreenPulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes sxScreenPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+        }
+
+        .input-row .share-btn i {
+            font-size: 0.88rem;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        .input-row .share-btn:hover:not(:disabled) i {
+            transform: scale(1.12);
+        }
+
+        /* ══════════════════════════════════════════
+     ACTION ROW — Ask / Listen / Camera
+     ══════════════════════════════════════════ */
+        .button-row {
+            gap: 8px !important;
+            padding: 0 24px !important;
+            margin-bottom: 12px !important;
+        }
+
+        .button-row .ask-btn {
+            padding: 13px 20px !important;
+            border-radius: 10px !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.8rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #b8bac0 !important;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            overflow: visible !important;
+            min-height: 48px;
+            gap: 9px !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            position: relative;
+        }
+
+        /* Disable the old shimmer overlay */
+        .button-row .ask-btn::before {
+            display: none !important;
+        }
+
+        .button-row .ask-btn::after {
+            display: none !important;
+        }
+
+        .button-row .ask-btn i {
+            font-size: 0.95rem !important;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            position: static !important;
+        }
+
+        .button-row .ask-btn span {
+            position: static !important;
+        }
+
+        .button-row .ask-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)) !important;
+            border-color: rgba(255, 255, 255, 0.16) !important;
+            color: #EDEDEF !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+        }
+
+        .button-row .ask-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .button-row .ask-btn:disabled {
+            opacity: 0.4 !important;
+            cursor: not-allowed;
+        }
+
+        /* ── ASK — PRIMARY (chrome gradient) ── */
+        #askBtn {
+            background: linear-gradient(160deg, #F3F3F4 0%, #C9CBCF 55%, #54575D 130%) !important;
+            color: #0B0C0E !important;
+            border: none !important;
+            font-weight: 700 !important;
+            box-shadow:
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+        }
+
+        #askBtn i {
+            color: #FF7A1A !important;
+        }
+
+        #askBtn:hover:not(:disabled) {
+            background: linear-gradient(160deg, #FFFFFF 0%, #D8DADE 55%, #65686E 130%) !important;
+            color: #000000 !important;
+            transform: translateY(-2px);
+            box-shadow:
+                0 10px 28px rgba(0, 0, 0, 0.5),
+                0 0 30px rgba(255, 122, 26, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.7),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2) !important;
+        }
+
+        #askBtn:hover:not(:disabled) i {
+            transform: scale(1.18) rotate(-10deg) !important;
+        }
+
+        /* ── LISTEN — SECONDARY (amber-tinted) ── */
+        #voiceBtn i {
+            color: #FF7A1A !important;
+        }
+
+        #voiceBtn:hover:not(:disabled) {
+            background: linear-gradient(180deg, rgba(255, 122, 26, 0.1), rgba(255, 122, 26, 0.03)) !important;
+            border-color: rgba(255, 122, 26, 0.5) !important;
+            color: #FF9A45 !important;
+            box-shadow: 0 6px 20px rgba(255, 122, 26, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        }
+
+        #voiceBtn:hover:not(:disabled) i {
+            transform: scale(1.18) !important;
+        }
+
+        /* Listen — LISTENING state (pulsing red glow) */
+        #voiceBtn.listening {
+            background: linear-gradient(180deg, rgba(255, 107, 107, 0.14), rgba(255, 107, 107, 0.04)) !important;
+            border-color: rgba(255, 107, 107, 0.6) !important;
+            color: #FF8888 !important;
+            animation: sxListenPulse 1.3s ease-in-out infinite;
+        }
+
+        #voiceBtn.listening i {
+            color: #FF6B6B !important;
+            animation: sxMicPulse 1s ease-in-out infinite !important;
+        }
+
+        @keyframes sxListenPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(255, 107, 107, 0.25),
+                    inset 0 0 20px rgba(255, 107, 107, 0.05) !important;
+            }
+
+            50% {
+                box-shadow: 0 0 36px rgba(255, 107, 107, 0.5),
+                    inset 0 0 28px rgba(255, 107, 107, 0.1) !important;
+            }
+        }
+
+        @keyframes sxMicPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        /* Listen — SPEAKING state */
+        #voiceBtn.speaking-active {
+            background: linear-gradient(180deg, rgba(255, 107, 107, 0.16), rgba(255, 107, 107, 0.05)) !important;
+            border-color: rgba(255, 107, 107, 0.65) !important;
+            color: #FF8888 !important;
+            box-shadow: 0 0 26px rgba(255, 107, 107, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        }
+
+        #voiceBtn.speaking-active i {
+            color: #FF6B6B !important;
+            animation: sxMicPulse 0.55s ease-in-out infinite !important;
+        }
+
+        /* ── CAMERA — neutral / red when off ── */
+        #cameraToggleBtn i {
+            color: #6a6d75 !important;
+            transition: color 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        #cameraToggleBtn:hover:not(:disabled) i {
+            color: #b8bac0 !important;
+            transform: scale(1.12) !important;
+        }
+
+        #cameraToggleBtn.off {
+            background: linear-gradient(180deg, rgba(255, 107, 107, 0.08), rgba(255, 107, 107, 0.02)) !important;
+            border-color: rgba(255, 107, 107, 0.4) !important;
+            color: #FF8888 !important;
+        }
+
+        #cameraToggleBtn.off i {
+            color: #FF6B6B !important;
+        }
+
+        #cameraToggleBtn.off:hover:not(:disabled) {
+            background: linear-gradient(180deg, rgba(255, 107, 107, 0.16), rgba(255, 107, 107, 0.05)) !important;
+            border-color: rgba(255, 107, 107, 0.65) !important;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+        }
+
+        /* ══════════════════════════════════════════
+     STYLE PILLS (Short / Balanced / Detailed)
+     ══════════════════════════════════════════ */
+        .chat-style-selector {
+            padding: 4px !important;
+            gap: 2px !important;
+            border-radius: 11px !important;
+            background: rgba(11, 12, 14, 0.94) !important;
+            backdrop-filter: blur(20px) saturate(150%) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow:
+                0 8px 28px rgba(0, 0, 0, 0.55),
+                0 0 24px rgba(255, 122, 26, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+            isolation: isolate;
+        }
+
+        .style-pill {
+            padding: 7px 14px !important;
+            border-radius: 8px !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.72rem !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            gap: 7px !important;
+            color: #7a7d84 !important;
+            transition: color 0.3s ease, transform 0.2s ease !important;
+            position: relative;
+            z-index: 1;
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            box-shadow: none !important;
+        }
+
+        .style-pill:hover:not(.active) {
+            color: #EDEDEF !important;
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .style-pill i {
+            font-size: 0.8rem !important;
+            opacity: 1 !important;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        .style-pill:hover i {
+            transform: scale(1.15) !important;
+        }
+
+        .style-pill.active {
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            box-shadow: none !important;
+            color: #0B0C0E !important;
+        }
+
+        .style-pill.active i {
+            transform: scale(1.1) !important;
+            color: #0B0C0E !important;
+        }
+
+        /* Sliding indicator polish (enhancement layer's #sx-ind) */
+        #sx-ind {
+            border-radius: 8px !important;
+            background: linear-gradient(180deg, #FFB570 0%, #FF7A1A 55%, #D45A0E 130%) !important;
+            box-shadow:
+                0 0 16px rgba(255, 122, 26, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+            transition:
+                transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+                width 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+                height 0.3s ease !important;
+        }
+
+        #sx-ind.nt {
+            transition: none !important;
+        }
+
+        /* Fallback: if the sliding indicator isn't present */
+        #styleSelector:not(:has(#sx-ind)) .style-pill.active {
+            background: linear-gradient(180deg, #FFB570, #FF7A1A) !important;
+            border: 1px solid rgba(255, 122, 26, 0.6) !important;
+            color: #0B0C0E !important;
+            box-shadow:
+                0 0 16px rgba(255, 122, 26, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+        }
+
+        /* ══════════════════════════════════════════
+     MOBILE
+     ══════════════════════════════════════════ */
+        @media (max-width: 820px) {
+            .input-row {
+                padding: 0 12px 10px !important;
+            }
+
+            .button-row {
+                gap: 6px !important;
+                padding: 0 12px !important;
+            }
+
+            .button-row .ask-btn {
+                padding: 11px 14px !important;
+                font-size: 0.76rem !important;
+                min-height: 44px;
+            }
+
+            .input-row input[type="text"] {
+                font-size: 16px !important;
+                padding: 12px 14px !important;
+            }
+
+            /* Compact style selector on mobile */
+            .chat-style-selector {
+                padding: 3px !important;
+                gap: 1px !important;
+                border-radius: 10px !important;
+            }
+
+            .style-pill {
+                padding: 6px 9px !important;
+                font-size: 0.62rem !important;
+                gap: 4px !important;
+            }
+
+            .style-pill span {
+                display: none;
+            }
+
+            .style-pill.active span {
+                display: inline;
+            }
+
+            .style-pill i {
+                font-size: 0.72rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .button-row .ask-btn {
+                padding: 10px 10px !important;
+                font-size: 0.72rem !important;
+            }
+
+            .chat-style-selector {
+                top: 52px !important;
+                right: 8px !important;
+            }
+
+            .style-pill.active span {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .button-row .ask-btn,
+            .style-pill,
+            #sx-ind,
+            .attach-btn,
+            .input-row .share-btn {
+                animation: none !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+    </style>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- END BUTTONS POLISH -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
 </body>
 
 </html>
