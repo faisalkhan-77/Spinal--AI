@@ -10,18 +10,12 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Added Syne for a bolder, modern heading -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
+    href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     /* ============================================================
      TOKENS
-     Void Black   #0B0C0E  – base
-     Deep Gunmetal#1B1D21  – panels
-     Gunmetal     #55585F  – mid metal / rules
-     Machined     #C7C9CD  – bright chrome
-     Bone         #F2F1ED  – primary text (warm off-white, spine motif)
-     Signal Amber #FF7A1A  – single accent, used sparingly
      ============================================================ */
     :root {
       --void: #0B0C0E;
@@ -35,6 +29,7 @@
       --bone-dim: #9A9B98;
       --amber: #FF7A1A;
       --line: rgba(199, 201, 205, 0.14);
+      --green: #4ADE80;
     }
 
     * {
@@ -69,7 +64,7 @@
       letter-spacing: 0.08em;
     }
 
-    /* faint machined backdrop: hairline grid + brushed streaks */
+    /* faint machined backdrop + moving gradient */
     body::before {
       content: '';
       position: fixed;
@@ -87,14 +82,16 @@
     body::after {
       content: '';
       position: fixed;
-      inset: 0;
-      z-index: 0;
+      inset: -50%;
+      z-index: -1;
       pointer-events: none;
-      background: repeating-linear-gradient(100deg,
-          rgba(255, 255, 255, 0.012) 0px,
-          rgba(255, 255, 255, 0.012) 1px,
-          transparent 1px,
-          transparent 4px);
+      background: radial-gradient(circle at 50% 50%, rgba(255, 122, 26, 0.05) 0%, transparent 60%);
+      animation: bgRotate 20s linear infinite;
+    }
+
+    @keyframes bgRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     /* ============================================================
@@ -183,6 +180,7 @@
       width: 100%;
     }
 
+    /* --- NAVBAR LOGIN BUTTON --- */
     .btn-login {
       text-decoration: none;
       display: inline-flex;
@@ -191,19 +189,45 @@
       background: linear-gradient(160deg, var(--chrome-hi), var(--gunmetal) 140%);
       color: var(--void);
       font-family: 'IBM Plex Mono', monospace;
-      font-weight: 500;
+      font-weight: 600;
       font-size: 0.72rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       padding: 10px 20px;
-      border-radius: 0;
+      position: relative;
       clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
-      transition: transform .2s, box-shadow .2s;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1;
+    }
+
+    /* Glow effect behind the button on hover */
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(90deg, var(--amber), var(--chrome));
+      z-index: -1;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
     }
 
     .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      transform: translateY(-2px) scale(1.05);
+      color: var(--void);
+      box-shadow: 0 0 20px rgba(255, 122, 26, 0.4);
+    }
+
+    .btn-login:hover::before {
+      opacity: 1;
+    }
+
+    .btn-login svg {
+      transition: transform 0.3s ease;
+    }
+
+    .btn-login:hover svg {
+      transform: translateX(3px);
     }
 
     /* ============================================================
@@ -242,33 +266,69 @@
     }
 
     @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.25;
-      }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
     }
 
+    /* --- NEW H1 ANIMATION & FONT --- */
+    /* --- H1 ORIGINAL FONT WITH ANIMATION --- */
     .hero h1 {
       font-family: 'Big Shoulders Display', sans-serif;
       font-weight: 800;
       text-transform: uppercase;
-      font-size: clamp(2.6rem, 5.2vw, 4.6rem);
-      line-height: 0.96;
+      font-size: clamp(2.6rem, 5.2vw, 4.6rem); /* Original Size */
+      line-height: 1.02;
       letter-spacing: 0.005em;
       color: var(--chrome-hi);
       max-width: 640px;
+    }
+
+    .hero h1 .line {
+      display: block;
+      overflow: hidden;
+      padding-bottom: 5px;
+    }
+
+    .hero h1 .line span {
+      display: inline-block;
+      transform: translateY(110%);
+      animation: slideUpReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .hero h1 .line:nth-child(2) span {
+      animation-delay: 0.15s;
+    }
+
+    @keyframes slideUpReveal {
+      to { transform: translateY(0); }
     }
 
     .hero h1 em {
       font-style: normal;
       color: transparent;
       -webkit-text-stroke: 1.5px var(--chrome);
+      position: relative;
+      display: inline-block;
     }
+
+    /* Glowing pulse behind the word 'spine' */
+    .hero h1 em::before {
+      content: 'spine.';
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--amber);
+      -webkit-text-stroke: 0;
+      z-index: -1;
+      opacity: 0;
+      animation: glowPulse 3s ease-in-out infinite alternate 0.8s;
+    }
+
+    @keyframes glowPulse {
+      0% { opacity: 0; filter: blur(4px); transform: scale(0.95); }
+      100% { opacity: 0.5; filter: blur(10px); transform: scale(1.05); }
+    }
+    /* ------------------------------- */
 
     .hero p.lede {
       margin-top: 26px;
@@ -286,13 +346,14 @@
       flex-wrap: wrap;
     }
 
+    /* --- HERO PRIMARY CTA BUTTON --- */
     .cta-btn {
       position: relative;
       background: linear-gradient(160deg, var(--chrome-hi), var(--chrome) 55%, var(--gunmetal) 130%);
       color: var(--void);
       text-decoration: none;
       font-family: 'IBM Plex Mono', monospace;
-      font-weight: 500;
+      font-weight: 600;
       font-size: 0.86rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -302,32 +363,75 @@
       gap: 12px;
       clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 100%, 16px 100%);
       overflow: hidden;
-      transition: transform .25s, box-shadow .25s;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.7);
+      z-index: 1;
+      /* Halka sa floating animation button ko de rahe hain */
+      animation: floatBtn 4s ease-in-out infinite;
     }
 
+    @keyframes floatBtn {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    /* Shimmer / Scanline Effect */
     .cta-btn::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.65) 50%, transparent 65%);
-      background-size: 220% 100%;
-      animation: shimmer 3.2s linear infinite;
+      background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.8) 50%, transparent 80%);
+      background-size: 250% 100%;
+      animation: scanShimmer 2.5s linear infinite;
+      z-index: -1;
     }
 
-    @keyframes shimmer {
-      0% {
-        background-position: -220% 0;
-      }
+    @keyframes scanShimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -100% 0; }
+    }
 
-      100% {
-        background-position: 220% 0;
-      }
+    /* Glow Background on Hover */
+    .cta-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255, 122, 26, 0.4) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: -2;
     }
 
     .cta-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.85);
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 15px 40px -8px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 122, 26, 0.3);
+      color: #000;
+    }
+
+    .cta-btn:hover::after {
+      opacity: 1;
+    }
+
+    .cta-btn svg {
+      width: 16px;
+      height: 16px;
+      position: relative;
+      z-index: 2;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-btn:hover svg {
+      transform: scale(1.2) rotate(10deg);
+    }
+
+    .cta-btn span {
+      position: relative;
+      z-index: 2;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 122, 26, 0.3);
     }
 
     .cta-btn svg {
@@ -359,7 +463,7 @@
 
     .cta-secondary:hover {
       color: var(--bone);
-      border-color: var(--chrome);
+      border-color: var(--amber);
     }
 
     /* ---- spec strip ---- */
@@ -391,7 +495,7 @@
     }
 
     /* ============================================================
-     SIGNATURE GRAPHIC — chrome vertebral column w/ lens
+     SIGNATURE GRAPHIC
      ============================================================ */
     .rig {
       position: relative;
@@ -399,6 +503,7 @@
       justify-content: center;
       align-items: center;
       height: 100%;
+      perspective: 1000px;
     }
 
     .rig svg {
@@ -407,18 +512,17 @@
       height: auto;
       filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.65));
       animation: drift 7s ease-in-out infinite;
+      transition: filter 0.5s ease, transform 0.5s ease;
+    }
+
+    .rig:hover svg {
+      filter: drop-shadow(0 30px 80px rgba(255, 122, 26, 0.3));
+      transform: scale(1.05);
     }
 
     @keyframes drift {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-14px);
-      }
+      0%, 100% { transform: translateY(0) rotateY(0deg); }
+      50% { transform: translateY(-14px) rotateY(2deg); }
     }
 
     .vert {
@@ -452,20 +556,12 @@
     }
 
     @keyframes blink {
-
-      0%,
-      92%,
-      100% {
-        transform: scale(1);
-      }
-
-      96% {
-        transform: scale(0.72);
-      }
+      0%, 92%, 100% { transform: scale(1); }
+      96% { transform: scale(0.72); }
     }
 
     /* ============================================================
-     FEATURE ROW — vertebral levels, sharp cut panels
+     FEATURE ROW
      ============================================================ */
     .levels {
       position: relative;
@@ -490,8 +586,9 @@
       font-family: 'Big Shoulders Display', sans-serif;
       font-weight: 700;
       text-transform: uppercase;
-      font-size: clamp(1.6rem, 3vw, 2.3rem);
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
       color: var(--chrome-hi);
+      letter-spacing: 0.02em;
     }
 
     .levels-head p {
@@ -514,11 +611,14 @@
       background: var(--panel);
       padding: 34px 30px 38px;
       position: relative;
-      transition: background .3s;
+      transition: all .3s ease;
+      overflow: hidden;
     }
 
     .level:hover {
       background: var(--panel-2);
+      box-shadow: inset 0 0 0 1px rgba(255, 122, 26, 0.4), 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 2;
     }
 
     .level-id {
@@ -531,10 +631,16 @@
     }
 
     .level-icon {
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       margin-bottom: 20px;
       color: var(--chrome-hi);
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    .level:hover .level-icon {
+      transform: scale(1.1) translateY(-3px);
+      color: var(--amber);
     }
 
     .level-icon svg {
@@ -546,10 +652,15 @@
       font-family: 'Big Shoulders Display', sans-serif;
       font-weight: 700;
       text-transform: uppercase;
-      font-size: 1.28rem;
+      font-size: 1.4rem;
       letter-spacing: 0.01em;
       margin-bottom: 10px;
       color: var(--bone);
+      transition: color 0.3s ease;
+    }
+
+    .level:hover h3 {
+      color: var(--chrome-hi);
     }
 
     .level p {
@@ -558,24 +669,38 @@
       line-height: 1.6;
     }
 
+    /* Updated Tags with Green Dot */
     .level .tag {
-      display: inline-block;
-      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 22px;
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.62rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--gunmetal);
-      border: 1px solid var(--gunmetal-dim);
-      padding: 4px 9px;
+      color: #4ADE80; /* Green color */
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      background: rgba(74, 222, 128, 0.05);
+      padding: 5px 10px;
+      border-radius: 2px;
     }
 
-    .level.soon .tag {
-      color: var(--amber);
-      border-color: rgba(255, 122, 26, 0.35);
+    .level .tag .dot {
+      width: 6px;
+      height: 6px;
+      background: #4ADE80;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #4ADE80;
+      animation: pulseGreen 2s infinite;
     }
 
-    /* corner notch on each panel — machined plate detail */
+    @keyframes pulseGreen {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* corner notch */
     .level::before {
       content: '';
       position: absolute;
@@ -586,6 +711,11 @@
       border-style: solid;
       border-width: 0 16px 16px 0;
       border-color: transparent var(--void) transparent transparent;
+      transition: border-color 0.3s;
+    }
+
+    .level:hover::before {
+      border-color: transparent var(--panel-2) transparent transparent;
     }
 
     /* ============================================================
@@ -601,6 +731,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 14px;
+      background: var(--void);
     }
 
     footer .fmono {
@@ -618,16 +749,17 @@
 
     .foot-icons a {
       color: var(--gunmetal);
-      transition: color .2s;
+      transition: color .2s, transform .2s;
     }
 
     .foot-icons a:hover {
-      color: var(--chrome-hi);
+      color: var(--amber);
+      transform: translateY(-2px);
     }
 
     .foot-icons svg {
-      width: 17px;
-      height: 17px;
+      width: 18px;
+      height: 18px;
     }
 
     /* ============================================================
@@ -637,6 +769,23 @@
       .hero {
         grid-template-columns: 1fr;
         padding-top: 60px;
+        text-align: center;
+      }
+
+      .hero h1 {
+        margin: 0 auto;
+      }
+
+      .hero p.lede {
+        margin: 26px auto 0;
+      }
+
+      .hero-ctas {
+        justify-content: center;
+      }
+
+      .spec-strip {
+        justify-content: center;
       }
 
       .rig {
@@ -673,6 +822,10 @@
       .levels {
         padding: 20px 6% 70px;
       }
+
+      .hero h1 {
+        font-size: 2.6rem;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -680,7 +833,6 @@
         animation-duration: 0.001ms !important;
         animation-iteration-count: 1 !important;
       }
-
       html {
         scroll-behavior: auto;
       }
@@ -723,7 +875,13 @@
   <section class="hero">
     <div>
       <div class="eyebrow"><span class="dot"></span> Live camera + voice model</div>
-      <h1>An AI companion<br>with a <em>spine.</em></h1>
+      
+      <!-- UPDATED H1 WITH ANIMATION -->
+      <h1>
+        <span class="line"><span>An AI companion</span></span>
+        <span class="line"><span>with a <em>spine.</em></span></span>
+      </h1>
+
       <p class="lede">
         Spinal watches through your camera and listens through your mic, then answers in a voice
         that comes from a chrome companion standing right in front of you — not a chat bubble.
@@ -775,10 +933,8 @@
           </radialGradient>
         </defs>
 
-        <!-- spinal cord line -->
         <path class="cord" d="M200,120 L198,220 L204,320 L197,420 L202,520 L199,600" fill="none" />
 
-        <!-- vertebrae, C1 (top, near lens) to C6 (base) -->
         <g class="vert">
           <polygon points="152,150 248,150 264,182 236,196 164,196 136,182" />
           <polygon points="118,168 92,182 96,196" opacity="0.9" />
@@ -808,7 +964,6 @@
           <polygon points="140,546 260,546 280,582 244,600 156,600 120,582" />
         </g>
 
-        <!-- lens / iris at the top -->
         <circle class="iris-ring" cx="200" cy="96" r="72" />
         <circle class="iris-ring" cx="200" cy="96" r="58" stroke-opacity="0.5" />
         <g>
@@ -844,9 +999,9 @@
           </svg>
         </div>
         <h3>Real-time vision</h3>
-        <p>Points the camera at anything and Spinal reads the room — objects, expressions, text on a page — and answers
-          before you finish the sentence.</p>
-        <span class="tag">Shipping</span>
+        <p>Points the camera at anything and Spinal reads the room — objects, expressions, text on a page — and answers before you finish the sentence.</p>
+        <!-- UPDATED TAG -->
+        <span class="tag"><span class="dot"></span> Live</span>
       </div>
 
       <div class="level">
@@ -859,12 +1014,12 @@
           </svg>
         </div>
         <h3>A voice, not a chatbox</h3>
-        <p>The chrome companion speaks in a natural voice and holds a conversation like it's standing in the room with
-          you, not typing from behind a screen.</p>
-        <span class="tag">Shipping</span>
+        <p>The chrome companion speaks in a natural voice and holds a conversation like it's standing in the room with you, not typing from behind a screen.</p>
+        <!-- UPDATED TAG -->
+        <span class="tag"><span class="dot"></span> Live</span>
       </div>
 
-      <div class="level soon">
+      <div class="level">
         <span class="level-id mono">LEVEL C7 — MEMORY</span>
         <div class="level-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -873,9 +1028,9 @@
           </svg>
         </div>
         <h3>Memory & screen share</h3>
-        <p>Spinal starts remembering what matters between sessions, and can watch your screen to follow along with your
-          actual work.</p>
-        <span class="tag">Coming soon</span>
+        <p>Spinal starts remembering what matters between sessions, and can watch your screen to follow along with your actual work.</p>
+        <!-- UPDATED TAG -->
+        <span class="tag"><span class="dot"></span> Live</span>
       </div>
 
     </div>
@@ -885,8 +1040,7 @@
     <div class="fmono">© 2026 Spinal AI — Built with a backbone</div>
     <div class="foot-icons">
       <a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.13-4.56-5.02 0-1.11.39-2.02 1.03-2.73-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.04a9.3 9.3 0 0 1 5 0c1.91-1.31 2.75-1.04 2.75-1.04.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.73 0 3.9-2.34 4.76-4.57 5.01.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z" />
+          <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.13-4.56-5.02 0-1.11.39-2.02 1.03-2.73-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.04a9.3 9.3 0 0 1 5 0c1.91-1.31 2.75-1.04 2.75-1.04.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.73 0 3.9-2.34 4.76-4.57 5.01.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z" />
         </svg></a>
       <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M3 3l7.5 9.6L3.2 21h2.3l6.3-7.2 5 7.2H21l-7.8-10 6.9-8H18l-5.7 6.5L7.4 3H3z" />
