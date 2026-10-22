@@ -9121,6 +9121,137 @@
             }
         }
     </style>
+    <!-- ═══ MOBILE VIEWPORT FIX v2 — fixes hidden buttons ═══ -->
+    <style id="mobile-viewport-fix-v2">
+        @media (max-width: 820px) {
+
+            /* ══ CRITICAL: dynamic viewport height so address bar doesn't clip ══ */
+            html,
+            body {
+                height: 100vh !important;
+                height: 100dvh !important;
+                max-height: 100dvh !important;
+                overflow: hidden !important;
+            }
+
+            .main {
+                height: 100vh !important;
+                height: 100dvh !important;
+                max-height: 100dvh !important;
+                padding: 8px 10px max(8px, env(safe-area-inset-bottom)) !important;
+                justify-content: flex-start !important;
+            }
+
+            /* ══ Chat shrinks to fit — buttons always visible ══ */
+            #chat-container {
+                flex: 1 1 0 !important;
+                min-height: 0 !important;
+                max-height: 100% !important;
+                overflow-y: auto !important;
+            }
+
+            /* ══ These CANNOT shrink — always visible ══ */
+            .status-strip,
+            .input-row,
+            .button-row,
+            .stop-row,
+            .file-chip-row,
+            #recording-indicator {
+                flex-shrink: 0 !important;
+            }
+
+            /* ══ Force all 3 buttons on ONE row ══ */
+            .button-row {
+                flex-wrap: nowrap !important;
+                gap: 6px !important;
+            }
+
+            .button-row .ask-btn {
+                flex: 1 1 0 !important;
+                min-width: 0 !important;
+                white-space: nowrap !important;
+                padding: 10px 8px !important;
+                font-size: 0.72rem !important;
+            }
+
+            .button-row .ask-btn span {
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            /* ══ Trim tight spacing ══ */
+            .status-strip {
+                margin: 2px 0 4px 0 !important;
+            }
+
+            #avatar-container {
+                margin: 2px auto 4px !important;
+            }
+
+            .input-row {
+                margin: 0 auto 6px !important;
+            }
+
+            .button-row {
+                margin: 0 auto 6px !important;
+            }
+
+            /* ══ Style pills — no overlap with buttons ══ */
+            .chat-style-selector {
+                top: 8px !important;
+                right: 8px !important;
+            }
+        }
+
+        /* ══ Very small screens — extra trim ══ */
+        @media (max-width: 480px) {
+            .main {
+                padding: 6px 8px max(6px, env(safe-area-inset-bottom)) !important;
+            }
+
+            #avatar-container {
+                width: 88px !important;
+                height: 140px !important;
+                max-width: 88px !important;
+                max-height: 140px !important;
+            }
+
+            .button-row .ask-btn {
+                padding: 9px 6px !important;
+                font-size: 0.68rem !important;
+                min-height: 42px !important;
+            }
+
+            .input-row input[type="text"] {
+                min-height: 42px !important;
+                padding: 10px 12px !important;
+            }
+
+            .attach-btn {
+                width: 42px !important;
+                min-width: 42px !important;
+                min-height: 42px !important;
+            }
+        }
+
+        @media (max-width: 380px) {
+            #avatar-container {
+                width: 76px !important;
+                height: 120px !important;
+                max-width: 76px !important;
+                max-height: 120px !important;
+            }
+
+            .status-item {
+                font-size: 0.48rem !important;
+            }
+
+            .button-row .ask-btn {
+                font-size: 0.62rem !important;
+                padding: 8px 4px !important;
+            }
+        }
+    </style>
 </body>
 
 </html>
