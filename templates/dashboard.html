@@ -8563,6 +8563,564 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- END BUTTONS POLISH -->
     <!-- ═══════════════════════════════════════════════════════════ -->
+    <style id="mobile-dashboard-fix">
+        /* ═══ 820px — tablet + large phones ═══ */
+        @media (max-width: 820px) {
+
+            /* Free vertical space */
+            .share-note {
+                display: none !important;
+            }
+
+            #recording-indicator {
+                padding: 3px 10px 3px 8px !important;
+                margin-bottom: 6px !important;
+            }
+
+            .status-strip {
+                padding: 3px 12px !important;
+                gap: 12px !important;
+                margin: 4px 0 4px 0 !important;
+            }
+
+            .status-item {
+                font-size: 0.56rem !important;
+            }
+
+            .status-item .dot {
+                width: 5px !important;
+                height: 5px !important;
+            }
+
+            /* Main padding */
+            .main {
+                padding: 14px 10px 16px !important;
+            }
+
+            /* Spine container */
+            #avatar-container {
+                width: 120px !important;
+                height: 192px !important;
+                max-width: 120px !important;
+                max-height: 192px !important;
+                margin: 4px auto 6px !important;
+            }
+
+            /* Chat container */
+            #chat-container {
+                padding: 10px 12px 12px !important;
+            }
+
+            #message-area {
+                max-width: 100% !important;
+            }
+
+            /* Messages */
+            .message {
+                font-size: 0.88rem !important;
+                line-height: 1.7 !important;
+                margin-bottom: 14px !important;
+            }
+
+            .message.user {
+                padding: 10px 14px !important;
+                max-width: 88% !important;
+                border-radius: 16px !important;
+                margin: 14px 0 14px auto !important;
+            }
+
+            .message.ai {
+                padding: 10px 0 !important;
+                font-size: 0.88rem !important;
+            }
+
+            .message.ai.system-hint {
+                font-size: 0.76rem !important;
+            }
+
+            /* Input row — stacked, no overflow */
+            .input-row {
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                padding: 0 10px 8px !important;
+                max-width: 100% !important;
+            }
+
+            .attach-btn {
+                width: 46px !important;
+                min-width: 46px !important;
+                min-height: 46px !important;
+                order: 1 !important;
+            }
+
+            .input-row input[type="text"] {
+                order: 2 !important;
+                flex: 1 1 calc(100% - 52px) !important;
+                min-width: 0 !important;
+                font-size: 16px !important;
+                padding: 12px 14px !important;
+                min-height: 46px !important;
+            }
+
+            /* Hide share on mobile (already hidden by original, kept for safety) */
+            .input-row .share-btn {
+                display: none !important;
+            }
+
+            /* File chip */
+            .file-chip-row {
+                padding: 0 10px !important;
+                margin-top: 4px !important;
+            }
+
+            .file-chip {
+                font-size: 0.68rem !important;
+                padding: 7px 10px !important;
+                max-width: 100% !important;
+            }
+
+            .file-chip .file-name {
+                max-width: 160px !important;
+            }
+
+            /* Button row */
+            .button-row {
+                gap: 6px !important;
+                padding: 0 10px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .button-row .ask-btn {
+                padding: 11px 12px !important;
+                font-size: 0.74rem !important;
+                min-height: 46px !important;
+                flex: 1 1 30% !important;
+                gap: 6px !important;
+            }
+
+            .button-row .ask-btn i {
+                font-size: 0.82rem !important;
+            }
+
+            /* Style pills — compact top-right */
+            .chat-style-selector {
+                top: 52px !important;
+                right: 10px !important;
+                padding: 3px !important;
+                gap: 1px !important;
+                border-radius: 10px !important;
+            }
+
+            .style-pill {
+                padding: 5px 9px !important;
+                font-size: 0.6rem !important;
+                gap: 4px !important;
+            }
+
+            .style-pill i {
+                font-size: 0.68rem !important;
+            }
+
+            .style-pill span {
+                display: none !important;
+            }
+
+            .style-pill.active span {
+                display: inline !important;
+            }
+
+            /* Stop button */
+            .stop-btn {
+                padding: 9px 18px !important;
+                font-size: 0.65rem !important;
+            }
+
+            /* Jump to bottom */
+            .jump-to-bottom {
+                padding: 7px 12px !important;
+                font-size: 0.56rem !important;
+            }
+
+            /* Sidebar polish overrides (mobile-specific) */
+            .sidebar-brand {
+                font-size: 1.15rem !important;
+            }
+
+            .new-chat-btn {
+                padding: 10px 12px !important;
+                font-size: 0.75rem !important;
+            }
+
+            .sidebar-search input {
+                padding: 9px 30px 9px 30px !important;
+                font-size: 0.72rem !important;
+            }
+
+            .session-item {
+                font-size: 0.78rem !important;
+                padding: 8px 8px 8px 10px !important;
+            }
+
+            .history-group-label {
+                font-size: 0.56rem !important;
+                padding: 6px 8px 4px !important;
+            }
+
+            .history-group-label::before {
+                width: 3px !important;
+                height: 3px !important;
+                margin-right: 6px !important;
+            }
+
+            /* Settings polish overrides */
+            .settings-modal {
+                max-height: 90dvh !important;
+                padding: 18px 16px 16px !important;
+            }
+
+            .settings-modal h2::before {
+                font-size: 1.3rem !important;
+            }
+
+            .settings-modal .sub {
+                font-size: 0.68rem !important;
+                margin-bottom: 14px !important;
+                padding-bottom: 12px !important;
+            }
+
+            .settings-modal .setting-item {
+                padding: 11px 12px !important;
+                gap: 10px !important;
+            }
+
+            .settings-modal .setting-item .info {
+                gap: 10px !important;
+            }
+
+            .settings-modal .setting-item .info i {
+                width: 30px !important;
+                height: 30px !important;
+                font-size: 0.76rem !important;
+            }
+
+            .settings-modal .setting-item .info .label {
+                font-size: 0.78rem !important;
+            }
+
+            .settings-modal .setting-item .info .desc {
+                font-size: 0.66rem !important;
+            }
+
+            .settings-modal .btn-secondary,
+            .settings-modal .btn-danger {
+                padding: 6px 12px !important;
+                font-size: 0.68rem !important;
+            }
+
+            .personality-section-label::after {
+                font-size: 0.56rem !important;
+            }
+
+            .personality-selector {
+                gap: 6px !important;
+            }
+
+            .personality-card {
+                padding: 12px 6px 10px !important;
+            }
+
+            .personality-card i {
+                font-size: 1rem !important;
+            }
+
+            .personality-card .personality-name {
+                font-size: 0.68rem !important;
+            }
+
+            .personality-card .personality-desc {
+                font-size: 0.58rem !important;
+            }
+
+            .settings-modal .btn-close {
+                padding: 10px !important;
+                font-size: 0.74rem !important;
+                margin-top: 14px !important;
+            }
+
+            /* Memory modal */
+            .memory-modal {
+                max-height: 92dvh !important;
+            }
+
+            .memory-header {
+                padding: 18px 16px 12px !important;
+            }
+
+            .memory-modal h2 {
+                font-size: 1.25rem !important;
+            }
+
+            .memory-toolbar {
+                padding: 12px 16px !important;
+                gap: 10px !important;
+            }
+
+            .memory-search {
+                padding: 9px 12px !important;
+                font-size: 0.72rem !important;
+            }
+
+            .memory-filter-tab {
+                padding: 5px 9px !important;
+                font-size: 0.56rem !important;
+            }
+
+            .memory-sort {
+                font-size: 0.56rem !important;
+                padding: 5px 8px !important;
+            }
+
+            .memory-list {
+                padding: 12px 16px !important;
+            }
+
+            .memory-card {
+                padding: 12px 14px !important;
+            }
+
+            .memory-card .memory-text {
+                font-size: 0.78rem !important;
+            }
+
+            .memory-footer {
+                padding: 12px 16px !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+                align-items: stretch !important;
+            }
+
+            .memory-cleanup-note {
+                font-size: 0.52rem !important;
+                text-align: center !important;
+            }
+
+            .memory-footer .btn-close {
+                width: 100% !important;
+            }
+
+            /* Export modal */
+            .export-modal {
+                max-height: 92dvh !important;
+            }
+
+            .export-formats {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+                padding: 16px !important;
+            }
+
+            .export-format {
+                flex-direction: row !important;
+                padding: 12px 14px !important;
+                gap: 12px !important;
+                text-align: left !important;
+                align-items: center !important;
+            }
+
+            .export-format .export-icon {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 1rem !important;
+                flex-shrink: 0 !important;
+            }
+
+            .export-format>div:not(.export-icon) {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 2px !important;
+            }
+
+            /* Rename modal */
+            .rename-modal {
+                max-height: 92dvh !important;
+            }
+
+            .rename-header {
+                padding: 16px 18px 12px !important;
+            }
+
+            .rename-header h2 {
+                font-size: 1.15rem !important;
+            }
+
+            .rename-body {
+                padding: 16px 18px !important;
+            }
+
+            .rename-input {
+                padding: 11px 12px !important;
+                font-size: 16px !important;
+            }
+
+            .rename-actions {
+                padding: 0 18px 16px !important;
+            }
+
+            /* Onboarding */
+            .onboarding-card {
+                padding: 24px 20px 20px !important;
+            }
+
+            .onboarding-card h2 {
+                font-size: 1.2rem !important;
+            }
+
+            .onboarding-card p {
+                font-size: 0.85rem !important;
+            }
+
+            .onboarding-card .actions button {
+                padding: 10px 18px !important;
+                font-size: 0.68rem !important;
+            }
+        }
+
+        /* ═══ 480px — small phones ═══ */
+        @media (max-width: 480px) {
+            .main {
+                padding: 10px 8px 12px !important;
+            }
+
+            #avatar-container {
+                width: 100px !important;
+                height: 160px !important;
+                max-width: 100px !important;
+                max-height: 160px !important;
+            }
+
+            #chat-container {
+                padding: 8px 10px 10px !important;
+            }
+
+            .message {
+                font-size: 0.86rem !important;
+            }
+
+            .message.user {
+                padding: 9px 13px !important;
+                max-width: 90% !important;
+            }
+
+            .chat-style-selector {
+                top: 48px !important;
+                right: 6px !important;
+            }
+
+            .style-pill {
+                padding: 5px 8px !important;
+                font-size: 0.56rem !important;
+            }
+
+            .style-pill.active span {
+                display: none !important;
+            }
+
+            .button-row .ask-btn {
+                padding: 10px 8px !important;
+                font-size: 0.68rem !important;
+                min-height: 42px !important;
+                gap: 4px !important;
+            }
+
+            .button-row .ask-btn i {
+                font-size: 0.75rem !important;
+            }
+
+            .button-row .ask-btn span {
+                display: none !important;
+            }
+
+            .button-row .ask-btn i+span,
+            #askBtn span {
+                display: inline !important;
+            }
+
+            .input-row {
+                padding: 0 8px 6px !important;
+                gap: 5px !important;
+            }
+
+            .attach-btn {
+                width: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+            }
+
+            .input-row input[type="text"] {
+                padding: 11px 12px !important;
+                min-height: 44px !important;
+                font-size: 16px !important;
+            }
+
+            .file-chip {
+                font-size: 0.62rem !important;
+                padding: 6px 9px !important;
+            }
+
+            .file-chip .file-name {
+                max-width: 130px !important;
+            }
+
+            /* Modals full-width on tiny screens */
+            .settings-modal,
+            .memory-modal,
+            .export-modal,
+            .rename-modal {
+                max-width: 100% !important;
+            }
+
+            .memory-edit-card {
+                padding: 18px !important;
+            }
+        }
+
+        /* ═══ 380px — very small (iPhone SE, etc.) ═══ */
+        @media (max-width: 380px) {
+            #avatar-container {
+                width: 88px !important;
+                height: 140px !important;
+            }
+
+            h1,
+            .settings-modal h2::before {
+                font-size: 1.15rem !important;
+            }
+
+            .status-strip {
+                gap: 8px !important;
+                padding: 2px 8px !important;
+            }
+
+            .status-item {
+                font-size: 0.5rem !important;
+            }
+
+            .button-row .ask-btn {
+                font-size: 0.62rem !important;
+                padding: 9px 6px !important;
+            }
+        }
+
+        /* iOS safe area */
+        @supports (padding: env(safe-area-inset-bottom)) {
+            @media (max-width: 820px) {
+                .button-row {
+                    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+                }
+            }
+        }
+    </style>
 </body>
 
 </html>

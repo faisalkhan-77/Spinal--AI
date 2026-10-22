@@ -1460,6 +1460,367 @@
       }
     })();
   </script>
+  <style id="mobile-landing-fix">
+    /* ═══ 900px — tablet/mobile ═══ */
+    @media (max-width: 900px) {
+
+      /* Nav */
+      header.nav {
+        padding: 12px var(--pad) !important;
+      }
+
+      .brand {
+        font-size: 1.15rem !important;
+        gap: 8px !important;
+      }
+
+      .brand-mark {
+        width: 22px !important;
+        height: 22px !important;
+      }
+
+      .brand small {
+        font-size: 0.46rem !important;
+        letter-spacing: 0.18em !important;
+      }
+
+      .nav-right {
+        gap: 0 !important;
+      }
+
+      .btn {
+        padding: 9px 14px !important;
+        font-size: 0.66rem !important;
+        gap: 6px !important;
+      }
+
+      .btn svg {
+        width: 12px !important;
+        height: 12px !important;
+      }
+
+      /* Hero */
+      .hero {
+        grid-template-columns: 1fr !important;
+        text-align: center !important;
+        gap: 20px !important;
+        padding: 30px var(--pad) 40px !important;
+        min-height: auto !important;
+      }
+
+      .rig {
+        order: -1;
+        margin-bottom: 6px;
+      }
+
+      .rig svg {
+        max-width: 180px !important;
+      }
+
+      h1 {
+        font-size: clamp(2.05rem, 8.5vw, 3rem) !important;
+        line-height: 1.02 !important;
+        margin: 0 auto !important;
+      }
+
+      h1 .line {
+        padding-bottom: 3px !important;
+      }
+
+      .lede {
+        font-size: 0.92rem !important;
+        line-height: 1.6 !important;
+        margin: 18px auto 0 !important;
+        max-width: 92% !important;
+      }
+
+      .eyebrow {
+        font-size: 0.62rem !important;
+        padding: 6px 11px !important;
+        margin-bottom: 14px !important;
+        letter-spacing: 0.14em !important;
+      }
+
+      .hero-ctas {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        margin-top: 24px !important;
+        max-width: 320px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      .btn.lg {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 14px 20px !important;
+        font-size: 0.8rem !important;
+      }
+
+      .link {
+        justify-content: center !important;
+        font-size: 0.72rem !important;
+        padding-bottom: 4px !important;
+      }
+
+      .fine {
+        font-size: 0.6rem !important;
+        margin-top: 12px !important;
+        letter-spacing: 0.08em !important;
+      }
+
+      /* Spec strip */
+      .spec-strip {
+        margin-top: 28px !important;
+        padding-top: 18px !important;
+        gap: 18px 24px !important;
+        justify-content: space-around !important;
+      }
+
+      .spec .val {
+        font-size: 0.98rem !important;
+      }
+
+      .spec .lab {
+        font-size: 0.55rem !important;
+        letter-spacing: 0.1em !important;
+      }
+
+      /* Sections */
+      .sec {
+        padding: 48px var(--pad) !important;
+      }
+
+      .head {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        margin-bottom: 22px !important;
+        padding-bottom: 16px !important;
+      }
+
+      .head h2 {
+        font-size: clamp(1.5rem, 6vw, 2rem) !important;
+        line-height: 1.1 !important;
+      }
+
+      .head p {
+        font-size: 0.7rem !important;
+        max-width: 100% !important;
+      }
+
+      .faq .head {
+        align-items: flex-start !important;
+      }
+
+      /* Level cards */
+      .level {
+        padding: 22px 18px 24px !important;
+      }
+
+      .level-id {
+        font-size: 0.62rem !important;
+        margin-bottom: 14px !important;
+      }
+
+      .level-icon {
+        width: 34px !important;
+        height: 34px !important;
+        margin-bottom: 14px !important;
+      }
+
+      .level h3 {
+        font-size: 1.2rem !important;
+        margin-bottom: 8px !important;
+      }
+
+      .level p {
+        font-size: 0.86rem !important;
+        line-height: 1.55 !important;
+      }
+
+      .tag {
+        font-size: 0.58rem !important;
+        padding: 4px 8px !important;
+        margin-top: 16px !important;
+      }
+
+      /* Steps (vertical timeline) */
+      .step {
+        padding: 0 0 28px 0 !important;
+      }
+
+      .step::before {
+        top: 18px !important;
+        left: 17px !important;
+        right: auto !important;
+        bottom: 0 !important;
+        width: 1px !important;
+        height: auto !important;
+      }
+
+      .step:last-child::before {
+        display: none !important;
+      }
+
+      .step .n {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 0.72rem !important;
+        margin-bottom: 12px !important;
+      }
+
+      .step h3 {
+        font-size: 1.12rem !important;
+        margin-bottom: 6px !important;
+      }
+
+      .step p {
+        font-size: 0.86rem !important;
+        line-height: 1.55 !important;
+      }
+
+      /* FAQ */
+      summary {
+        font-size: 1rem !important;
+        padding: 16px 0 !important;
+        line-height: 1.35 !important;
+        gap: 14px !important;
+      }
+
+      summary i {
+        width: 12px !important;
+        height: 12px !important;
+      }
+
+      summary i::before {
+        top: 5px !important;
+        height: 2px !important;
+      }
+
+      summary i::after {
+        left: 5px !important;
+        width: 2px !important;
+      }
+
+      details p {
+        font-size: 0.86rem !important;
+        line-height: 1.6 !important;
+        padding: 0 0 18px 0 !important;
+      }
+
+      /* Final CTA */
+      .final {
+        margin: 0 var(--pad) 50px !important;
+        padding: 34px 20px !important;
+        clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)) !important;
+      }
+
+      .final h2 {
+        font-size: clamp(1.55rem, 6.5vw, 2.2rem) !important;
+        line-height: 1.05 !important;
+      }
+
+      .final p {
+        font-size: 0.9rem !important;
+        margin: 14px auto 22px !important;
+        max-width: 92% !important;
+      }
+
+      /* Footer */
+      footer {
+        padding: 22px var(--pad) !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        text-align: center !important;
+      }
+
+      footer .fmono {
+        font-size: 0.62rem !important;
+        letter-spacing: 0.08em !important;
+      }
+
+      .foot-icons {
+        gap: 2px !important;
+      }
+
+      .foot-icons a {
+        padding: 8px 10px !important;
+      }
+
+      .foot-icons svg {
+        width: 16px !important;
+        height: 16px !important;
+      }
+    }
+
+    /* ═══ 480px — small phones ═══ */
+    @media (max-width: 480px) {
+      :root {
+        --pad: 18px;
+      }
+
+      .hero {
+        padding: 22px var(--pad) 32px !important;
+      }
+
+      .rig svg {
+        max-width: 150px !important;
+      }
+
+      h1 {
+        font-size: clamp(1.85rem, 9.2vw, 2.6rem) !important;
+      }
+
+      .lede {
+        font-size: 0.88rem !important;
+      }
+
+      .hero-ctas {
+        margin-top: 20px !important;
+        gap: 10px !important;
+      }
+
+      .spec-strip {
+        gap: 14px 18px !important;
+      }
+
+      .spec .val {
+        font-size: 0.9rem !important;
+      }
+
+      .spec .lab {
+        font-size: 0.52rem !important;
+      }
+
+      .sec {
+        padding: 38px var(--pad) !important;
+      }
+
+      .head h2 {
+        font-size: 1.4rem !important;
+      }
+
+      .level h3 {
+        font-size: 1.1rem !important;
+      }
+
+      .level p,
+      .step p,
+      details p {
+        font-size: 0.84rem !important;
+      }
+
+      .final {
+        padding: 30px 18px !important;
+      }
+
+      .final h2 {
+        font-size: 1.5rem !important;
+      }
+    }
+  </style>
 </body>
 
 </html>

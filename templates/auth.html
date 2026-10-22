@@ -1370,6 +1370,182 @@
             d.addEventListener('visibilitychange', function () { if (d.hidden) cancelAnimationFrame(raf); else raf = requestAnimationFrame(tick) });
         })();
     </script>
+    <style id="mobile-auth-fix">
+        @media (max-width: 900px) {
+            body {
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 100dvh !important;
+                height: auto !important;
+                overflow-y: auto !important;
+            }
+
+            /* Brand panel — compact hero */
+            .brand-panel {
+                border-right: none !important;
+                border-bottom: 1px solid var(--line) !important;
+                padding: 16px 6% 18px !important;
+                min-height: auto !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+                gap: 12px !important;
+            }
+
+            .brand-panel .bp-top .brand {
+                font-size: 1.1rem !important;
+                gap: 8px !important;
+            }
+
+            .brand-panel .bp-top .brand svg {
+                width: 20px !important;
+                height: 20px !important;
+            }
+
+            .brand-panel .bp-top .brand small {
+                font-size: 0.46rem !important;
+                letter-spacing: 0.18em !important;
+            }
+
+            /* Compact mid section (spine + tagline) */
+            .brand-panel .bp-mid {
+                gap: 14px !important;
+                margin: 8px 0 !important;
+            }
+
+            .brand-panel .bp-mid svg {
+                max-width: 80px !important;
+            }
+
+            .brand-panel .bp-copy {
+                max-width: 100% !important;
+                padding: 0 8px !important;
+            }
+
+            .brand-panel .bp-copy h1 {
+                font-size: 1.15rem !important;
+                line-height: 1.15 !important;
+                margin-bottom: 8px !important;
+            }
+
+            .brand-panel .bp-copy p {
+                font-size: 0.78rem !important;
+                line-height: 1.5 !important;
+            }
+
+            .brand-panel .bp-eyebrow {
+                font-size: 0.6rem !important;
+                margin-bottom: 8px !important;
+            }
+
+            /* Hide specs on mobile (already in form info) */
+            .brand-panel .bp-specs {
+                display: none !important;
+            }
+
+            /* Form panel */
+            .form-panel {
+                padding: 24px 6% 32px !important;
+                flex: 1 !important;
+                align-items: flex-start !important;
+            }
+
+            .auth-container {
+                max-width: 100% !important;
+            }
+
+            /* Tabs */
+            .tabs {
+                margin-bottom: 18px !important;
+            }
+
+            .tab {
+                padding: 12px 8px !important;
+                font-size: 0.75rem !important;
+            }
+
+            /* Form fields */
+            .form-group {
+                margin-bottom: 14px !important;
+            }
+
+            .form-group label {
+                font-size: 0.62rem !important;
+            }
+
+            .form-group input {
+                padding: 14px 14px !important;
+                font-size: 16px !important;
+                /* prevent iOS zoom */
+                min-height: 48px !important;
+            }
+
+            .form-group input::placeholder {
+                font-size: 0.82rem !important;
+            }
+
+            /* Submit button */
+            .btn-submit {
+                padding: 15px 20px !important;
+                font-size: 0.8rem !important;
+                min-height: 50px !important;
+            }
+
+            /* Divider + Google */
+            .divider {
+                margin: 18px 0 14px !important;
+                font-size: 0.62rem !important;
+            }
+
+            .btn-google {
+                padding: 14px 18px !important;
+                font-size: 0.78rem !important;
+                min-height: 50px !important;
+            }
+
+            /* Error/success */
+            .error-msg,
+            .success-msg {
+                font-size: 0.72rem !important;
+                padding: 8px 10px !important;
+            }
+
+            /* Back link */
+            .back-link {
+                margin-top: 20px !important;
+                font-size: 0.68rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .brand-panel {
+                padding: 14px 5% 14px !important;
+            }
+
+            .brand-panel .bp-mid svg {
+                max-width: 60px !important;
+            }
+
+            .brand-panel .bp-copy h1 {
+                font-size: 1rem !important;
+            }
+
+            .brand-panel .bp-copy p {
+                font-size: 0.74rem !important;
+            }
+
+            .form-panel {
+                padding: 20px 5% 28px !important;
+            }
+
+            .form-group input {
+                padding: 13px 12px !important;
+            }
+
+            .btn-submit {
+                padding: 14px 18px !important;
+            }
+        }
+    </style>
 </body>
 
 </html>
